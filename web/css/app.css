@@ -1,0 +1,78 @@
+body {
+    padding-top: 70px;
+    font-family: "Inconsolata", "Helvetica Neue", "Open Sans", Arial, sans-serif;
+    font-size: 17px;
+    background-color: #f9f9f9;
+}
+
+.btn:focus,.btn:active {
+    outline: none !important;
+}
+
+#navbar{
+    font-size: 15px;
+    color:#fff;
+}
+
+.navbar-inverse .navbar-text{
+   color: #fff;
+}
+
+.table{
+    box-shadow: 0.5px 0.5px 0.5px 0 rgba(174,174,174,0.5);
+    color:#464646;
+    background-color: #fff;
+}
+
+.session-start{
+    text-align: center;
+    color: gray;
+    font-style: italic;
+}
+
+.navbar-inverse{
+    background-color: #336699;
+    background-image: none;
+    border: none;
+}
+
+a.more {
+    vertical-align: middle;
+}
+
+.tiny {
+    width: 50px !important;
+    text-align: center;
+}
+
+.time {
+    width: 120px !important;
+    text-align: center;
+}
+
+.query > div.truncated {
+    width: 900px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.table tbody > tr > td {
+    vertical-align: middle;
+}
+
+.table > tbody > tr > th {
+    background-color: #f7f7f7;
+}
+
+pre, code {
+    margin: 0;
+    border: none;
+    background: none;
+    font-size: 17px;
+    font-family: inherit;
+}
+
+.detail-view {
+    background: #fff;
+}

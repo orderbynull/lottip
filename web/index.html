@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link rel="stylesheet" href="css/bootstrap.min.css">
+
+    <link rel="stylesheet" href="css/bootstrap-theme.min.css">
+    <link rel="stylesheet" href="css/fonts.css" type="text/css">
+    <link rel="stylesheet" href="css/app.css">
+</head>
+
+<body id="app">
+    <nav class="navbar navbar-inverse navbar-fixed-top">
+        <div class="container">
+            <div id="navbar" class="navbar-collapse collapse">
+
+                <div class="btn-group" role="group" aria-label="...">
+                    <button type="button" class="btn btn-primary navbar-btn" v-bind:class="{'active': isConnected}" v-on:click="startWs()">Start
+                </button>
+                    <button type="button" class="btn btn-primary navbar-btn" v-bind:class="{'active': !isConnected}" v-on:click="stopWs()">Stop
+                </button>
+                    <button type="button" class="btn btn-primary navbar-btn" v-on:click="clearItems()">Clear
+                </button>
+                </div>
+                | Options:
+                <button type="button" class="btn btn-primary navbar-btn" v-bind:class="{'active': isTruncated}" v-on:click="toggleTruncated()">Truncated
+            </button> :
+                <button type="button" class="btn btn-primary navbar-btn" v-bind:class="{'active': showId}" v-on:click="toggleShowId()">Show ID
+            </button> :
+                <button type="button" class="btn btn-primary navbar-btn" v-bind:class="{'active': showTime}" v-on:click="toggleShowTime()">Show time
+            </button>
+
+                <p class="navbar-text navbar-right">
+                    Status: <span v-bind:class="{'label label-success': isConnected, 'label label-danger': !isConnected}">{{ isConnected ? 'connected' : 'disconnected' }}</span>                    Queries: <span class="label label-success">{{ items.length }}</span>
+                </p>
+
+            </div>
+        </div>
+    </nav>
+
+
+    <div class="container">
+        <table v-if="items.length" class="table table-condensed table-hover table-bordered">
+        <tr>
+            <th class="tiny">*</th>
+            <th class="tiny" v-if="showId">#</th>
+            <th class="time" v-if="showTime">Time</th>
+            <th>Query</th>
+        </tr>
+        <!--<tr>
+            <td colspan="4" class="session-start">
+                Session start
+            </td>
+        </tr>-->
+        <template v-for="item in items">
+            <tr>
+                <td class="tiny">
+                    <a href="#" v-on:click.prevent="showDetails($index)" class="more"><span
+                            class="glyphicon glyphicon-eye-open" aria-hidden="true"></span></a>
+                </td>
+                <td class="tiny" v-if="showId">#{{ $index + 1 }}</td>
+                <td class="time" v-if="showTime">{{ item.time }}</td>
+                <td class="query">
+                    <div v-bind:class="{'truncated': isTruncated}">
+                        {{ item.query }}
+                    </div>
+                </td>
+            </tr>
+            <tr class="detail-view" v-if="item.detailed">
+                <td colspan="4">
+                    <pre><code>{{ item.query }}</code></pre>
+                </td>
+            </tr>
+        </template>
+
+    </table>
+
+        <p class="text-center" v-if="!items.length">No queries yet</p>
+    </div>
+
+    <script src="js/jquery.min.js"></script>
+    <script src="js/bootstrap.min.js"></script>
+    <script src="js/vue.min.js"></script>
+    <script src="js/app.js"></script>
+</body>
+
+</html>
