@@ -50,11 +50,28 @@ a.more {
     text-align: center;
 }
 
-.query > div.truncated {
-    width: 900px;
+.query {
+    position: relative;
+}
+
+.query:before {
+    content: '&nbsp;';
+    visibility: hidden;
+}
+
+.query span {
+    padding-left: 5px;
+    padding-right: 5px;
+    position: absolute;
+    left: 0;
+    right: 0;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+}
+
+.light{
+    color:#e3e3e3;
 }
 
 .table tbody > tr > td {
@@ -74,5 +91,5 @@ pre, code {
 }
 
 .detail-view {
-    background: #fff;
+    background: #fcfcfc;
 }

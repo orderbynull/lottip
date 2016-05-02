@@ -27,10 +27,10 @@
                 </button>
                 </div>
                 | Options:
-                <button type="button" class="btn btn-primary navbar-btn" v-bind:class="{'active': isTruncated}" v-on:click="toggleTruncated()">Truncated
-            </button> :
+                <button type="button" class="btn btn-primary navbar-btn" v-bind:class="{'active': isExpanded}" v-on:click="toggleExpanded()">Expanded
+            </button> &middot;
                 <button type="button" class="btn btn-primary navbar-btn" v-bind:class="{'active': showId}" v-on:click="toggleShowId()">Show ID
-            </button> :
+            </button> &middot;
                 <button type="button" class="btn btn-primary navbar-btn" v-bind:class="{'active': showTime}" v-on:click="toggleShowTime()">Show time
             </button>
 
@@ -44,7 +44,7 @@
 
 
     <div class="container">
-        <table v-if="items.length" class="table table-condensed table-hover table-bordered">
+        <table v-if="items.length" class="table table-condensed table-bordered">
         <tr>
             <th class="tiny">*</th>
             <th class="tiny" v-if="showId">#</th>
@@ -57,7 +57,7 @@
             </td>
         </tr>-->
         <template v-for="item in items">
-            <tr>
+            <tr v-bind:class="{'light': item.detailed}">
                 <td class="tiny">
                     <a href="#" v-on:click.prevent="showDetails($index)" class="more"><span
                             class="glyphicon glyphicon-eye-open" aria-hidden="true"></span></a>
@@ -65,9 +65,7 @@
                 <td class="tiny" v-if="showId">#{{ $index + 1 }}</td>
                 <td class="time" v-if="showTime">{{ item.time }}</td>
                 <td class="query">
-                    <div v-bind:class="{'truncated': isTruncated}">
-                        {{ item.query }}
-                    </div>
+                    <span>{{ item.query }}</span>
                 </td>
             </tr>
             <tr class="detail-view" v-if="item.detailed">
