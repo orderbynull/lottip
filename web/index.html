@@ -38,10 +38,12 @@
                 </div>
 
                 <p class="navbar-text navbar-right">
-                    Status: <span v-bind:class="{'label label-success': isConnected, 'label label-danger': !isConnected}">{{ isConnected ? 'connected' : 'disconnected' }}</span>                    Queries: <span class="label label-success">{{ items.length }}</span>
+                    Status: <span v-bind:class="{'label label-success': isConnected, 'label label-danger': !isConnected}">{{ isConnected ? 'connected' : 'disconnected' }}</span>
+                    Queries: <span class="label label-success">{{ items.length }}</span>
+                    Sessions: <span class="label label-success">{{ sessionCount }}</span>
                 </p>
                 <form class="navbar-form navbar-right">
-                    <input type="text" class="form-control" placeholder="Filter">
+                    <input type="text" class="form-control" placeholder="filter">
                 </form>
             </div>
         </div>
@@ -56,13 +58,15 @@
                 <th class="time" v-if="showTime">Time</th>
                 <th>Query</th>
             </tr>
-            <!--<tr>
-            <td colspan="4" class="session-start">
-                Session start
-            </td>
-        </tr>-->
             <template v-for="item in items">
-            <tr v-bind:class="{'light': item.detailed}">
+                
+            <tr v-if="item.sessionStart">
+                <td colspan="4" class="session-start">
+                    New session
+                </td>
+            </tr>
+            
+            <tr v-bind:class="{'light': item.detailed}" v-if="item.query.length">
                 <td class="tiny">
                     <a href="#" v-on:click.prevent="showDetails($index)" class="more"><span
                             class="glyphicon glyphicon-eye-open" aria-hidden="true"></span></a>
@@ -78,6 +82,7 @@
                     <pre><code>{{ item.query }}</code></pre>
                 </td>
             </tr>
+
         </template>
 
         </table>

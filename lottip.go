@@ -14,7 +14,8 @@ import (
 )
 
 type GuiData struct {
-	Query string
+	Query        string
+	SessionStart bool
 }
 
 var proxyAddr = flag.String("listen", "127.0.0.1:4040", "proxy address")
@@ -26,7 +27,7 @@ var upgrader = websocket.Upgrader{CheckOrigin: func(r *http.Request) bool { retu
 //Lottip defines application
 type Lottip struct {
 	wg        *sync.WaitGroup
-	gui       chan string
+	gui       chan GuiData
 	leftAddr  string
 	rightAddr string
 	verbose   bool
@@ -36,7 +37,7 @@ type Lottip struct {
 func New(wg *sync.WaitGroup, leftAddr string, rightAddr string, verbose bool) *Lottip {
 	l := &Lottip{}
 	l.wg = wg
-	l.gui = make(chan string, 10)
+	l.gui = make(chan GuiData, 10)
 	l.leftAddr = leftAddr
 	l.rightAddr = rightAddr
 	l.verbose = verbose
@@ -59,12 +60,8 @@ func (l *Lottip) startWebsocket() {
 		}
 		defer c.Close()
 
-		data := GuiData{}
-
 		for {
-			data.Query = <-l.gui
-
-			json, _ := json.Marshal(data)
+			json, _ := json.Marshal(<-l.gui)
 
 			err = c.WriteMessage(1, json)
 			if err != nil {
@@ -86,22 +83,16 @@ func (l *Lottip) startProxy() {
 	defer sourceListener.Close()
 
 	for {
-		l.log("Waiting for LEFT connection")
-
 		leftConn, err := sourceListener.Accept()
 		if err != nil {
 			log.Print(err)
 			continue
 		}
 
-		l.log("Received LEFT connection")
-
 		go func(conn net.Conn) {
 			defer conn.Close()
 
 			var wg sync.WaitGroup
-
-			l.log("Handling LEFT connection")
 
 			rightConn, err := net.Dial("tcp", l.rightAddr)
 			if err != nil {
@@ -111,18 +102,17 @@ func (l *Lottip) startProxy() {
 			defer rightConn.Close()
 
 			wg.Add(2)
-			go func(){
+			go func() {
 				defer wg.Done()
 				l.leftToRight(conn, rightConn)
 			}()
-			
-			go func(){
+
+			go func() {
 				defer wg.Done()
 				l.rightToLeft(rightConn, conn)
 			}()
 			wg.Wait()
 
-			l.log("End of handling LEFT connection")
 		}(leftConn)
 	}
 }
@@ -147,6 +137,8 @@ func (l *Lottip) rightToLeft(left, right net.Conn) {
 }
 
 func (l *Lottip) leftToRight(left, right net.Conn) {
+	isNewSession := true
+
 	for {
 		header := []byte{0, 0, 0, 0}
 
@@ -179,7 +171,8 @@ func (l *Lottip) leftToRight(left, right net.Conn) {
 
 		if buf[0] == 0x03 {
 			select {
-			case l.gui <- string(buf[1:bn]):
+			case l.gui <- GuiData{Query: string(buf[1:bn]), SessionStart: isNewSession}:
+				isNewSession = false
 			default:
 			}
 		}

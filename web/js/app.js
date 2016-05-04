@@ -9,6 +9,7 @@ $(document).ready(function () {
             showTime: false,
             isExpanded: false,
             isConnected: false,
+            sessionCount: 0,
             items: []
         },
         methods: {
@@ -34,6 +35,7 @@ $(document).ready(function () {
 
             clearItems: function () {
                 this.items = [];
+                this.sessionCount = 0;
             },
 
             startWs: function () {
@@ -59,7 +61,18 @@ $(document).ready(function () {
                 ws.onmessage = function (evt) {
                     data = jQuery.parseJSON(evt.data);
 
-                    vue.items.push({time: new Date().toLocaleTimeString(), query: data.Query, detailed: vm.isExpanded});
+                    vue.items.push({
+                        time: new Date().toLocaleTimeString(), 
+                        query: data.Query, 
+                        detailed: vm.isExpanded,
+                        sessionStart: data.SessionStart,
+                    });
+                    
+                    if(data.SessionStart){
+                        vm.sessionCount++
+                    }
+                    
+                    console.log(data.SessionStart);
                 }
 
                 ws.onerror = function (evt) {
