@@ -7,7 +7,7 @@ $(document).ready(function () {
         data: {
             showId: false,
             showTime: false,
-            isExpanded: true,
+            isExpanded: false,
             isConnected: false,
             items: []
         },

@@ -26,18 +26,23 @@
                     <button type="button" class="btn btn-primary navbar-btn" v-on:click="clearItems()">Clear
                 </button>
                 </div>
-                | Options:
-                <button type="button" class="btn btn-primary navbar-btn" v-bind:class="{'active': isExpanded}" v-on:click="toggleExpanded()">Expanded
-            </button> &middot;
-                <button type="button" class="btn btn-primary navbar-btn" v-bind:class="{'active': showId}" v-on:click="toggleShowId()">Show ID
-            </button> &middot;
-                <button type="button" class="btn btn-primary navbar-btn" v-bind:class="{'active': showTime}" v-on:click="toggleShowTime()">Show time
+                |
+                <div class="btn-group" role="group" aria-label="...">
+
+                    <button type="button" class="btn btn-primary navbar-btn" v-bind:class="{'active': isExpanded}" v-on:click="toggleExpanded()">Expanded
             </button>
+                    <button type="button" class="btn btn-primary navbar-btn" v-bind:class="{'active': showId}" v-on:click="toggleShowId()">Show ID
+            </button>
+                    <button type="button" class="btn btn-primary navbar-btn" v-bind:class="{'active': showTime}" v-on:click="toggleShowTime()">Show time
+            </button>
+                </div>
 
                 <p class="navbar-text navbar-right">
                     Status: <span v-bind:class="{'label label-success': isConnected, 'label label-danger': !isConnected}">{{ isConnected ? 'connected' : 'disconnected' }}</span>                    Queries: <span class="label label-success">{{ items.length }}</span>
                 </p>
-
+                <form class="navbar-form navbar-right">
+                    <input type="text" class="form-control" placeholder="Filter">
+                </form>
             </div>
         </div>
     </nav>
@@ -45,18 +50,18 @@
 
     <div class="container">
         <table v-if="items.length" class="table table-condensed table-bordered">
-        <tr>
-            <th class="tiny">*</th>
-            <th class="tiny" v-if="showId">#</th>
-            <th class="time" v-if="showTime">Time</th>
-            <th>Query</th>
-        </tr>
-        <!--<tr>
+            <tr>
+                <th class="tiny">*</th>
+                <th class="tiny" v-if="showId">#</th>
+                <th class="time" v-if="showTime">Time</th>
+                <th>Query</th>
+            </tr>
+            <!--<tr>
             <td colspan="4" class="session-start">
                 Session start
             </td>
         </tr>-->
-        <template v-for="item in items">
+            <template v-for="item in items">
             <tr v-bind:class="{'light': item.detailed}">
                 <td class="tiny">
                     <a href="#" v-on:click.prevent="showDetails($index)" class="more"><span
@@ -75,7 +80,7 @@
             </tr>
         </template>
 
-    </table>
+        </table>
 
         <p class="text-center" v-if="!items.length">No queries yet</p>
     </div>
