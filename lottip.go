@@ -16,6 +16,14 @@ import (
 type GuiData struct {
 	Query        string
 	SessionStart bool
+	SessionID    int
+	Type         string
+}
+
+type sessionState struct {
+	SessionID    int
+	State bool
+	Type  string
 }
 
 var proxyAddr = flag.String("listen", "127.0.0.1:4040", "proxy address")
@@ -28,6 +36,7 @@ var upgrader = websocket.Upgrader{CheckOrigin: func(r *http.Request) bool { retu
 type Lottip struct {
 	wg        *sync.WaitGroup
 	gui       chan GuiData
+	sessions  chan sessionState
 	leftAddr  string
 	rightAddr string
 	verbose   bool
@@ -37,7 +46,8 @@ type Lottip struct {
 func New(wg *sync.WaitGroup, leftAddr string, rightAddr string, verbose bool) *Lottip {
 	l := &Lottip{}
 	l.wg = wg
-	l.gui = make(chan GuiData, 10)
+	l.gui = make(chan GuiData)
+	l.sessions = make(chan sessionState)
 	l.leftAddr = leftAddr
 	l.rightAddr = rightAddr
 	l.verbose = verbose
@@ -60,11 +70,22 @@ func (l *Lottip) startWebsocket() {
 		}
 		defer c.Close()
 
-		for {
-			json, _ := json.Marshal(<-l.gui)
+		var data []byte
 
-			err = c.WriteMessage(1, json)
+		for {
+			select {
+			case q := <-l.gui:
+				data, _ = json.Marshal(q)
+				break
+			case s := <-l.sessions:
+				data, _ = json.Marshal(s)
+				l.log("State received")
+				break
+			}
+
+			err = c.WriteMessage(1, data)
 			if err != nil {
+				l.log("Error writing to socket: "+err.Error())
 				break
 			}
 		}
@@ -82,15 +103,19 @@ func (l *Lottip) startProxy() {
 	}
 	defer sourceListener.Close()
 
+	sessID := 1
+
 	for {
 		leftConn, err := sourceListener.Accept()
 		if err != nil {
 			log.Print(err)
 			continue
 		}
-
-		go func(conn net.Conn) {
+		
+		go func(conn net.Conn, sessionID int) {
 			defer conn.Close()
+			go l.sessionStarted(sessionID)
+			defer func(){go l.sessionEnded(sessionID)}()
 
 			var wg sync.WaitGroup
 
@@ -104,7 +129,7 @@ func (l *Lottip) startProxy() {
 			wg.Add(2)
 			go func() {
 				defer wg.Done()
-				l.leftToRight(conn, rightConn)
+				l.leftToRight(conn, rightConn, sessionID)
 			}()
 
 			go func() {
@@ -113,7 +138,9 @@ func (l *Lottip) startProxy() {
 			}()
 			wg.Wait()
 
-		}(leftConn)
+		}(leftConn, sessID)
+
+		sessID++
 	}
 }
 
@@ -121,6 +148,15 @@ func (l *Lottip) log(msg string) {
 	if l.verbose {
 		log.Println(msg)
 	}
+}
+
+func (l *Lottip) sessionStarted(sessID int) {
+	l.log("Im in sessionStarted...")
+	l.sessions <- sessionState{SessionID: sessID, State: true, Type: "State"}
+}
+
+func (l *Lottip) sessionEnded(sessID int) {
+	l.sessions <- sessionState{SessionID: sessID, State: false, Type: "State"}
 }
 
 func (l *Lottip) rightToLeft(left, right net.Conn) {
@@ -136,7 +172,7 @@ func (l *Lottip) rightToLeft(left, right net.Conn) {
 	}
 }
 
-func (l *Lottip) leftToRight(left, right net.Conn) {
+func (l *Lottip) leftToRight(left, right net.Conn, sessID int) {
 	isNewSession := true
 
 	for {
@@ -171,7 +207,7 @@ func (l *Lottip) leftToRight(left, right net.Conn) {
 
 		if buf[0] == 0x03 {
 			select {
-			case l.gui <- GuiData{Query: string(buf[1:bn]), SessionStart: isNewSession}:
+			case l.gui <- GuiData{Query: string(buf[1:bn]), SessionStart: isNewSession, SessionID: sessID, Type: "Query"}:
 				isNewSession = false
 			default:
 			}

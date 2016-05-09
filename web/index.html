@@ -38,12 +38,10 @@
                 </div>
 
                 <p class="navbar-text navbar-right">
-                    Status: <span v-bind:class="{'label label-success': isConnected, 'label label-danger': !isConnected}">{{ isConnected ? 'connected' : 'disconnected' }}</span>
-                    Queries: <span class="label label-success">{{ items.length }}</span>
-                    Sessions: <span class="label label-success">{{ sessionCount }}</span>
+                    Status: <span v-bind:class="{'label label-success': isConnected, 'label label-danger': !isConnected}">{{ isConnected ? 'connected' : 'disconnected' }}</span>                    Queries: <span class="label label-success">{{ items.length }}</span> Sessions: <span class="label label-success">{{ sessions.length }}</span>
                 </p>
                 <form class="navbar-form navbar-right">
-                    <input type="text" class="form-control" placeholder="filter">
+                    <input type="text" class="form-control" placeholder="filter" v-model="filter">
                 </form>
             </div>
         </div>
@@ -51,6 +49,13 @@
 
 
     <div class="container">
+
+        <div v-if="items.length">
+            <div class="btn-group" role="group" aria-label="...">
+            <button type="button" class="btn btn-default btn-sm" v-bind:class="{'loading': session.inProgress}" v-for="session in sessions" v-on:click="setSession(session.id)">#{{ $index+1 }}</button>
+            </div>
+        </div>
+
         <table v-if="items.length" class="table table-condensed table-bordered">
             <tr>
                 <th class="tiny">*</th>
@@ -58,32 +63,25 @@
                 <th class="time" v-if="showTime">Time</th>
                 <th>Query</th>
             </tr>
-            <template v-for="item in items">
-                
-            <tr v-if="item.sessionStart">
-                <td colspan="4" class="session-start">
-                    New session
-                </td>
-            </tr>
-            
-            <tr v-bind:class="{'light': item.detailed}" v-if="item.query.length">
-                <td class="tiny">
-                    <a href="#" v-on:click.prevent="showDetails($index)" class="more"><span
-                            class="glyphicon glyphicon-eye-open" aria-hidden="true"></span></a>
-                </td>
-                <td class="tiny" v-if="showId">#{{ $index + 1 }}</td>
-                <td class="time" v-if="showTime">{{ item.time }}</td>
-                <td class="query">
-                    <span>{{ item.query }}</span>
-                </td>
-            </tr>
-            <tr class="detail-view" v-if="item.detailed">
-                <td colspan="4">
-                    <pre><code>{{ item.query }}</code></pre>
-                </td>
-            </tr>
 
-        </template>
+            <template v-for="item in items | exactFilterBy showSession in 'sessId' | filterBy filter in 'query'">            
+                <tr v-bind:class="{'light': item.detailed}">
+                    <td class="tiny">
+                        <a href="#" v-on:click.prevent="showDetails($index)" class="more"><span
+                                class="glyphicon glyphicon-eye-open" aria-hidden="true"></span></a>
+                    </td>
+                    <td class="tiny" v-if="showId">#{{ $index + 1 }}</td>
+                    <td class="time" v-if="showTime">{{ item.time }}</td>
+                    <td class="query">
+                        <span>{{ item.query }}</span>
+                    </td>
+                </tr>
+                <tr class="detail-view" v-if="item.detailed">
+                    <td colspan="4">
+                        <pre><code>{{ item.query }}</code></pre>
+                    </td>
+                </tr>
+            </template>
 
         </table>
 
@@ -94,6 +92,12 @@
     <script src="js/bootstrap.min.js"></script>
     <script src="js/vue.min.js"></script>
     <script src="js/app.js"></script>
+    <script>
+        $('#myTabs a').click(function (e) {
+            e.preventDefault();
+            $(this).tab('show');
+        })
+    </script>
 </body>
 
 </html>

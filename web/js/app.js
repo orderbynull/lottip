@@ -2,6 +2,12 @@ var ws = null;
 
 $(document).ready(function () {
 
+    Vue.filter('exactFilterBy', function (array, needle, inKeyword, key) {
+        return array.filter(function (item) {
+            return item[key] == needle;
+        });
+    });
+
     var vm = new Vue({
         el: '#app',
         data: {
@@ -9,10 +15,15 @@ $(document).ready(function () {
             showTime: false,
             isExpanded: false,
             isConnected: false,
-            sessionCount: 0,
-            items: []
+            showSession: 0,
+            items: [],
+            sessions: [],
         },
         methods: {
+            setSession: function (session) {
+                this.showSession = session
+            },
+
             toggleShowId: function () {
                 this.showId = !this.showId;
             },
@@ -24,7 +35,7 @@ $(document).ready(function () {
             toggleExpanded: function () {
                 var v = this;
                 this.isExpanded = !this.isExpanded;
-                this.items.forEach(function(item, index){
+                this.items.forEach(function (item, index) {
                     item.detailed = v.isExpanded;
                 });
             },
@@ -35,7 +46,8 @@ $(document).ready(function () {
 
             clearItems: function () {
                 this.items = [];
-                this.sessionCount = 0;
+                this.sessions = [];
+                this.showSession = 0;
             },
 
             startWs: function () {
@@ -53,7 +65,7 @@ $(document).ready(function () {
                 }
 
                 ws.onclose = function (evt, reason) {
-                    console.log('DISCONNECTED '+reason);
+                    console.log('DISCONNECTED ' + reason);
                     vue.isConnected = false;
                     ws = null;
                 }
@@ -61,18 +73,37 @@ $(document).ready(function () {
                 ws.onmessage = function (evt) {
                     data = jQuery.parseJSON(evt.data);
 
-                    vue.items.push({
-                        time: new Date().toLocaleTimeString(), 
-                        query: data.Query, 
-                        detailed: vm.isExpanded,
-                        sessionStart: data.SessionStart,
-                    });
-                    
-                    if(data.SessionStart){
-                        vm.sessionCount++
+                    //console.log(data.Type);
+
+                    switch (data.Type) {
+                        case "Query":
+                            vue.items.push({
+                                time: new Date().toLocaleTimeString(),
+                                query: data.Query,
+                                detailed: vm.isExpanded,
+                                sessId: data.SessionID
+                            });
+
+                            if (vue.showSession === 0) {
+                                vue.showSession = data.SessionID;
+                            }
+
+
+                            if (!vue.sessions.some(function (e) { return e.id == data.SessionID })) {
+                                vue.sessions.push({ id: data.SessionID, inProgress: true });
+                            }
+
+                            break;
+
+                        case "State":
+                        console.log(data);
+                            for (var i in vue.sessions) {
+                                if (vue.sessions[i].id == data.SessionID) {
+                                    vue.sessions[i].inProgress = data.State;
+                                }
+                            }
+                            break;
                     }
-                    
-                    console.log(data.SessionStart);
                 }
 
                 ws.onerror = function (evt) {
@@ -90,7 +121,4 @@ $(document).ready(function () {
             }
         }
     });
-    
-//    vm.items.push({time: new Date().toLocaleTimeString('en-US', { hour12: false }), query: "SELECT self.*,self.name_ru as name, self.map_img_ext_ru as map_img_ext, resort.name_ru as resort_name, resort.name_en as resort_name_en, resort.country as country, country.name_ru as country_name, country.name_en as country_name_en, country.name_en as country_name_eng, country.region as region, country.sng as sng, country.sng as is_sng, country.iso_code as country_iso_code FROM uts_city as self LEFT JOIN uts_resort resort ON resort.id = self.resort LEFT JOIN uts_country country ON country.id = resort.country WHERE self.id = '4' AND self.name_ru<>'' AND self.name_ru IS NOT NULL AND self.name_en<>'' AND self.name_en IS NOT NULL LIMIT 1", detailed: false});
-
 });
