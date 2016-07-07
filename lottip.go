@@ -3,40 +3,41 @@ package main
 import (
 	"encoding/json"
 	"flag"
-	"io"
+	"fmt"
 	"log"
 	"net"
 	"net/http"
 	"sync"
 
 	"github.com/gorilla/websocket"
-	// "golang.org/x/text"
+	"github.com/orderbynull/lottip/mysql"
 )
 
+// GuiData holds data sent to browser
 type GuiData struct {
-	Query        string
-	SessionStart bool
-	SessionID    int
-	Type         string
+	Query      string
+	NewSession bool
+	SessionID  int
+	Type       string
 }
 
-type sessionState struct {
-	SessionID    int
-	State bool
-	Type  string
+type SessionState struct {
+	SessionID int
+	State     bool
+	Type      string
 }
 
 var proxyAddr = flag.String("listen", "127.0.0.1:4040", "proxy address")
 var mysqlAddr = flag.String("mysql", "127.0.0.1:3306", "mysql address")
 var guiAddr = flag.String("addr", "127.0.0.1:8080", "http service address")
-var verbose = flag.Bool("verbose", true, "mysql address")
+var verbose = flag.Bool("verbose", true, "verbose mode")
 var upgrader = websocket.Upgrader{CheckOrigin: func(r *http.Request) bool { return true }}
 
 //Lottip defines application
 type Lottip struct {
 	wg        *sync.WaitGroup
 	gui       chan GuiData
-	sessions  chan sessionState
+	sessions  chan SessionState
 	leftAddr  string
 	rightAddr string
 	verbose   bool
@@ -47,7 +48,7 @@ func New(wg *sync.WaitGroup, leftAddr string, rightAddr string, verbose bool) *L
 	l := &Lottip{}
 	l.wg = wg
 	l.gui = make(chan GuiData)
-	l.sessions = make(chan sessionState)
+	l.sessions = make(chan SessionState)
 	l.leftAddr = leftAddr
 	l.rightAddr = rightAddr
 	l.verbose = verbose
@@ -57,11 +58,12 @@ func New(wg *sync.WaitGroup, leftAddr string, rightAddr string, verbose bool) *L
 
 //Run fires up application
 func (l *Lottip) Run() {
-	go l.startWebsocket()
-	go l.startProxy()
+	go l.StartWebsocket()
+	go l.StartProxy()
 }
 
-func (l *Lottip) startWebsocket() {
+//StartWebsocket ...
+func (l *Lottip) StartWebsocket() {
 	http.Handle("/", http.FileServer(FS(false)))
 	http.HandleFunc("/proxy", func(w http.ResponseWriter, r *http.Request) {
 		c, err := upgrader.Upgrade(w, r, nil)
@@ -85,7 +87,7 @@ func (l *Lottip) startWebsocket() {
 
 			err = c.WriteMessage(1, data)
 			if err != nil {
-				l.log("Error writing to socket: "+err.Error())
+				l.log("Error writing to socket: " + err.Error())
 				break
 			}
 		}
@@ -94,7 +96,8 @@ func (l *Lottip) startWebsocket() {
 	log.Fatal(http.ListenAndServe(*guiAddr, nil))
 }
 
-func (l *Lottip) startProxy() {
+//StartProxy ...
+func (l *Lottip) StartProxy() {
 	defer l.wg.Done()
 
 	sourceListener, err := net.Listen("tcp", l.leftAddr)
@@ -103,7 +106,7 @@ func (l *Lottip) startProxy() {
 	}
 	defer sourceListener.Close()
 
-	sessID := 1
+	sessionID := 1
 
 	for {
 		leftConn, err := sourceListener.Accept()
@@ -111,37 +114,39 @@ func (l *Lottip) startProxy() {
 			log.Print(err)
 			continue
 		}
-		
-		go func(conn net.Conn, sessionID int) {
-			defer conn.Close()
-			go l.sessionStarted(sessionID)
-			defer func(){go l.sessionEnded(sessionID)}()
 
-			var wg sync.WaitGroup
+		go l.HandleConnection(leftConn, sessionID)
 
-			rightConn, err := net.Dial("tcp", l.rightAddr)
-			if err != nil {
-				log.Println(err)
-				return
-			}
-			defer rightConn.Close()
-
-			wg.Add(2)
-			go func() {
-				defer wg.Done()
-				l.leftToRight(conn, rightConn, sessionID)
-			}()
-
-			go func() {
-				defer wg.Done()
-				l.rightToLeft(rightConn, conn)
-			}()
-			wg.Wait()
-
-		}(leftConn, sessID)
-
-		sessID++
+		sessionID++
 	}
+}
+
+//HandleConnection ...
+func (l *Lottip) HandleConnection(leftConn net.Conn, sessionID int) {
+	defer leftConn.Close()
+	defer l.SessionEnded(sessionID)
+
+	l.SessionStarted(sessionID)
+
+	var wg sync.WaitGroup
+
+	rightConn, err := net.Dial("tcp", l.rightAddr)
+	if err != nil {
+		return
+	}
+	defer rightConn.Close()
+
+	wg.Add(2)
+	go func() {
+		defer wg.Done()
+		l.LeftToRight(leftConn, rightConn, sessionID)
+	}()
+
+	go func() {
+		defer wg.Done()
+		l.RightToLeft(rightConn, leftConn)
+	}()
+	wg.Wait()
 }
 
 func (l *Lottip) log(msg string) {
@@ -150,16 +155,18 @@ func (l *Lottip) log(msg string) {
 	}
 }
 
-func (l *Lottip) sessionStarted(sessID int) {
-	l.log("Im in sessionStarted...")
-	l.sessions <- sessionState{SessionID: sessID, State: true, Type: "State"}
+//SessionStarted ...
+func (l *Lottip) SessionStarted(sessID int) {
+	l.sessions <- SessionState{SessionID: sessID, State: true, Type: "State"}
 }
 
-func (l *Lottip) sessionEnded(sessID int) {
-	l.sessions <- sessionState{SessionID: sessID, State: false, Type: "State"}
+//SessionEnded ...
+func (l *Lottip) SessionEnded(sessID int) {
+	l.sessions <- SessionState{SessionID: sessID, State: false, Type: "State"}
 }
 
-func (l *Lottip) rightToLeft(left, right net.Conn) {
+//RightToLeft ...
+func (l *Lottip) RightToLeft(left, right net.Conn) {
 	for {
 		buf := make([]byte, 65535)
 		n, err := left.Read(buf)
@@ -172,50 +179,52 @@ func (l *Lottip) rightToLeft(left, right net.Conn) {
 	}
 }
 
-func (l *Lottip) leftToRight(left, right net.Conn, sessID int) {
+//LeftToRight ...
+func (l *Lottip) LeftToRight(left, right net.Conn, sessID int) {
+	//Indicates first query in session
+	//First query means session just started
 	isNewSession := true
 
 	for {
-		header := []byte{0, 0, 0, 0}
-
-		_, err := left.Read(header)
-		if err == io.EOF {
-			break
-		}
-		if err != nil {
-			l.log("ERROR: " + err.Error())
-			break
-		}
-
-		length := int(uint32(header[0]) | uint32(header[1])<<8 | uint32(header[2])<<16)
-
-		buf := make([]byte, length)
-
-		bn, err := left.Read(buf)
-		if err == io.EOF {
-			break
-		}
-		if err != nil {
-			l.log("ERROR: " + err.Error())
-			break
-		}
-
-		_, err = right.Write(append(header, buf[0:bn]...))
+		packet, err := mysql.ProxyPacket(left, right)
 		if err != nil {
 			break
 		}
 
-		if buf[0] == 0x03 {
-			select {
-			case l.gui <- GuiData{Query: string(buf[1:bn]), SessionStart: isNewSession, SessionID: sessID, Type: "Query"}:
-				isNewSession = false
-			default:
-			}
-		}
+		isNewSession = l.PushToWebSocket(packet, isNewSession, sessID)
 	}
 }
 
+//PushToWebSocket ...
+func (l *Lottip) PushToWebSocket(pkt *mysql.Packet, isNewSession bool, sessID int) bool {
+	if pkt.Type == mysql.ComQuery {
+		select {
+		case l.gui <- GuiData{Query: pkt.Query, NewSession: isNewSession, SessionID: sessID, Type: "Query"}:
+			return false
+		default:
+		}
+	}
+
+	return true
+}
+
 func main() {
+	art := `
+                    ___                                               ___   
+                   /  /\          ___         ___       ___          /  /\  
+                  /  /::\        /  /\       /  /\     /  /\        /  /::\ 
+  ___     ___    /  /:/\:\      /  /:/      /  /:/    /  /:/       /  /:/\:\
+ /__/\   /  /\  /  /:/  \:\    /  /:/      /  /:/    /__/::\      /  /:/~/:/
+ \  \:\ /  /:/ /__/:/ \__\:\  /  /::\     /  /::\    \__\/\:\__  /__/:/ /:/ 
+  \  \:\  /:/  \  \:\ /  /:/ /__/:/\:\   /__/:/\:\      \  \:\/\ \  \:\/:/  
+   \  \:\/:/    \  \:\  /:/  \__\/  \:\  \__\/  \:\      \__\::/  \  \::/   
+    \  \::/      \  \:\/:/        \  \:\      \  \:\     /__/:/    \  \:\   
+     \__\/        \  \::/          \__\/       \__\/     \__\/      \  \:\  
+                   \__\/                                             \__\/                                                           
+	`
+
+	fmt.Println(art)
+
 	var wg sync.WaitGroup
 
 	flag.Parse()

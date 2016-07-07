@@ -15,89 +15,85 @@
 
 <body id="app">
     <nav class="navbar navbar-inverse navbar-fixed-top">
-        <div class="container">
+        <div class="container-fluid">
             <div id="navbar" class="navbar-collapse collapse">
 
                 <div class="btn-group" role="group" aria-label="...">
-                    <button type="button" class="btn btn-primary navbar-btn" v-bind:class="{'active': isConnected}" v-on:click="startWs()">Start
-                </button>
-                    <button type="button" class="btn btn-primary navbar-btn" v-bind:class="{'active': !isConnected}" v-on:click="stopWs()">Stop
-                </button>
-                    <button type="button" class="btn btn-primary navbar-btn" v-on:click="clearItems()">Clear
-                </button>
+                    <button type="button" class="btn btn-primary navbar-btn" v-bind:class="{'active': isConnected}" v-on:click="startWs()">Start</button>
+                    <button type="button" class="btn btn-primary navbar-btn" v-bind:class="{'active': !isConnected}" v-on:click="stopWs()">Stop</button>
+                    <button type="button" class="btn btn-primary navbar-btn" v-on:click="clearItems()">Clear</button>
                 </div>
                 |
                 <div class="btn-group" role="group" aria-label="...">
-
-                    <button type="button" class="btn btn-primary navbar-btn" v-bind:class="{'active': isExpanded}" v-on:click="toggleExpanded()">Expanded
-            </button>
-                    <button type="button" class="btn btn-primary navbar-btn" v-bind:class="{'active': showId}" v-on:click="toggleShowId()">Show ID
-            </button>
-                    <button type="button" class="btn btn-primary navbar-btn" v-bind:class="{'active': showTime}" v-on:click="toggleShowTime()">Show time
-            </button>
+                    <button type="button" class="btn btn-primary navbar-btn" v-bind:class="{'active': isExpanded}" v-on:click="toggleExpanded()">Expanded</button>
+                    <button type="button" class="btn btn-primary navbar-btn" v-bind:class="{'active': showId}" v-on:click="toggleShowId()">Show ID</button>
+                    <button type="button" class="btn btn-primary navbar-btn" v-bind:class="{'active': showTime}" v-on:click="toggleShowTime()">Show time</button>
                 </div>
 
                 <p class="navbar-text navbar-right">
-                    Status: <span v-bind:class="{'label label-success': isConnected, 'label label-danger': !isConnected}">{{ isConnected ? 'connected' : 'disconnected' }}</span>                    Queries: <span class="label label-success">{{ items.length }}</span> Sessions: <span class="label label-success">{{ sessions.length }}</span>
+                    Status: <span v-bind:class="{'label label-success': isConnected, 'label label-danger': !isConnected}">{{ isConnected ? 'connected' : 'disconnected' }}</span>
+                    Queries: <span class="label label-success">{{ items.length }}</span> Sessions: <span class="label label-success">{{ sessions.length }}</span>
                 </p>
+
                 <form class="navbar-form navbar-right">
-                    <input type="text" class="form-control" placeholder="filter" v-model="filter">
+                    <div class="col-xs-4">
+                        <input type="text" class="form-control" placeholder="filter" v-model="filter">
+                    </div>
                 </form>
+                
             </div>
         </div>
     </nav>
 
+    <div class="container-fluid">
+        <p class="text-center" v-if="!items.length">No queries yet</p>
 
-    <div class="container">
+        <div class="row" v-if="items.length">
+            <div class="col-sm-2">
+                <div class="panel panel-default">
+                    <div class="panel-heading">Sessions</div>
+                    <div class="panel-body">
+                        <div class="list-group">
+                            <a href="#" class="list-group-item" v-bind:class="{'list-group-item-warning': session.inProgress, 'list-group-item-success': !session.inProgress}"
+                                v-for="session in sessions" v-on:click="setSession(session.id)">Session #{{ $index+1 }}</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-        <div v-if="items.length">
-            <div class="btn-group" role="group" aria-label="...">
-            <button type="button" class="btn btn-default btn-sm" v-bind:class="{'loading': session.inProgress}" v-for="session in sessions" v-on:click="setSession(session.id)">#{{ $index+1 }}</button>
+
+            <div class="col-sm-10">
+                <div class="panel panel-default">
+                    <div class="panel-heading">Queries</div>
+                    <table v-if="items.length" class="table table-condensed table-bordered">
+                        <tr></tr>
+                        <template v-for="item in items | exactFilterBy showSession in 'sessId' | filterBy filter in 'query'">            
+                            <tr v-bind:class="{'light': item.detailed}">
+                                <td class="tiny">
+                                    <a href="#" v-on:click.prevent="showDetails(item.sessId)" class="more"><span class="glyphicon glyphicon-eye-open" aria-hidden="true"></span></a>
+                                </td>
+                                <td class="tiny" v-if="showId">#{{ $index + 1 }}</td>
+                                <td class="time" v-if="showTime">{{ item.time }}</td>
+                                <td class="query">
+                                    <span>{{ item.query }}</span>
+                                </td>
+                            </tr>
+                            <tr class="detail-view" v-if="item.detailed">
+                                <td colspan="4">
+                                    <pre><code>{{ item.query }}</code></pre>
+                                </td>
+                            </tr>
+                        </template>
+                    </table>
+                </div>
             </div>
         </div>
-
-        <table v-if="items.length" class="table table-condensed table-bordered">
-            <tr>
-                <th class="tiny">*</th>
-                <th class="tiny" v-if="showId">#</th>
-                <th class="time" v-if="showTime">Time</th>
-                <th>Query</th>
-            </tr>
-
-            <template v-for="item in items | exactFilterBy showSession in 'sessId' | filterBy filter in 'query'">            
-                <tr v-bind:class="{'light': item.detailed}">
-                    <td class="tiny">
-                        <a href="#" v-on:click.prevent="showDetails($index)" class="more"><span
-                                class="glyphicon glyphicon-eye-open" aria-hidden="true"></span></a>
-                    </td>
-                    <td class="tiny" v-if="showId">#{{ $index + 1 }}</td>
-                    <td class="time" v-if="showTime">{{ item.time }}</td>
-                    <td class="query">
-                        <span>{{ item.query }}</span>
-                    </td>
-                </tr>
-                <tr class="detail-view" v-if="item.detailed">
-                    <td colspan="4">
-                        <pre><code>{{ item.query }}</code></pre>
-                    </td>
-                </tr>
-            </template>
-
-        </table>
-
-        <p class="text-center" v-if="!items.length">No queries yet</p>
     </div>
 
     <script src="js/jquery.min.js"></script>
     <script src="js/bootstrap.min.js"></script>
     <script src="js/vue.min.js"></script>
     <script src="js/app.js"></script>
-    <script>
-        $('#myTabs a').click(function (e) {
-            e.preventDefault();
-            $(this).tab('show');
-        })
-    </script>
 </body>
 
 </html>

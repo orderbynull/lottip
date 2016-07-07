@@ -41,7 +41,8 @@ $(document).ready(function () {
             },
 
             showDetails: function (index) {
-                this.items[index].detailed = !this.items[index].detailed;
+                //
+                //this.items[index].detailed = !this.items[index].detailed;
             },
 
             clearItems: function () {
