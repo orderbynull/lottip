@@ -2,6 +2,7 @@ package lottip
 
 import (
 	"encoding/json"
+	"io"
 	"log"
 	"net"
 	"net/http"
@@ -60,10 +61,12 @@ func (l *Lottip) Run() {
 
 //StartWebsocket ...
 func (l *Lottip) StartWebsocket() {
-	upgrader := websocket.Upgrader{CheckOrigin: func(r *http.Request) bool { return true }}
 
 	http.Handle("/", http.FileServer(embed.FS(false)))
+
 	http.HandleFunc("/proxy", func(w http.ResponseWriter, r *http.Request) {
+
+		upgrader := websocket.Upgrader{CheckOrigin: func(r *http.Request) bool { return true }}
 
 		//Init websocket connection
 		c, err := upgrader.Upgrade(w, r, nil)
@@ -132,10 +135,10 @@ func (l *Lottip) StartProxy() {
 //HandleConnection ...
 func (l *Lottip) HandleConnection(leftConn net.Conn, sessionID int) {
 	defer leftConn.Close()
-	defer l.SessionEnded(sessionID)
+	defer l.SessionStarted(sessionID, false)
 
 	//Send "session started" event to gui
-	l.SessionStarted(sessionID)
+	l.SessionStarted(sessionID, true)
 
 	var wg sync.WaitGroup
 
@@ -168,32 +171,20 @@ func (l *Lottip) log(msg string) {
 }
 
 //SessionStarted sends "session started" event to gui
-func (l *Lottip) SessionStarted(sessID int) {
-	l.sessions <- SessionState{SessionID: sessID, State: true, Type: "State"}
-}
-
-//SessionEnded sends "session ended" event to gui
-func (l *Lottip) SessionEnded(sessID int) {
-	l.sessions <- SessionState{SessionID: sessID, State: false, Type: "State"}
+func (l *Lottip) SessionStarted(sessID int, started bool) {
+	select {
+	case l.sessions <- SessionState{SessionID: sessID, State: started, Type: "State"}:
+	default:
+	}
 }
 
 //RightToLeft passes packets from server to client
-func (l *Lottip) RightToLeft(left, right net.Conn) {
-	for {
-		buf := make([]byte, 65535)
-		n, err := left.Read(buf)
-		if err != nil {
-			log.Println("Error: " + err.Error())
-			break
-		}
-
-		right.Write(buf[:n])
-	}
+func (l *Lottip) RightToLeft(right, left net.Conn) {
+	io.Copy(left, right)
 }
 
 //LeftToRight passes packets from client to server
 func (l *Lottip) LeftToRight(left, right net.Conn, sessID int) {
-
 	//Indicates first query in session
 	//First query means session just started
 	isNewSession := true
