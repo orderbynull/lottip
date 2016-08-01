@@ -1,15 +1,14 @@
-package main
+package lottip
 
 import (
 	"encoding/json"
-	"flag"
-	"fmt"
 	"log"
 	"net"
 	"net/http"
 	"sync"
 
 	"github.com/gorilla/websocket"
+	"github.com/orderbynull/lottip/embed"
 	"github.com/orderbynull/lottip/mysql"
 )
 
@@ -28,12 +27,6 @@ type SessionState struct {
 	Type      string
 }
 
-var proxyAddr = flag.String("listen", "127.0.0.1:4040", "proxy address")
-var mysqlAddr = flag.String("mysql", "127.0.0.1:3306", "mysql address")
-var guiAddr = flag.String("addr", "127.0.0.1:8080", "http service address")
-var verbose = flag.Bool("verbose", true, "verbose mode")
-var upgrader = websocket.Upgrader{CheckOrigin: func(r *http.Request) bool { return true }}
-
 //Lottip defines application structure
 type Lottip struct {
 	wg        *sync.WaitGroup
@@ -41,17 +34,19 @@ type Lottip struct {
 	sessions  chan SessionState
 	leftAddr  string
 	rightAddr string
+	guiAddr   string
 	verbose   bool
 }
 
 //New creates new Lottip application
-func New(wg *sync.WaitGroup, leftAddr string, rightAddr string, verbose bool) *Lottip {
+func New(wg *sync.WaitGroup, leftAddr string, rightAddr string, guiAddr string, verbose bool) *Lottip {
 	l := &Lottip{}
 	l.wg = wg
 	l.gui = make(chan GuiData)
 	l.sessions = make(chan SessionState)
 	l.leftAddr = leftAddr
 	l.rightAddr = rightAddr
+	l.guiAddr = guiAddr
 	l.verbose = verbose
 
 	return l
@@ -65,7 +60,9 @@ func (l *Lottip) Run() {
 
 //StartWebsocket ...
 func (l *Lottip) StartWebsocket() {
-	http.Handle("/", http.FileServer(FS(false)))
+	upgrader := websocket.Upgrader{CheckOrigin: func(r *http.Request) bool { return true }}
+
+	http.Handle("/", http.FileServer(embed.FS(false)))
 	http.HandleFunc("/proxy", func(w http.ResponseWriter, r *http.Request) {
 
 		//Init websocket connection
@@ -99,7 +96,7 @@ func (l *Lottip) StartWebsocket() {
 		}
 	})
 
-	log.Fatal(http.ListenAndServe(*guiAddr, nil))
+	log.Fatal(http.ListenAndServe(l.guiAddr, nil))
 }
 
 //StartProxy ...
@@ -222,33 +219,4 @@ func (l *Lottip) PushToWebSocket(pkt *mysql.Packet, isNewSession bool, sessID in
 	}
 
 	return true
-}
-
-func main() {
-	art := `
-                    ___                                               ___   
-                   /  /\          ___         ___       ___          /  /\  
-                  /  /::\        /  /\       /  /\     /  /\        /  /::\ 
-  ___     ___    /  /:/\:\      /  /:/      /  /:/    /  /:/       /  /:/\:\
- /__/\   /  /\  /  /:/  \:\    /  /:/      /  /:/    /__/::\      /  /:/~/:/
- \  \:\ /  /:/ /__/:/ \__\:\  /  /::\     /  /::\    \__\/\:\__  /__/:/ /:/ 
-  \  \:\  /:/  \  \:\ /  /:/ /__/:/\:\   /__/:/\:\      \  \:\/\ \  \:\/:/  
-   \  \:\/:/    \  \:\  /:/  \__\/  \:\  \__\/  \:\      \__\::/  \  \::/   
-    \  \::/      \  \:\/:/        \  \:\      \  \:\     /__/:/    \  \:\   
-     \__\/        \  \::/          \__\/       \__\/     \__\/      \  \:\  
-                   \__\/                                             \__\/                                                           
-	`
-
-	fmt.Println(art)
-
-	var wg sync.WaitGroup
-
-	flag.Parse()
-
-	wg.Add(1)
-
-	lottip := New(&wg, *proxyAddr, *mysqlAddr, *verbose)
-	lottip.Run()
-
-	wg.Wait()
 }

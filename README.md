@@ -13,8 +13,8 @@ MySQL proxy server with browser based GUI.
 
 4) `cd $GOPATH/src/github.com/orderbynull/lottip`
 
-5) `$GOPATH/bin/esc -o="embed.go" -prefix="web" -ignore="\.idea.*|\.DS.*" -pkg="main" web`
+5) `$GOPATH/bin/esc -o="embed/embed.go" -prefix="web" -ignore="\.idea.*|\.DS.*" -pkg="embed" web`
 
-6) `go build lottip.go embed.go` 
+6) `go build -o server main.go` 
 
-7) `./lottip --listen=:5050 --mysql=192.168.0.195:3306`
+7) `./server --listen=:5050 --mysql=192.168.0.195:3306`
