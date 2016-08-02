@@ -1,4 +1,5 @@
 var ws = null;
+var queryID = 0;
 
 $(document).ready(function () {
 
@@ -15,13 +16,15 @@ $(document).ready(function () {
             showTime: false,
             isExpanded: false,
             isConnected: false,
-            showSession: 0,
+            activeSession: 0,
+            activeSessionIndex: 1,
             items: [],
             sessions: [],
         },
         methods: {
-            setSession: function (session) {
-                this.showSession = session
+            setSession: function (sessionID, sessionIndex) {
+                this.activeSession = sessionID;
+                this.activeSessionIndex = sessionIndex;
             },
 
             toggleShowId: function () {
@@ -40,15 +43,16 @@ $(document).ready(function () {
                 });
             },
 
-            showDetails: function (index) {
-                //
-                //this.items[index].detailed = !this.items[index].detailed;
+            showDetails: function (id) {
+                this.items[id].detailed = !this.items[id].detailed;
             },
 
             clearItems: function () {
                 this.items = [];
                 this.sessions = [];
-                this.showSession = 0;
+                this.activeSession = 0;
+                this.activeSessionIndex = 1;
+                queryID = 0;
             },
 
             startWs: function () {
@@ -79,16 +83,18 @@ $(document).ready(function () {
                     switch (data.Type) {
                         case "Query":
                             vue.items.push({
+                                id: queryID++,
                                 time: new Date().toLocaleTimeString(),
                                 query: data.Query,
                                 detailed: vm.isExpanded,
                                 sessId: data.SessionID
                             });
 
-                            if (vue.showSession === 0) {
-                                vue.showSession = data.SessionID;
-                            }
+                            //console.log(vue.items);
 
+                            if (vue.activeSession === 0) {
+                                vue.activeSession = data.SessionID;
+                            }
 
                             if (!vue.sessions.some(function (e) { return e.id == data.SessionID })) {
                                 vue.sessions.push({ id: data.SessionID, inProgress: true });
@@ -97,7 +103,6 @@ $(document).ready(function () {
                             break;
 
                         case "State":
-                        console.log(data);
                             for (var i in vue.sessions) {
                                 if (vue.sessions[i].id == data.SessionID) {
                                     vue.sessions[i].inProgress = data.State;

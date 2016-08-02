@@ -25,7 +25,7 @@
                 </div>
                 |
                 <div class="btn-group" role="group" aria-label="...">
-                    <button type="button" class="btn btn-primary navbar-btn" v-bind:class="{'active': isExpanded}" v-on:click="toggleExpanded()">Expanded</button>
+                    <button type="button" class="btn btn-primary navbar-btn" v-bind:class="{'active': isExpanded}" v-on:click="toggleExpanded()">Expand</button>
                     <button type="button" class="btn btn-primary navbar-btn" v-bind:class="{'active': showId}" v-on:click="toggleShowId()">Show ID</button>
                     <button type="button" class="btn btn-primary navbar-btn" v-bind:class="{'active': showTime}" v-on:click="toggleShowTime()">Show time</button>
                 </div>
@@ -55,7 +55,7 @@
                     <div class="panel-body">
                         <div class="list-group">
                             <a href="#" class="list-group-item" v-bind:class="{'list-group-item-warning': session.inProgress, 'list-group-item-success': !session.inProgress}"
-                                v-for="session in sessions" v-on:click="setSession(session.id)">Session #{{ $index+1 }}</a>
+                                v-for="session in sessions" v-on:click="setSession(session.id, $index + 1)">session #{{ $index + 1 }}</a>
                         </div>
                     </div>
                 </div>
@@ -64,13 +64,13 @@
 
             <div class="col-sm-10">
                 <div class="panel panel-default">
-                    <div class="panel-heading">Queries</div>
+                    <div class="panel-heading">Queries in session #{{ activeSessionIndex }}</div>
                     <table v-if="items.length" class="table table-condensed table-bordered">
                         <tr></tr>
-                        <template v-for="item in items | exactFilterBy showSession in 'sessId' | filterBy filter in 'query'">            
+                        <template v-for="item in items | exactFilterBy activeSession in 'sessId' | filterBy filter in 'query'">            
                             <tr v-bind:class="{'light': item.detailed}">
                                 <td class="tiny">
-                                    <a href="#" v-on:click.prevent="showDetails(item.sessId)" class="more"><span class="glyphicon glyphicon-eye-open" aria-hidden="true"></span></a>
+                                    <a href="#" v-on:click.prevent="showDetails(item.id)" class="more"><span class="glyphicon glyphicon-eye-open" aria-hidden="true"></span></a>
                                 </td>
                                 <td class="tiny" v-if="showId">#{{ $index + 1 }}</td>
                                 <td class="time" v-if="showTime">{{ item.time }}</td>
