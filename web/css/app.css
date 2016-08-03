@@ -141,3 +141,7 @@ pre, code {
 .list-group-item:last-child{
     border-radius: 0;  
 }
+
+.hljs{
+    background: none;
+}

@@ -41,10 +41,17 @@ $(document).ready(function () {
                 this.items.forEach(function (item, index) {
                     item.detailed = v.isExpanded;
                 });
+
+                if(this.isExpanded){
+                    $('pre code').each(function(i, block) {
+                        hljs.highlightBlock(block);
+                    });
+                }
             },
 
             showDetails: function (id) {
                 this.items[id].detailed = !this.items[id].detailed;
+                hljs.highlightBlock($('pre#snip-'+id+' code').get(0));
             },
 
             clearItems: function () {
