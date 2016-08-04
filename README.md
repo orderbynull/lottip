@@ -3,7 +3,7 @@
 MySQL proxy server with browser based GUI.
 **Under development.**
 
-# Installation
+# Installation from sources
 
 1) `go get -t github.com/orderbynull/lottip`
 
