@@ -22,6 +22,38 @@ $(document).ready(function () {
             sessions: [],
         },
         methods: {
+            handleQuery: function (json) {
+                this.items.push({
+                    id: queryID++,
+                    time: new Date().toLocaleTimeString(),
+                    query: data.Query,
+                    detailed: this.isExpanded,
+                    sessId: data.SessionID
+                });
+
+                if (this.activeSession === 0) {
+                    this.activeSession = data.SessionID;
+                }
+
+                if (!this.sessions.some(function (e) { return e.id == data.SessionID })) {
+                    this.sessions.push({ id: data.SessionID, inProgress: true });
+                }
+
+                if (this.isExpanded) {
+                    $('pre code').each(function (i, block) {
+                        hljs.highlightBlock(block);
+                    });
+                }
+            },
+
+            handleSession: function (json) {
+                for (var i in this.sessions) {
+                    if (this.sessions[i].id == data.SessionID) {
+                        this.sessions[i].inProgress = data.State;
+                    }
+                }
+            },
+
             setSession: function (sessionID, sessionIndex) {
                 this.activeSession = sessionID;
                 this.activeSessionIndex = sessionIndex;
@@ -42,8 +74,8 @@ $(document).ready(function () {
                     item.detailed = v.isExpanded;
                 });
 
-                if(this.isExpanded){
-                    $('pre code').each(function(i, block) {
+                if (this.isExpanded) {
+                    $('pre code').each(function (i, block) {
                         hljs.highlightBlock(block);
                     });
                 }
@@ -51,7 +83,7 @@ $(document).ready(function () {
 
             showDetails: function (id) {
                 this.items[id].detailed = !this.items[id].detailed;
-                hljs.highlightBlock($('pre#snip-'+id+' code').get(0));
+                hljs.highlightBlock($('pre#snip-' + id + ' code').get(0));
             },
 
             clearItems: function () {
@@ -63,7 +95,6 @@ $(document).ready(function () {
             },
 
             startWs: function () {
-
                 if (ws !== null)
                     return;
 
@@ -72,12 +103,10 @@ $(document).ready(function () {
                 ws = new WebSocket("ws://127.0.0.1:8080/proxy");
 
                 ws.onopen = function (evt) {
-                    console.log('CONNECTED');
                     vue.isConnected = true;
                 }
 
                 ws.onclose = function (evt, reason) {
-                    console.log('DISCONNECTED ' + reason);
                     vue.isConnected = false;
                     ws = null;
                 }
@@ -85,42 +114,15 @@ $(document).ready(function () {
                 ws.onmessage = function (evt) {
                     data = jQuery.parseJSON(evt.data);
 
-                    //console.log(data.Type);
-
                     switch (data.Type) {
                         case "Query":
-                            vue.items.push({
-                                id: queryID++,
-                                time: new Date().toLocaleTimeString(),
-                                query: data.Query,
-                                detailed: vm.isExpanded,
-                                sessId: data.SessionID
-                            });
-
-                            //console.log(vue.items);
-
-                            if (vue.activeSession === 0) {
-                                vue.activeSession = data.SessionID;
-                            }
-
-                            if (!vue.sessions.some(function (e) { return e.id == data.SessionID })) {
-                                vue.sessions.push({ id: data.SessionID, inProgress: true });
-                            }
-
+                            vue.handleQuery(data);
                             break;
 
                         case "State":
-                            for (var i in vue.sessions) {
-                                if (vue.sessions[i].id == data.SessionID) {
-                                    vue.sessions[i].inProgress = data.State;
-                                }
-                            }
+                            vue.handleSession(data);
                             break;
                     }
-                }
-
-                ws.onerror = function (evt) {
-                    console.log("ERROR: " + evt.data);
                 }
             },
 
