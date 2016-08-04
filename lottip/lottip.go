@@ -185,6 +185,7 @@ func (l *Lottip) RightToLeft(right, left net.Conn) {
 
 //LeftToRight passes packets from client to server
 func (l *Lottip) LeftToRight(left, right net.Conn, sessID int) {
+
 	//Indicates first query in session
 	//First query means session just started
 	isNewSession := true
