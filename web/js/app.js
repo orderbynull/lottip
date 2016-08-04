@@ -2,6 +2,7 @@ var ws = null;
 var queryID = 0;
 
 $(document).ready(function () {
+    if (!window.WebSocket) alert("WebSocket not supported by this browser");
 
     Vue.filter('exactFilterBy', function (array, needle, inKeyword, key) {
         return array.filter(function (item) {
@@ -9,7 +10,7 @@ $(document).ready(function () {
         });
     });
 
-    var vm = new Vue({
+    new Vue({
         el: '#app',
         data: {
             showId: false,
@@ -22,6 +23,9 @@ $(document).ready(function () {
             sessions: [],
         },
         methods: {
+            /**
+             * Handle data that holds query came from WebSocket connection
+             */
             handleQuery: function (json) {
                 this.items.push({
                     id: queryID++,
@@ -46,6 +50,9 @@ $(document).ready(function () {
                 }
             },
 
+            /**
+             * Handle data that holds session state(active/done) came from WebSocket connection
+             */
             handleSession: function (json) {
                 for (var i in this.sessions) {
                     if (this.sessions[i].id == data.SessionID) {
@@ -54,19 +61,31 @@ $(document).ready(function () {
                 }
             },
 
+            /**
+             * Set currently active session that should be shown to user
+             */
             setSession: function (sessionID, sessionIndex) {
                 this.activeSession = sessionID;
                 this.activeSessionIndex = sessionIndex;
             },
 
+            /**
+             * Toggle visibility of query id
+             */
             toggleShowId: function () {
                 this.showId = !this.showId;
             },
 
+            /**
+             * Toggle visibility of query datetime
+             */
             toggleShowTime: function () {
                 this.showTime = !this.showTime;
             },
 
+            /**
+             * Toggle all queries mode - expanded or collapsed
+             */
             toggleExpanded: function () {
                 var v = this;
                 this.isExpanded = !this.isExpanded;
@@ -81,11 +100,17 @@ $(document).ready(function () {
                 }
             },
 
+            /**
+             * Toggle single query mode - expanded or collapsed
+             */
             showDetails: function (id) {
                 this.items[id].detailed = !this.items[id].detailed;
                 hljs.highlightBlock($('pre#snip-' + id + ' code').get(0));
             },
 
+            /**
+             * Remove all queries and sessions
+             */
             clearItems: function () {
                 this.items = [];
                 this.sessions = [];
@@ -94,10 +119,10 @@ $(document).ready(function () {
                 queryID = 0;
             },
 
+            /**
+             * Init WebSocket connection
+             */
             startWs: function () {
-                if (ws !== null)
-                    return;
-
                 var vue = this;
 
                 ws = new WebSocket("ws://127.0.0.1:8080/proxy");
@@ -108,7 +133,6 @@ $(document).ready(function () {
 
                 ws.onclose = function (evt, reason) {
                     vue.isConnected = false;
-                    ws = null;
                 }
 
                 ws.onmessage = function (evt) {
@@ -126,12 +150,14 @@ $(document).ready(function () {
                 }
             },
 
+            /**
+             * Close WebSocket connection
+             */
             stopWs: function () {
-                if (ws !== null)
+                if (ws !== null) {
                     ws.close();
-
-                ws = null;
-
+                    ws = null;
+                }
                 this.isConnected = false;
             }
         }

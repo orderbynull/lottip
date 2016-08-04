@@ -2,6 +2,7 @@ package mysql
 
 import (
 	"fmt"
+	"io"
 	"net"
 )
 
@@ -65,6 +66,8 @@ const ComResetConnection byte = 0x1f
 //ComDaemon ...
 const ComDaemon byte = 0x1d
 
+const maxPacketSize = 1<<24 - 1
+
 //Packet represents MySQL packet
 type Packet struct {
 	Payload []byte
@@ -76,7 +79,7 @@ type Packet struct {
 func ReadPacket(left net.Conn) (*Packet, error) {
 	header := []byte{0, 0, 0, 0}
 
-	_, err := left.Read(header)
+	_, err := io.ReadFull(left, header)
 	if err != nil {
 		return nil, fmt.Errorf("Error while reading packet header: %s", err.Error())
 	}
@@ -85,7 +88,7 @@ func ReadPacket(left net.Conn) (*Packet, error) {
 
 	buf := make([]byte, bodyLength)
 
-	bn, err := left.Read(buf)
+	bn, err := io.ReadFull(left, buf)
 	if err != nil {
 		return nil, fmt.Errorf("Error while reading packet body: %s", err.Error())
 	}
