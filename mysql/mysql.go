@@ -24,14 +24,14 @@ func ReadPacket(left net.Conn) (*Packet, error) {
 
 	bodyLength := int(uint32(header[0]) | uint32(header[1])<<8 | uint32(header[2])<<16)
 
-	buf := make([]byte, bodyLength)
+	body := make([]byte, bodyLength)
 
-	bn, err := io.ReadFull(left, buf)
+	bn, err := io.ReadFull(left, body)
 	if err != nil {
 		return nil, fmt.Errorf("Error while reading packet body: %s", err.Error())
 	}
 
-	return &Packet{Payload: append(header, buf[0:bn]...), Type: buf[0], Query: string(buf[1:bn])}, nil
+	return &Packet{Payload: append(header, body[0:bn]...), Type: body[0], Query: string(body[1:bn])}, nil
 }
 
 //WritePacket writes packet to connection
