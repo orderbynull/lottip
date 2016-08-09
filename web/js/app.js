@@ -23,6 +23,16 @@ $(document).ready(function () {
             sessions: [],
         },
         methods: {
+            highlightVisible: function () {
+                $('pre code').each(function (i, block) {
+                    hljs.highlightBlock(block);
+                });
+            },
+
+            highlightOne: function (id) {
+                hljs.highlightBlock($('pre#snip-' + id + ' code').get(0));
+            },
+
             /**
              * Handle data that holds query came from WebSocket connection
              */
@@ -44,9 +54,7 @@ $(document).ready(function () {
                 }
 
                 if (this.isExpanded) {
-                    $('pre code').each(function (i, block) {
-                        hljs.highlightBlock(block);
-                    });
+                    this.highlightVisible();
                 }
             },
 
@@ -67,6 +75,10 @@ $(document).ready(function () {
             setSession: function (sessionID, sessionIndex) {
                 this.activeSession = sessionID;
                 this.activeSessionIndex = sessionIndex;
+
+                if (this.isExpanded) {
+                    this.highlightVisible()
+                }
             },
 
             /**
@@ -94,9 +106,7 @@ $(document).ready(function () {
                 });
 
                 if (this.isExpanded) {
-                    $('pre code').each(function (i, block) {
-                        hljs.highlightBlock(block);
-                    });
+                    this.highlightVisible()
                 }
             },
 
@@ -105,7 +115,7 @@ $(document).ready(function () {
              */
             showDetails: function (id) {
                 this.items[id].detailed = !this.items[id].detailed;
-                hljs.highlightBlock($('pre#snip-' + id + ' code').get(0));
+                this.highlightOne(id);
             },
 
             /**
@@ -156,7 +166,6 @@ $(document).ready(function () {
             stopWs: function () {
                 if (ws !== null) {
                     ws.close();
-                    ws = null;
                 }
                 this.isConnected = false;
             }

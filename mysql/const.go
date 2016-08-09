@@ -41,7 +41,7 @@ const ComProcessInfo byte = 0x0a
 const ComConnect byte = 0x0b
 
 //ComProcessKill asks the server to terminate a connection
-//As of MySQL 5.7.11, COM_PROCESS_KILL is deprecated and will be removed in a future version of MySQL
+//As of MySQL 5.7.11, ComProcessKill is deprecated and will be removed in a future version of MySQL
 const ComProcessKill byte = 0x0c
 
 //ComDebug triggers a dump on internal debug info to stdout of the mysql-server

@@ -17,21 +17,24 @@ type Packet struct {
 func ReadPacket(left net.Conn) (*Packet, error) {
 	header := []byte{0, 0, 0, 0}
 
-	_, err := io.ReadFull(left, header)
-	if err != nil {
-		return nil, fmt.Errorf("Error while reading packet header: %s", err.Error())
+	if _, err := io.ReadFull(left, header); err == io.EOF {
+		return nil, io.ErrUnexpectedEOF
+	} else if err != nil {
+		return nil, err
 	}
 
 	bodyLength := int(uint32(header[0]) | uint32(header[1])<<8 | uint32(header[2])<<16)
 
 	body := make([]byte, bodyLength)
 
-	bn, err := io.ReadFull(left, body)
-	if err != nil {
-		return nil, fmt.Errorf("Error while reading packet body: %s", err.Error())
+	n, err := io.ReadFull(left, body)
+	if err == io.EOF {
+		return nil, io.ErrUnexpectedEOF
+	} else if err != nil {
+		return nil, err
 	}
 
-	return &Packet{Payload: append(header, body[0:bn]...), Type: body[0], Query: string(body[1:bn])}, nil
+	return &Packet{Payload: append(header, body[0:n]...), Type: body[0], Query: string(body[1:n])}, nil
 }
 
 //WritePacket writes packet to connection
