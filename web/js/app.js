@@ -37,6 +37,10 @@ $(document).ready(function () {
              * Handle data that holds query came from WebSocket connection
              */
             handleQuery: function (json) {
+                if(!this.isConnected){
+                    return;
+                }
+
                 this.items.push({
                     id: queryID++,
                     time: new Date().toLocaleTimeString(),
@@ -164,9 +168,9 @@ $(document).ready(function () {
              * Close WebSocket connection
              */
             stopWs: function () {
-                if (ws !== null) {
-                    ws.close();
-                }
+                // if (ws !== null) {
+                //     ws.close();
+                // }
                 this.isConnected = false;
             }
         }
