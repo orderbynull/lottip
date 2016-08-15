@@ -1,5 +1,9 @@
 package mysql
 
+//ResponseOkPacket is sent from the server to the client to signal successful completion of a command.
+//As of MySQL 5.7.5, OK packes are also used to indicate EOF, and EOF packets are deprecated.
+const ResponseOkPacket byte = 0x00
+
 const (
 	//ComSleep is internal server command
 	ComSleep byte = iota

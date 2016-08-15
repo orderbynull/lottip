@@ -2,7 +2,7 @@ package lottip
 
 import (
 	"encoding/json"
-	"io"
+	"fmt"
 	"log"
 	"net"
 	"net/http"
@@ -180,7 +180,17 @@ func (l *Lottip) SessionStarted(sessID int, started bool) {
 
 //RightToLeft passes packets from server to client
 func (l *Lottip) RightToLeft(right, left net.Conn) {
-	io.Copy(left, right)
+	for {
+		pkt, err := mysql.ProxyPacket(right, left)
+		if err != nil {
+			break
+		}
+
+		_, err = mysql.ParseOk(pkt)
+		if err == nil {
+			fmt.Println("OK received")
+		}
+	}
 }
 
 //LeftToRight passes packets from client to server
@@ -200,6 +210,7 @@ func (l *Lottip) LeftToRight(left, right net.Conn, sessID int) {
 		if err == nil {
 			isNewSession = l.PushToWebSocket(queryPkt, isNewSession, sessID)
 		}
+		queryPkt = nil
 	}
 }
 
