@@ -191,23 +191,24 @@ func (l *Lottip) LeftToRight(left, right net.Conn, sessID int) {
 	isNewSession := true
 
 	for {
-		packet, err := mysql.ProxyPacket(left, right)
+		pkt, err := mysql.ProxyPacket(left, right)
 		if err != nil {
 			break
 		}
 
-		isNewSession = l.PushToWebSocket(packet, isNewSession, sessID)
+		queryPkt, err := mysql.ParseComQuery(pkt)
+		if err == nil {
+			isNewSession = l.PushToWebSocket(queryPkt, isNewSession, sessID)
+		}
 	}
 }
 
 //PushToWebSocket ...
-func (l *Lottip) PushToWebSocket(pkt *mysql.Packet, isNewSession bool, sessID int) bool {
-	if pkt.Type == mysql.ComQuery {
-		select {
-		case l.gui <- GuiData{Query: pkt.Query, NewSession: isNewSession, SessionID: sessID, Type: "Query"}:
-			return false
-		default:
-		}
+func (l *Lottip) PushToWebSocket(pkt *mysql.ComQueryPkt, isNewSession bool, sessID int) bool {
+	select {
+	case l.gui <- GuiData{Query: pkt.Query, NewSession: isNewSession, SessionID: sessID, Type: "Query"}:
+		return false
+	default:
 	}
 
 	return true

@@ -6,18 +6,11 @@ import (
 	"net"
 )
 
-//Packet represents MySQL packet
-type Packet struct {
-	Payload []byte
-	Type    byte
-	Query   string
-}
-
 //ReadPacket reads MySQL packet into Packet struct
-func ReadPacket(left net.Conn) (*Packet, error) {
+func ReadPacket(conn net.Conn) ([]byte, error) {
 	header := []byte{0, 0, 0, 0}
 
-	if _, err := io.ReadFull(left, header); err == io.EOF {
+	if _, err := io.ReadFull(conn, header); err == io.EOF {
 		return nil, io.ErrUnexpectedEOF
 	} else if err != nil {
 		return nil, err
@@ -27,19 +20,19 @@ func ReadPacket(left net.Conn) (*Packet, error) {
 
 	body := make([]byte, bodyLength)
 
-	n, err := io.ReadFull(left, body)
+	n, err := io.ReadFull(conn, body)
 	if err == io.EOF {
 		return nil, io.ErrUnexpectedEOF
 	} else if err != nil {
 		return nil, err
 	}
 
-	return &Packet{Payload: append(header, body[0:n]...), Type: body[0], Query: string(body[1:n])}, nil
+	return append(header, body[0:n]...), nil
 }
 
 //WritePacket writes packet to connection
-func WritePacket(pkt *Packet, conn net.Conn) (int, error) {
-	n, err := conn.Write(pkt.Payload)
+func WritePacket(pkt []byte, conn net.Conn) (int, error) {
+	n, err := conn.Write(pkt)
 	if err != nil {
 		return 0, fmt.Errorf("Error while writing packet payload: %s", err.Error())
 	}
@@ -47,17 +40,17 @@ func WritePacket(pkt *Packet, conn net.Conn) (int, error) {
 	return n, nil
 }
 
-//ProxyPacket is a shortcut for ReadPacket and then WritePacket
-func ProxyPacket(left, right net.Conn) (*Packet, error) {
-	packet, err := ReadPacket(left)
+//ProxyPacket is a shortcut for ReadPacket + WritePacket
+func ProxyPacket(src, dst net.Conn) ([]byte, error) {
+	pkt, err := ReadPacket(src)
 	if err != nil {
 		return nil, err
 	}
 
-	_, err = WritePacket(packet, right)
+	_, err = WritePacket(pkt, dst)
 	if err != nil {
 		return nil, err
 	}
 
-	return packet, nil
+	return pkt, nil
 }
