@@ -4,6 +4,9 @@ package mysql
 //As of MySQL 5.7.5, OK packes are also used to indicate EOF, and EOF packets are deprecated.
 const ResponseOkPacket byte = 0x00
 
+//ResponseErrPacket signals that an error occurred
+const ResponseErrPacket byte = 0xff
+
 const (
 	//ComSleep is internal server command
 	ComSleep byte = iota

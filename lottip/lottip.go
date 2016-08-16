@@ -189,6 +189,11 @@ func (l *Lottip) RightToLeft(right, left net.Conn) {
 		_, err = mysql.ParseOk(pkt)
 		if err == nil {
 			fmt.Println("OK received")
+		} else {
+			e, err := mysql.ParseErr(pkt)
+			if err == nil {
+				fmt.Printf("ERR received: (%d)%s", e.ErrorCode, e.ErrorMessage)
+			}
 		}
 	}
 }
