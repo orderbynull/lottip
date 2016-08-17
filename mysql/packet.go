@@ -3,7 +3,26 @@ package mysql
 import "errors"
 
 //ErrMalformedPacket means packet is malformed or cannot be parsed via selected function
-var ErrMalformedPacket = errors.New("Malformed packet")
+var ErrMalformedPacket = errors.New("malformed packet")
+
+//ErrUnknownPacket means packet type cannot be detected
+var ErrUnknownPacket = errors.New("unknown packet")
+
+//GetResponsePktType returns response packet type without parsing it into struct
+func GetResponsePktType(pkt []byte) (byte, error) {
+	if len(pkt) < 4 {
+		return 0, ErrMalformedPacket
+	}
+
+	switch pkt[4] {
+	case
+		ResponseOkPacket,
+		ResponseErrPacket:
+		return pkt[4], nil
+	}
+
+	return 0, ErrUnknownPacket
+}
 
 //ComQueryPkt represents COM_QUERY request packet
 type ComQueryPkt struct {

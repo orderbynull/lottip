@@ -28,6 +28,12 @@ type SessionState struct {
 	Type      string
 }
 
+type QueryStatus struct {
+	QueryID int
+	Success bool
+	Error   string
+}
+
 //Lottip defines application structure
 type Lottip struct {
 	wg        *sync.WaitGroup
@@ -186,14 +192,22 @@ func (l *Lottip) RightToLeft(right, left net.Conn) {
 			break
 		}
 
-		_, err = mysql.ParseOk(pkt)
+		pktType, err := mysql.GetResponsePktType(pkt)
 		if err == nil {
-			fmt.Println("OK received")
-		} else {
-			e, err := mysql.ParseErr(pkt)
-			if err == nil {
-				fmt.Printf("ERR received: (%d)%s", e.ErrorCode, e.ErrorMessage)
+			switch pktType {
+			case mysql.ResponseOkPacket:
+				okPkt, err := mysql.ParseOk(pkt)
+				if err == nil {
+					fmt.Printf("OK received. Rows affected: %d\n", okPkt.AffectedRows)
+				}
+			case mysql.ResponseErrPacket:
+				errPkt, err := mysql.ParseErr(pkt)
+				if err == nil {
+					fmt.Printf("ERR received: #%d %s\n", errPkt.ErrorCode, errPkt.ErrorMessage)
+				}
 			}
+		} else {
+			fmt.Println("Unknown packet")
 		}
 	}
 }
