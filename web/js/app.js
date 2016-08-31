@@ -168,10 +168,9 @@ $(document).ready(function () {
              * Close WebSocket connection
              */
             stopWs: function () {
-                // if (ws !== null) {
-                //     ws.close();
-                // }
-                this.isConnected = false;
+                if (ws !== null) {
+                    ws.close();
+                }
             }
         }
     });

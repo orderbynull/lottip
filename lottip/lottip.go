@@ -79,7 +79,14 @@ func (l *Lottip) StartWebsocket() {
 		if err != nil {
 			return
 		}
-		defer c.Close()
+
+		//Proper handling 'close' message from the peer
+		//https://godoc.org/github.com/gorilla/websocket#hdr-Control_Messages
+		go func() {
+			if _, _, err := c.NextReader(); err != nil {
+				c.Close()
+			}
+		}()
 
 		//Holds data to be sent via websocket
 		var data []byte
