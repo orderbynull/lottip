@@ -23,16 +23,6 @@ $(document).ready(function () {
             sessions: [],
         },
         methods: {
-            highlightVisible: function () {
-                $('pre code').each(function (i, block) {
-                    hljs.highlightBlock(block);
-                });
-            },
-
-            highlightOne: function (id) {
-                hljs.highlightBlock($('pre#snip-' + id + ' code').get(0));
-            },
-
             /**
              * Handle data that holds query came from WebSocket connection
              */
@@ -57,10 +47,6 @@ $(document).ready(function () {
                 if (!this.sessions.some(function (e) { return e.id == data.SessionID })) {
                     this.sessions.push({ id: data.SessionID, inProgress: true });
                 }
-
-                if (this.isExpanded) {
-                    this.highlightVisible();
-                }
             },
 
             /**
@@ -80,10 +66,6 @@ $(document).ready(function () {
             setSession: function (sessionID, sessionIndex) {
                 this.activeSession = sessionID;
                 this.activeSessionIndex = sessionIndex;
-
-                if (this.isExpanded) {
-                    this.highlightVisible()
-                }
             },
 
             /**
@@ -109,10 +91,6 @@ $(document).ready(function () {
                 this.items.forEach(function (item, index) {
                     item.detailed = v.isExpanded;
                 });
-
-                if (this.isExpanded) {
-                    this.highlightVisible()
-                }
             },
 
             /**
@@ -120,7 +98,6 @@ $(document).ready(function () {
              */
             showDetails: function (id) {
                 this.items[id].detailed = !this.items[id].detailed;
-                this.highlightOne(id);
             },
 
             /**

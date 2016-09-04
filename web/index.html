@@ -9,7 +9,7 @@
     <link rel="stylesheet" href="css/bootstrap.min.css">
     <link rel="stylesheet" href="css/bootstrap-theme.min.css" >
     <link rel="stylesheet" href="css/fonts.css">
-    <link rel="stylesheet" href="css/highlight-default.css">
+    <!--<link rel="stylesheet" href="css/highlight-default.css">-->
     <link rel="stylesheet" href="css/app.css">
 </head>
 
@@ -85,7 +85,7 @@
                             </tr>
                             <tr class="detail-view" v-show="item.detailed">
                                 <td colspan="4">
-                                    <pre id="snip-{{ item.id }}"><code class="sql">{{ item.query }}</code></pre>
+                                    <pre><code class="sql">{{ item.query }}</code></pre>
                                 </td>
                             </tr>
                         </template>
@@ -98,7 +98,7 @@
     <script src="js/jquery.min.js"></script>
     <script src="js/bootstrap.min.js"></script>
     <script src="js/vue.min.js"></script>
-    <script src="js/highlight.pack.js"></script>
+    <!--<script src="js/highlight.pack.js"></script>-->
     <script src="js/app.js"></script>
 </body>
 
