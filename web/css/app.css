@@ -2,7 +2,7 @@ body {
     padding-top: 70px;
     font-family: "Inconsolata", "Helvetica Neue", "Open Sans", Arial, sans-serif;
     font-size: 17px;
-    background-color: #f9f9f9;
+    background-color: #f4f4f4;
 }
 
 .btn:focus,.btn:active {
@@ -121,10 +121,14 @@ pre, code {
     background: none;
     font-size: 17px;
     font-family: inherit;
+    padding-top: 10px;
+    padding-left: 0; 
 }
 
 .detail-view {
-    background: #fcfcfc;
+    background: #fff;
+    padding-top:7px !important;
+    padding-left: 17px !important;
 }
 
 .list-group{
@@ -142,6 +146,6 @@ pre, code {
     border-radius: 0;  
 }
 
-.hljs{
-    background: none;
+.query-results{
+    padding: 15px 0 15px 0;
 }

@@ -7,7 +7,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
     <link rel="stylesheet" href="css/bootstrap.min.css">
-    <link rel="stylesheet" href="css/bootstrap-theme.min.css" >
+    <link rel="stylesheet" href="css/bootstrap-theme.min.css">
     <link rel="stylesheet" href="css/fonts.css">
     <!--<link rel="stylesheet" href="css/highlight-default.css">-->
     <link rel="stylesheet" href="css/app.css">
@@ -31,8 +31,7 @@
                 </div>
 
                 <p class="navbar-text navbar-right">
-                    Status: <span v-bind:class="{'label label-success': isConnected, 'label label-danger': !isConnected}">{{ isConnected ? 'connected' : 'disconnected' }}</span>
-                    Queries: <span class="label label-success">{{ items.length }}</span> Sessions: <span class="label label-success">{{ sessions.length }}</span>
+                    Status: <span v-bind:class="{'label label-success': isConnected, 'label label-danger': !isConnected}">{{ isConnected ? 'connected' : 'disconnected' }}</span>                    Queries: <span class="label label-success">{{ items.length }}</span> Sessions: <span class="label label-success">{{ sessions.length }}</span>
                 </p>
 
                 <form class="navbar-form navbar-right">
@@ -40,7 +39,7 @@
                         <input type="text" class="form-control" placeholder="filter" v-model="filter">
                     </div>
                 </form>
-                
+
             </div>
         </div>
     </nav>
@@ -66,7 +65,7 @@
                     <div class="panel-heading">Queries in session #{{ activeSessionIndex }}</div>
                     <table v-if="items.length" class="table table-condensed table-bordered">
                         <tr></tr>
-                        <template v-for="item in items | exactFilterBy activeSession in 'sessId' | filterBy filter in 'query'">            
+                        <template v-for="item in items | exactFilterBy activeSession in 'sessId' | filterBy filter in 'query'">
                             <tr v-bind:class="{'light': item.detailed || item.actions}">
                                 <td class="tiny">
                                     <a href="#" v-on:click.prevent="showDetails(item.id)" class="more"><span class="glyphicon glyphicon-eye-open" aria-hidden="true"></span></a>
@@ -76,16 +75,29 @@
                                 <td class="query" @mouseenter="toggleQueryActions(item.id)" @mouseleave="toggleQueryActions(item.id)">
                                     <span>{{ item.query }}</span>
                                     <span class="query-actions" v-if="item.actions">
-                                        <button type="button" class="btn btn-default btn-xs">Copy</button>
-                                        <button type="button" class="btn btn-default btn-xs">Gist</button>
-                                        <button type="button" class="btn btn-default btn-xs">Execute</button>
-                                        <button type="button" class="btn btn-default btn-xs">Explain</button>
+                                        <button type="button" class="btn btn-primary btn-xs">Copy</button>
+                                        <button type="button" class="btn btn-primary btn-xs">Gist</button>
+                                        <button type="button" class="btn btn-primary btn-xs" v-on:click="executeSql(item.id)">Execute</button>
+                                        <button type="button" class="btn btn-primary btn-xs">Explain</button>
                                     </span>
                                 </td>
                             </tr>
-                            <tr class="detail-view" v-show="item.detailed">
-                                <td colspan="4">
-                                    <pre><code class="sql">{{ item.query }}</code></pre>
+                            <tr v-show="item.detailed">
+                                <td colspan="4" class="detail-view">
+
+                                    <div class="btn-group btn-group-xs" role="group">
+                                        <button type="button" class="btn btn-primary" v-bind:class="{'active': item.showSql}" v-on:click="showSql(item.id) ">SQL</button>
+                                        <button type="button" class="btn btn-primary" v-bind:class="{ 'active': item.showResults}" v-on:click="showResults(item.id)">Results</button>
+                                    </div>
+
+                                    <div class="query-sql" v-show="item.showSql">
+                                        <pre><code class="sql ">{{ item.query }}</code></pre>
+                                    </div>
+
+                                    <div class="query-results" v-show="item.showResults">
+                                        <demo-grid :data="gridData" :columns="gridColumns" :filter-key="searchQuery">
+                                        </demo-grid>
+                                    </div>
                                 </td>
                             </tr>
                         </template>
@@ -95,11 +107,34 @@
         </div>
     </div>
 
-    <script src="js/jquery.min.js"></script>
-    <script src="js/bootstrap.min.js"></script>
-    <script src="js/vue.min.js"></script>
-    <!--<script src="js/highlight.pack.js"></script>-->
-    <script src="js/app.js"></script>
+    <script type="text/x-template" id="grid-template">
+        <table class="table table-condensed">
+            <thead>
+            <tr>
+                <th v-for="key in columns"
+                :class="{active: sortKey == key}">
+                {{key | capitalize}}
+                </th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr v-for="
+                entry in data
+                | filterBy filterKey
+                | orderBy sortKey sortOrders[sortKey]">
+                <td v-for="key in columns">
+                {{entry[key]}}
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </script>
+
+    <script src="js/jquery.min.js "></script>
+    <script src="js/bootstrap.min.js "></script>
+    <script src="js/vue.min.js "></script>
+    <!--<script src="js/highlight.pack.js "></script>-->
+    <script src="js/app.js "></script>
 </body>
 
 </html>

@@ -4,6 +4,25 @@ var queryID = 0;
 $(document).ready(function () {
     if (!window.WebSocket) alert("WebSocket not supported by this browser");
 
+    Vue.component('demo-grid', {
+        template: '#grid-template',
+        props: {
+            data: Array,
+            columns: Array,
+            filterKey: String
+        },
+        data: function () {
+            var sortOrders = {}
+            this.columns.forEach(function (key) {
+                sortOrders[key] = 1
+            })
+            return {
+                sortKey: '',
+                sortOrders: sortOrders
+            }
+        }
+    })
+
     Vue.filter('exactFilterBy', function (array, needle, inKeyword, key) {
         return array.filter(function (item) {
             return item[key] == needle;
@@ -13,6 +32,15 @@ $(document).ready(function () {
     var app = new Vue({
         el: '#app',
         data: {
+            earchQuery: '',
+            gridColumns: ['name', 'power'],
+            gridData: [
+                { name: 'Chuck Norris', power: Infinity },
+                { name: 'Bruce Lee', power: 9000 },
+                { name: 'Jackie Chan', power: 7000 },
+                { name: 'Jet Li', power: 8000 }
+            ],
+
             showId: false,
             showTime: false,
             isExpanded: false,
@@ -23,6 +51,22 @@ $(document).ready(function () {
             sessions: [],
         },
         methods: {
+            executeSql: function (id) {
+                this.showResults(id);
+            },
+
+            showSql: function (id) {
+                this.items[id].detailed = true;
+                this.items[id].showSql = true;
+                this.items[id].showResults = false;
+            },
+
+            showResults: function (id) {
+                this.items[id].detailed = true;
+                this.items[id].showSql = false;
+                this.items[id].showResults = true;
+            },
+
             /**
              * Handle data that holds query came from WebSocket connection
              */
@@ -37,7 +81,9 @@ $(document).ready(function () {
                     query: data.Query,
                     detailed: this.isExpanded,
                     sessId: data.SessionID,
-                    actions: false
+                    actions: false,
+                    showSql: true,
+                    showResults: false
                 });
 
                 if (this.activeSession === 0) {
