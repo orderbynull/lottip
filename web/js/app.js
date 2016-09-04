@@ -10,7 +10,7 @@ $(document).ready(function () {
         });
     });
 
-    new Vue({
+    var app = new Vue({
         el: '#app',
         data: {
             showId: false,
@@ -37,7 +37,7 @@ $(document).ready(function () {
              * Handle data that holds query came from WebSocket connection
              */
             handleQuery: function (json) {
-                if(!this.isConnected){
+                if (!this.isConnected) {
                     return;
                 }
 
@@ -46,7 +46,8 @@ $(document).ready(function () {
                     time: new Date().toLocaleTimeString(),
                     query: data.Query,
                     detailed: this.isExpanded,
-                    sessId: data.SessionID
+                    sessId: data.SessionID,
+                    actions: false
                 });
 
                 if (this.activeSession === 0) {
@@ -123,6 +124,13 @@ $(document).ready(function () {
             },
 
             /**
+             * Toggle query actions buttons
+             */
+            toggleQueryActions: function (id) {
+                this.items[id].actions = !this.items[id].actions;
+            },
+
+            /**
              * Remove all queries and sessions
              */
             clearItems: function () {
@@ -174,4 +182,6 @@ $(document).ready(function () {
             }
         }
     });
+
+    app.startWs();
 });

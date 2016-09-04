@@ -61,21 +61,26 @@
                 </div>
             </div>
 
-
             <div class="col-sm-10">
                 <div class="panel panel-default">
                     <div class="panel-heading">Queries in session #{{ activeSessionIndex }}</div>
                     <table v-if="items.length" class="table table-condensed table-bordered">
                         <tr></tr>
                         <template v-for="item in items | exactFilterBy activeSession in 'sessId' | filterBy filter in 'query'">            
-                            <tr v-bind:class="{'light': item.detailed}">
+                            <tr v-bind:class="{'light': item.detailed || item.actions}">
                                 <td class="tiny">
                                     <a href="#" v-on:click.prevent="showDetails(item.id)" class="more"><span class="glyphicon glyphicon-eye-open" aria-hidden="true"></span></a>
                                 </td>
                                 <td class="tiny" v-if="showId">#{{ $index + 1 }}</td>
                                 <td class="time" v-if="showTime">{{ item.time }}</td>
-                                <td class="query">
+                                <td class="query" @mouseenter="toggleQueryActions(item.id)" @mouseleave="toggleQueryActions(item.id)">
                                     <span>{{ item.query }}</span>
+                                    <span class="query-actions" v-if="item.actions">
+                                        <button type="button" class="btn btn-default btn-xs">Copy</button>
+                                        <button type="button" class="btn btn-default btn-xs">Gist</button>
+                                        <button type="button" class="btn btn-default btn-xs">Execute</button>
+                                        <button type="button" class="btn btn-default btn-xs">Explain</button>
+                                    </span>
                                 </td>
                             </tr>
                             <tr class="detail-view" v-show="item.detailed">
