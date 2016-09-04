@@ -47,63 +47,69 @@
     <div class="container-fluid">
         <p class="text-center" v-if="!items.length">No queries yet</p>
 
+        <div class="row">
+            <div class="col-sm-12">
+                <span class="dot" v-for="session in sessions" v-bind:class="{'done': !session.inProgress, 'pending': session.inProgress}">&#9679;</span>
+            </div>
+        </div>
+
         <div class="row" v-if="items.length">
-            <div class="col-sm-2">
-                <div class="panel panel-default">
-                    <div class="panel-heading">Sessions</div>
-                    <div class="panel-body">
-                        <div class="list-group">
-                            <a href="#" class="list-group-item" v-bind:class="{'list-group-item-warning': session.inProgress, 'list-group-item-success': !session.inProgress}"
-                                v-for="session in sessions" v-on:click="setSession(session.id, $index + 1)">session #{{ $index + 1 }}</a>
+            <div class="col-sm-12">
+
+                <div class="panel panel-primary">
+                    <div class="panel-heading clearfix">
+                        <h4 class="panel-title pull-left">Queries in session</h4>
+                        <div class="input-group">
+                            <select class="form-control input-sm" v-model="activeSession">
+                                <option v-for="session in sessions" value="{{ session.id }}">#{{ $index + 1 }}</option>
+                            </select>
                         </div>
                     </div>
-                </div>
-            </div>
-
-            <div class="col-sm-10">
-                <div class="panel panel-default">
-                    <div class="panel-heading">Queries in session #{{ activeSessionIndex }}</div>
-                    <table v-if="items.length" class="table table-condensed table-bordered">
-                        <tr></tr>
-                        <template v-for="item in items | exactFilterBy activeSession in 'sessId' | filterBy filter in 'query'">
-                            <tr v-bind:class="{'light': item.detailed || item.actions}">
-                                <td class="tiny">
-                                    <a href="#" v-on:click.prevent="showDetails(item.id)" class="more"><span class="glyphicon glyphicon-eye-open" aria-hidden="true"></span></a>
-                                </td>
-                                <td class="tiny" v-if="showId">#{{ $index + 1 }}</td>
-                                <td class="time" v-if="showTime">{{ item.time }}</td>
-                                <td class="query" @mouseenter="toggleQueryActions(item.id)" @mouseleave="toggleQueryActions(item.id)">
-                                    <span>{{ item.query }}</span>
-                                    <span class="query-actions" v-if="item.actions">
+                    
+                    <div class="panel-body">
+                        <table v-if="items.length" class="table table-condensed table-bordered">
+                            <tr></tr>
+                            <template v-for="item in items | exactFilterBy activeSession in 'sessId' | filterBy filter in 'query'">
+                                <tr v-bind:class="{'light': item.detailed || item.actions}">
+                                    <td class="tiny">
+                                        <a href="#" v-on:click.prevent="showDetails(item.id)" class="more"><span class="glyphicon glyphicon-eye-open" aria-hidden="true"></span></a>
+                                    </td>
+                                    <td class="tiny" v-if="showId">#{{ $index + 1 }}</td>
+                                    <td class="time" v-if="showTime">{{ item.time }}</td>
+                                    <td class="query" @mouseenter="toggleQueryActions(item.id)" @mouseleave="toggleQueryActions(item.id)">
+                                        <span>{{ item.query }}</span>
+                                        <span class="query-actions" v-if="item.actions">
                                         <button type="button" class="btn btn-primary btn-xs">Copy</button>
                                         <button type="button" class="btn btn-primary btn-xs">Gist</button>
                                         <button type="button" class="btn btn-primary btn-xs" v-on:click="executeSql(item.id)">Execute</button>
                                         <button type="button" class="btn btn-primary btn-xs">Explain</button>
                                     </span>
-                                </td>
-                            </tr>
-                            <tr v-show="item.detailed">
-                                <td colspan="4" class="detail-view">
+                                    </td>
+                                </tr>
+                                <tr v-show="item.detailed">
+                                    <td colspan="4" class="detail-view">
 
-                                    <div class="btn-group btn-group-xs" role="group">
-                                        <button type="button" class="btn btn-primary" v-bind:class="{'active': item.showSql}" v-on:click="showSql(item.id) ">SQL</button>
-                                        <button type="button" class="btn btn-primary" v-bind:class="{ 'active': item.showResults}" v-on:click="showResults(item.id)">Results</button>
-                                    </div>
+                                        <div class="btn-group btn-group-xs" role="group">
+                                            <button type="button" class="btn btn-primary" v-bind:class="{'active': item.showSql}" v-on:click="showSql(item.id) ">SQL</button>
+                                            <button type="button" class="btn btn-primary" v-bind:class="{ 'active': item.showResults}" v-on:click="showResults(item.id)">Results</button>
+                                        </div>
 
-                                    <div class="query-sql" v-show="item.showSql">
-                                        <pre><code class="sql ">{{ item.query }}</code></pre>
-                                    </div>
+                                        <div class="query-sql" v-show="item.showSql">
+                                            <pre><code class="sql ">{{ item.query }}</code></pre>
+                                        </div>
 
-                                    <div class="query-results" v-show="item.showResults">
-                                        <demo-grid :data="gridData" :columns="gridColumns" :filter-key="searchQuery">
-                                        </demo-grid>
-                                    </div>
-                                </td>
-                            </tr>
-                        </template>
-                    </table>
+                                        <div class="query-results" v-show="item.showResults">
+                                            <demo-grid :data="gridData" :columns="gridColumns" :filter-key="searchQuery">
+                                            </demo-grid>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </template>
+                        </table>
+                    </div>
                 </div>
             </div>
+
         </div>
     </div>
 

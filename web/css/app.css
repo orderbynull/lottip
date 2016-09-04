@@ -1,5 +1,5 @@
 body {
-    padding-top: 70px;
+    padding-top: 55px;
     font-family: "Inconsolata", "Helvetica Neue", "Open Sans", Arial, sans-serif;
     font-size: 17px;
     background-color: #f4f4f4;
@@ -22,6 +22,7 @@ body {
     box-shadow: 0.5px 0.5px 0.5px 0 rgba(174,174,174,0.5);
     color:#464646;
     background-color: #fff;
+    margin-bottom: 0;
 }
 
 .session-start{
@@ -89,7 +90,7 @@ a.more {
 }
 
 .panel-heading{
-    padding: 2px 15px;
+    padding: 1px 15px;
 }
 
 .panel-body{
@@ -126,7 +127,7 @@ pre, code {
 }
 
 .detail-view {
-    background: #fff;
+    background: rgba(254, 251, 236, 0.38);;
     padding-top:7px !important;
     padding-left: 17px !important;
 }
@@ -148,4 +149,30 @@ pre, code {
 
 .query-results{
     padding: 15px 0 15px 0;
+}
+
+.dot{
+    display: inline-block;
+}
+
+.dot.pending{
+    color: rgba(240, 16, 5, 0.55);
+}
+
+.dot.done{
+    color: rgb(120, 200, 107);
+}
+
+h4.panel-title{
+    padding-top: 6.5px;
+    margin-right: 10px;
+}
+
+.panel-primary{
+    border: none;
+}
+
+.panel-primary>.panel-heading{
+    background-image: none;
+    background-color: #336699;  
 }
