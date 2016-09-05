@@ -13,44 +13,38 @@ import (
 	"github.com/orderbynull/lottip/mysql"
 )
 
-// GuiData holds data sent to browser via websocket
-type GuiData struct {
+//gQuery holds query and it's session sent via websocket
+type gQuery struct {
 	Query      string
 	NewSession bool
 	SessionID  int
 	Type       string
 }
 
-//SessionState ...
-type SessionState struct {
+//gState holds sessions state sent via websocket
+type gState struct {
 	SessionID int
 	State     bool
 	Type      string
 }
 
-type QueryStatus struct {
-	QueryID int
-	Success bool
-	Error   string
-}
-
 //Lottip defines application structure
 type Lottip struct {
-	wg        *sync.WaitGroup
-	gui       chan GuiData
-	sessions  chan SessionState
-	leftAddr  string
-	rightAddr string
-	guiAddr   string
-	verbose   bool
+	wg         *sync.WaitGroup
+	gQueryChan chan gQuery
+	gStateChan chan gState
+	leftAddr   string
+	rightAddr  string
+	guiAddr    string
+	verbose    bool
 }
 
 //New creates new Lottip application
 func New(leftAddr string, rightAddr string, guiAddr string, verbose bool) *Lottip {
 	l := &Lottip{}
 	l.wg = &sync.WaitGroup{}
-	l.gui = make(chan GuiData)
-	l.sessions = make(chan SessionState)
+	l.gQueryChan = make(chan gQuery)
+	l.gStateChan = make(chan gState)
 	l.leftAddr = leftAddr
 	l.rightAddr = rightAddr
 	l.guiAddr = guiAddr
@@ -97,10 +91,10 @@ func (l *Lottip) StartWebsocket() {
 		for {
 			//Reading data came for gui and preparing to send
 			select {
-			case q := <-l.gui:
+			case q := <-l.gQueryChan:
 				data, _ = json.Marshal(q)
 				break
-			case s := <-l.sessions:
+			case s := <-l.gStateChan:
 				data, _ = json.Marshal(s)
 				l.log("State received")
 				break
@@ -141,20 +135,20 @@ func (l *Lottip) StartProxy() {
 		}
 
 		//Parse and proxy packets to server
-		go l.HandleConnection(leftConn, sessionID)
+		go l.handleConnection(leftConn, sessionID)
 
 		//Each new connection from client means new session
 		sessionID++
 	}
 }
 
-//HandleConnection ...
-func (l *Lottip) HandleConnection(leftConn net.Conn, sessionID int) {
+//handleConnection ...
+func (l *Lottip) handleConnection(leftConn net.Conn, sessionID int) {
 	defer leftConn.Close()
-	defer l.SessionStarted(sessionID, false)
+	defer l.sessionState(sessionID, false)
 
 	//Send "session started" event to gui
-	l.SessionStarted(sessionID, true)
+	l.sessionState(sessionID, true)
 
 	var wg sync.WaitGroup
 
@@ -187,9 +181,9 @@ func (l *Lottip) log(msg string) {
 }
 
 //SessionStarted sends "session started" event to gui
-func (l *Lottip) SessionStarted(sessID int, started bool) {
+func (l *Lottip) sessionState(sessID int, started bool) {
 	select {
-	case l.sessions <- SessionState{SessionID: sessID, State: started, Type: "State"}:
+	case l.gStateChan <- gState{SessionID: sessID, State: started, Type: "State"}:
 	default:
 	}
 }
@@ -246,7 +240,7 @@ func (l *Lottip) LeftToRight(left, right net.Conn, sessID int) {
 //PushToWebSocket ...
 func (l *Lottip) PushToWebSocket(pkt *mysql.ComQueryPkt, isNewSession bool, sessID int) bool {
 	select {
-	case l.gui <- GuiData{Query: pkt.Query, NewSession: isNewSession, SessionID: sessID, Type: "Query"}:
+	case l.gQueryChan <- gQuery{Query: pkt.Query, NewSession: isNewSession, SessionID: sessID, Type: "Query"}:
 		return false
 	default:
 	}
