@@ -17,4 +17,4 @@ MySQL proxy server with browser based GUI.
 
 6) `go build -o server main.go` 
 
-7) `./server --listen=:5050 --mysql=192.168.0.195:3306`
+7) `./server --listen=:4040 --mysql=192.168.0.195 --port=3306`
