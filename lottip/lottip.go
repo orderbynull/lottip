@@ -46,9 +46,9 @@ type Lottip struct {
 }
 
 //New creates new Lottip application
-func New(wg *sync.WaitGroup, leftAddr string, rightAddr string, guiAddr string, verbose bool) *Lottip {
+func New(leftAddr string, rightAddr string, guiAddr string, verbose bool) *Lottip {
 	l := &Lottip{}
-	l.wg = wg
+	l.wg = &sync.WaitGroup{}
 	l.gui = make(chan GuiData)
 	l.sessions = make(chan SessionState)
 	l.leftAddr = leftAddr
@@ -61,12 +61,15 @@ func New(wg *sync.WaitGroup, leftAddr string, rightAddr string, guiAddr string, 
 
 //Run fires up application
 func (l *Lottip) Run() {
+	l.wg.Add(2)
 	go l.StartWebsocket()
 	go l.StartProxy()
+	l.wg.Wait()
 }
 
 //StartWebsocket ...
 func (l *Lottip) StartWebsocket() {
+	defer l.wg.Done()
 
 	http.Handle("/", http.FileServer(embed.FS(true)))
 
