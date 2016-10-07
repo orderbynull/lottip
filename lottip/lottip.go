@@ -2,7 +2,6 @@ package lottip
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
 	"net"
 	"net/http"
@@ -11,14 +10,14 @@ import (
 	"github.com/gorilla/websocket"
 	"github.com/orderbynull/lottip/embed"
 	"github.com/orderbynull/lottip/mysql"
+	"github.com/orderbynull/sqlfmt"
 )
 
 //gQuery holds query and it's session sent via websocket
 type gQuery struct {
-	Query      string
-	NewSession bool
-	SessionID  int
-	Type       string
+	Query     string
+	SessionID int
+	Type      string
 }
 
 //gState holds sessions state sent via websocket
@@ -61,7 +60,7 @@ func (l *Lottip) Run() {
 	l.wg.Wait()
 }
 
-//StartWebsocket ...
+//StartWebsocket starts listening for WS connection
 func (l *Lottip) StartWebsocket() {
 	defer l.wg.Done()
 
@@ -112,7 +111,7 @@ func (l *Lottip) StartWebsocket() {
 	log.Fatal(http.ListenAndServe(l.guiAddr, nil))
 }
 
-//StartProxy ...
+//StartProxy starts listening for MySQL connection
 func (l *Lottip) StartProxy() {
 	defer l.wg.Done()
 
@@ -200,28 +199,24 @@ func (l *Lottip) RightToLeft(right, left net.Conn) {
 		if err == nil {
 			switch pktType {
 			case mysql.ResponseOkPacket:
-				okPkt, err := mysql.ParseOk(pkt)
+				_, err := mysql.ParseOk(pkt)
 				if err == nil {
-					fmt.Printf("OK received. Rows affected: %d\n", okPkt.AffectedRows)
+					l.log("OK received")
 				}
 			case mysql.ResponseErrPacket:
-				errPkt, err := mysql.ParseErr(pkt)
+				_, err := mysql.ParseErr(pkt)
 				if err == nil {
-					fmt.Printf("ERR received: #%d %s\n", errPkt.ErrorCode, errPkt.ErrorMessage)
+					l.log("ERR received")
 				}
 			}
 		} else {
-			fmt.Println("Unknown packet")
+			l.log("Unknown packet")
 		}
 	}
 }
 
 //LeftToRight passes packets from client to server
 func (l *Lottip) LeftToRight(left, right net.Conn, sessID int) {
-
-	//Indicates first query in session
-	//First query means session just started
-	isNewSession := true
 
 	for {
 		pkt, err := mysql.ProxyPacket(left, right)
@@ -231,19 +226,16 @@ func (l *Lottip) LeftToRight(left, right net.Conn, sessID int) {
 
 		queryPkt, err := mysql.ParseComQuery(pkt)
 		if err == nil {
-			isNewSession = l.PushToWebSocket(queryPkt, isNewSession, sessID)
+			l.PushToWebSocket(queryPkt, sessID)
 		}
 		queryPkt = nil
 	}
 }
 
 //PushToWebSocket ...
-func (l *Lottip) PushToWebSocket(pkt *mysql.ComQueryPkt, isNewSession bool, sessID int) bool {
+func (l *Lottip) PushToWebSocket(pkt *mysql.ComQueryPkt, sessID int) {
 	select {
-	case l.gQueryChan <- gQuery{Query: pkt.Query, NewSession: isNewSession, SessionID: sessID, Type: "Query"}:
-		return false
+	case l.gQueryChan <- gQuery{Query: sqlfmt.Sformat(pkt.Query), SessionID: sessID, Type: "Query"}:
 	default:
 	}
-
-	return true
 }

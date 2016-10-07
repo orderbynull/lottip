@@ -1,10 +1,13 @@
 package mysql
 
 import (
-	"fmt"
+	"errors"
 	"io"
 	"net"
 )
+
+//ErrUnknownPacket means packet type cannot be detected
+var ErrWritePacket = errors.New("error while writing packet payload")
 
 //ReadPacket reads MySQL packet into Packet struct
 func ReadPacket(conn net.Conn) ([]byte, error) {
@@ -34,7 +37,7 @@ func ReadPacket(conn net.Conn) ([]byte, error) {
 func WritePacket(pkt []byte, conn net.Conn) (int, error) {
 	n, err := conn.Write(pkt)
 	if err != nil {
-		return 0, fmt.Errorf("Error while writing packet payload: %s", err.Error())
+		return 0, ErrWritePacket
 	}
 
 	return n, nil
