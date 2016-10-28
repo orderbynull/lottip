@@ -10,7 +10,6 @@ import (
 	"github.com/gorilla/websocket"
 	"github.com/orderbynull/lottip/embed"
 	"github.com/orderbynull/lottip/mysql"
-	"github.com/orderbynull/sqlfmt"
 )
 
 //gQuery holds query and it's session sent via websocket
@@ -235,7 +234,7 @@ func (l *Lottip) LeftToRight(left, right net.Conn, sessID int) {
 //PushToWebSocket ...
 func (l *Lottip) PushToWebSocket(pkt *mysql.ComQueryPkt, sessID int) {
 	select {
-	case l.gQueryChan <- gQuery{Query: sqlfmt.Sformat(pkt.Query), SessionID: sessID, Type: "Query"}:
+	case l.gQueryChan <- gQuery{Query: pkt.Query, SessionID: sessID, Type: "Query"}:
 	default:
 	}
 }
