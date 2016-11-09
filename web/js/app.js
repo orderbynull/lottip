@@ -43,6 +43,7 @@ $(document).ready(function () {
 
             showId: false,
             showTime: false,
+            showSidebar: true,
             isExpanded: false,
             isConnected: false,
             activeSession: 0,
@@ -51,6 +52,10 @@ $(document).ready(function () {
             sessions: [],
         },
         methods: {
+            toggleSidebar: function () {
+                this.showSidebar = !this.showSidebar;
+            },
+
             executeSql: function (id) {
                 this.showResults(id);
             },
@@ -65,6 +70,20 @@ $(document).ready(function () {
                 this.items[id].detailed = true;
                 this.items[id].showSql = false;
                 this.items[id].showResults = true;
+            },
+
+            getSessionIndex: function (sessionID) {
+                var key = null;
+
+                this.sessions.every(function (session, index) {
+                    if (session.id === sessionID) {
+                        key = index;
+                        return false;
+                    }
+                    return true;
+                });
+
+                return key;
             },
 
             /**
@@ -90,8 +109,17 @@ $(document).ready(function () {
                     this.activeSession = data.SessionID;
                 }
 
-                if (!this.sessions.some(function (e) { return e.id == data.SessionID })) {
-                    this.sessions.push({ id: data.SessionID, inProgress: true });
+                var index = this.getSessionIndex(data.SessionID);
+
+                if (index === null) {
+                    this.sessions.push({
+                        id: data.SessionID,
+                        inProgress: true,
+                        queries: 1
+                    });
+                }
+                else {
+                    this.sessions[index]['queries']++;
                 }
             },
 

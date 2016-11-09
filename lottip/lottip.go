@@ -189,28 +189,28 @@ func (l *Lottip) sessionState(sessID int, started bool) {
 //RightToLeft passes packets from server to client
 func (l *Lottip) RightToLeft(right, left net.Conn) {
 	for {
-		pkt, err := mysql.ProxyPacket(right, left)
+		_, err := mysql.ProxyPacket(right, left)
 		if err != nil {
 			break
 		}
 
-		pktType, err := mysql.GetResponsePktType(pkt)
-		if err == nil {
-			switch pktType {
-			case mysql.ResponseOkPacket:
-				_, err := mysql.ParseOk(pkt)
-				if err == nil {
-					l.log("OK received")
-				}
-			case mysql.ResponseErrPacket:
-				_, err := mysql.ParseErr(pkt)
-				if err == nil {
-					l.log("ERR received")
-				}
-			}
-		} else {
-			l.log("Unknown packet")
-		}
+		//pktType, err := mysql.GetResponsePktType(pkt)
+		//if err == nil {
+		//	switch pktType {
+		//	case mysql.ResponseOkPacket:
+		//		_, err := mysql.ParseOk(pkt)
+		//		if err == nil {
+		//			//l.log("OK received")
+		//		}
+		//	case mysql.ResponseErrPacket:
+		//		_, err := mysql.ParseErr(pkt)
+		//		if err == nil {
+		//			//l.log("ERR received")
+		//		}
+		//	}
+		//} else {
+		//	//l.log("Unknown packet")
+		//}
 	}
 }
 
