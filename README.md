@@ -10,7 +10,7 @@ It consists of 2 parts: proxy server and embedded GUI for better experience.
 ![Example 2](https://raw.githubusercontent.com/orderbynull/lottip/master/shots/2.png)
 
 # Main features
-
+TODO
 
 # Installation
 ###### From sources
