@@ -33,13 +33,13 @@ This tells server to listen on any interface on port **4040** for incoming MySQL
 Now go to [http://127.0.0.1:8080](http://127.0.0.1:8080) and you'll see nice GUI.
 
 # Options
-| option        | description                                                                                          | example                |
-| ------------- | ---------------------------------------------------------------------------------------------------- | ---------------------- |
-| `--listen`    | `<ip>:<port>` of proxy server. Your code should make connections to that address to make proxy work  | `--listen=:4040`       |
-| `--mysql`     | MySQL server address                                                                                 | `--mysql=192.168.0.195`|
-| `--port`      | MySQL server port                                                                                    | `--port=3306`          |
-| `--addr`      | `<ip>:<port>` of embedded GUI                                                                        | `--addr=127.0.0.1:8081`|
-| `--verbose`   | Print debug information to console                                                                   | `--verbose=true`       |
+| option available       | description                                                                                          | example of option usage                
+| ------------- | ---------------------------------------------------------------------------------------------------- | ---------------------- 
+| `--listen`    | `<ip>:<port>` of proxy server. Your code should make connections to that address to make proxy work  | `--listen=:4040`       
+| `--mysql`     | MySQL server address                                                                                 | `--mysql=192.168.0.195`
+| `--port`      | MySQL server port                                                                                    | `--port=3306`          
+| `--addr`      | `<ip>:<port>` of embedded GUI                                                                        | `--addr=127.0.0.1:8081`
+| `--verbose`   | Print debug information to console                                                                   | `--verbose=true`           
 
 # Default options
 TODO
