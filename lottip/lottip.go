@@ -223,18 +223,19 @@ func (l *Lottip) LeftToRight(left, right net.Conn, sessID int) {
 			break
 		}
 
-		queryPkt, err := mysql.ParseComQuery(pkt)
+		query, err := mysql.GetQuery(pkt)
 		if err == nil {
-			l.PushToWebSocket(queryPkt, sessID)
+			l.PushToWebSocket(query, sessID)
 		}
-		queryPkt = nil
+
+		query = ""
 	}
 }
 
 //PushToWebSocket ...
-func (l *Lottip) PushToWebSocket(pkt *mysql.ComQueryPkt, sessID int) {
+func (l *Lottip) PushToWebSocket(query string, sessID int) {
 	select {
-	case l.gQueryChan <- gQuery{Query: pkt.Query, SessionID: sessID, Type: "Query"}:
+	case l.gQueryChan <- gQuery{Query: query, SessionID: sessID, Type: "Query"}:
 	default:
 	}
 }

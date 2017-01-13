@@ -1,6 +1,8 @@
 package mysql
 
-import "errors"
+import (
+	"errors"
+)
 
 //ErrMalformedPacket means packet is malformed or cannot be parsed via selected function
 var ErrMalformedPacket = errors.New("malformed packet")
@@ -24,6 +26,23 @@ func GetResponsePktType(pkt []byte) (byte, error) {
 	return 0, ErrUnknownPacket
 }
 
+func GetQuery(pkt []byte) (string, error){
+	if len(pkt) < 6 {
+		return "", ErrMalformedPacket
+	}
+
+	switch pkt[4] {
+	case ComQuery:
+		p, err := ParseComQuery(pkt)
+		return p.Query, err
+	case ComStmtPrepare:
+		p, err := ParseComStmtPrepare(pkt)
+		return p.Query, err
+	default:
+		return "", ErrMalformedPacket
+	}
+}
+
 //ComQueryPkt represents COM_QUERY request packet
 type ComQueryPkt struct {
 	Query string
@@ -36,6 +55,19 @@ func ParseComQuery(pkt []byte) (*ComQueryPkt, error) {
 	}
 
 	if pkt[4] != ComQuery {
+		return nil, ErrMalformedPacket
+	}
+
+	return &ComQueryPkt{Query: string(pkt[5:])}, nil
+}
+
+//ParseComStmtPrepare extracts sql query from COM_SMT_PREPARE command
+func ParseComStmtPrepare(pkt []byte) (*ComQueryPkt, error) {
+	if len(pkt) < 6 {
+		return nil, ErrMalformedPacket
+	}
+
+	if pkt[4] != ComStmtPrepare {
 		return nil, ErrMalformedPacket
 	}
 
