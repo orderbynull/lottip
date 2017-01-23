@@ -35,10 +35,10 @@ $(document).ready(function () {
             earchQuery: '',
             gridColumns: ['name', 'power'],
             gridData: [
-                { name: 'Chuck Norris', power: Infinity },
-                { name: 'Bruce Lee', power: 9000 },
-                { name: 'Jackie Chan', power: 7000 },
-                { name: 'Jet Li', power: 8000 }
+                {name: 'Chuck Norris', power: Infinity},
+                {name: 'Bruce Lee', power: 9000},
+                {name: 'Jackie Chan', power: 7000},
+                {name: 'Jet Li', power: 8000}
             ],
 
             showId: false,
@@ -52,6 +52,13 @@ $(document).ready(function () {
             sessions: [],
         },
         methods: {
+            copyDialog: function (id) {
+                window.prompt("Copy to clipboard: Ctrl+C, Enter", this.items[id].query);
+            },
+
+            makeGist: function (id) {
+            },
+
             toggleSidebar: function () {
                 this.showSidebar = !this.showSidebar;
             },
@@ -198,7 +205,10 @@ $(document).ready(function () {
             startWs: function () {
                 var vue = this;
 
-                ws = new WebSocket("ws://127.0.0.1:8080/proxy");
+                var parser = document.createElement('a');
+                parser.href = window.location;
+
+                ws = new WebSocket("ws://" + parser.host + "/proxy");
 
                 ws.onopen = function (evt) {
                     vue.isConnected = true;

@@ -83,8 +83,8 @@
                                     <td class="query" @mouseenter="toggleQueryActions(item.id)" @mouseleave="toggleQueryActions(item.id)">
                                         <span>{{ item.query }}</span>
                                         <span class="query-actions" v-if="item.actions">
-                                        <button type="button" class="btn btn-primary btn-xs">Copy</button>
-                                        <button type="button" class="btn btn-primary btn-xs">Gist</button>
+                                        <button type="button" class="btn btn-primary btn-xs" @click="copyDialog(item.id)">Copy</button>
+                                        <!--<button type="button" class="btn btn-primary btn-xs" @click="makeGist(item.id)">Gist</button>-->
                                         <!--<button type="button" class="btn btn-primary btn-xs" v-on:click="executeSql(item.id)">Execute</button>-->
                                         <!--<button type="button" class="btn btn-primary btn-xs">Explain</button>-->
                                     </span>
@@ -93,10 +93,10 @@
                                 <tr v-show="item.detailed">
                                     <td colspan="4" class="detail-view">
 
-                                        <div class="btn-group btn-group-xs" role="group">
-                                            <button type="button" class="btn btn-primary" v-bind:class="{'active': item.showSql}" v-on:click="showSql(item.id) ">SQL</button>
+                                        <!--<div class="btn-group btn-group-xs" role="group">-->
+                                            <!--<button type="button" class="btn btn-primary" v-bind:class="{'active': item.showSql}" v-on:click="showSql(item.id) ">SQL</button>-->
                                             <!--<button type="button" class="btn btn-primary" v-bind:class="{ 'active': item.showResults}" v-on:click="showResults(item.id)">Results</button>-->
-                                        </div>
+                                        <!--</div>-->
 
                                         <div class="query-sql" v-show="item.showSql">
                                             <pre><code class="sql ">{{ item.query }}</code></pre>

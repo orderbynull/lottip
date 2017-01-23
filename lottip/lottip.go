@@ -63,7 +63,7 @@ func (l *Lottip) Run() {
 func (l *Lottip) StartWebsocket() {
 	defer l.wg.Done()
 
-	http.Handle("/", http.FileServer(embed.FS(true)))
+	http.Handle("/", http.FileServer(embed.FS(false)))
 
 	http.HandleFunc("/proxy", func(w http.ResponseWriter, r *http.Request) {
 

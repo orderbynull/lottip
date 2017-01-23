@@ -11,7 +11,7 @@ var proxyAddr = flag.String("listen", "127.0.0.1:4040", "Proxy address")
 var mysqlAddr = flag.String("mysql", "127.0.0.1", "MySQL address")
 var mysqlPort = flag.String("port", "3306", "MySQL port")
 var guiAddr = flag.String("addr", "127.0.0.1:8080", "HTTP service address")
-var verbose = flag.Bool("verbose", true, "Verbose mode")
+var verbose = flag.Bool("verbose", false, "Verbose mode")
 var art = `
                     ___                                               ___   
                    /  /\          ___         ___       ___          /  /\  
