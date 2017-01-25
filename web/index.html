@@ -42,7 +42,7 @@
     <!-- Sidebar -->
     <div id="sidebar-wrapper">
         <div class="list-group">
-            <a href="#" v-on:click="setSession(session.id)" class="list-group-item" v-for="session in sessions">
+            <a href="#" v-on:click="setSession(session.id)" class="list-group-item" v-bind:class="{'enabled': session.id == activeSession}" v-for="session in sessions">
                 <span class="dot" v-bind:class="{'done': !session.inProgress, 'pending': session.inProgress}">&#x25CF;</span>
                 <span>Session #{{ session.id }}</span>
                 <span class="tag">{{ session.queries }}</span>

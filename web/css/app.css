@@ -186,3 +186,7 @@ h4.panel-title{
 .glyphicon{
     top: 3px;
 }
+
+.list-group a.enabled{
+    background-color: #f5f5f5;
+}
