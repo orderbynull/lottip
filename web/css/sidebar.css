@@ -21,7 +21,8 @@ body {
     margin-left: -250px;
     overflow-y: auto;
     background: #FFF;
-    box-shadow: 0.5px -0.5px 0.5px 0.5px rgba(174,174,174,0.5);
+    border-right: solid #ddd 1px;
+    border-top: solid #ddd 1px;
     padding-bottom: 80px;
 }
 

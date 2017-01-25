@@ -35,13 +35,6 @@
                 <p class="navbar-text navbar-right">
                     Status: <span v-bind:class="{'label label-success': isConnected, 'label label-danger': !isConnected}">{{ isConnected ? 'connected' : 'disconnected' }}</span>                    Queries: <span class="label label-success">{{ items.length }}</span> Sessions: <span class="label label-success">{{ sessions.length }}</span>
                 </p>
-
-                <form class="navbar-form navbar-right">
-                    <div class="col-xs-4">
-                        <input type="text" class="form-control" placeholder="filter" v-model="filter">
-                    </div>
-                </form>
-
             </div>
         </div>
     </nav>
@@ -67,6 +60,13 @@
                 <div class="panel panel-primary">
                     <div class="panel-body">
                         <table v-if="items.length" class="table table-condensed table-bordered">
+                            <tr>
+                                <td colspan="5" class="row">
+                                    <div class="input-group input-group-sm col-xs-12">
+                                        <input type="text" class="form-control" placeholder="Filter" v-model="filter">
+                                    </div>
+                                </td>
+                            </tr>
                             <tr>
                                 <th>*</th>
                                 <th v-if="showId">ID</th>
