@@ -35,10 +35,11 @@ type Lottip struct {
 	rightAddr  string
 	guiAddr    string
 	verbose    bool
+	useLocal   bool
 }
 
 //New creates new Lottip application
-func New(leftAddr string, rightAddr string, guiAddr string, verbose bool) *Lottip {
+func New(leftAddr string, rightAddr string, guiAddr string, verbose bool, useLocal bool) *Lottip {
 	l := &Lottip{}
 	l.wg = &sync.WaitGroup{}
 	l.gQueryChan = make(chan gQuery)
@@ -47,6 +48,7 @@ func New(leftAddr string, rightAddr string, guiAddr string, verbose bool) *Lotti
 	l.rightAddr = rightAddr
 	l.guiAddr = guiAddr
 	l.verbose = verbose
+	l.useLocal = useLocal
 
 	return l
 }
@@ -63,7 +65,7 @@ func (l *Lottip) Run() {
 func (l *Lottip) StartWebsocket() {
 	defer l.wg.Done()
 
-	http.Handle("/", http.FileServer(embed.FS(false)))
+	http.Handle("/", http.FileServer(embed.FS(l.useLocal)))
 
 	http.HandleFunc("/proxy", func(w http.ResponseWriter, r *http.Request) {
 

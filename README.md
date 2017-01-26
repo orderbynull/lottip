@@ -26,9 +26,9 @@ TODO
 TODO
 
 # Usage
-Here's an example of how to run Lottip: `./server --listen=:4040 --mysql=127.0.0.1`
+Here's an example of how to run Lottip: `./server --listen=127.0.0.1:4040 --mysql=127.0.0.1:3306`
 
-This tells server to listen on any interface on port **4040** for incoming MySQL connections and to proxy them to local MySQL server listening on default port **3306**.
+This tells server to listen on local port **4040** for incoming MySQL connections and to proxy them to local MySQL server listening on default port **3306**.
  
 Now go to [http://127.0.0.1:8080](http://127.0.0.1:8080) and you'll see nice GUI.
 
@@ -36,9 +36,8 @@ Now go to [http://127.0.0.1:8080](http://127.0.0.1:8080) and you'll see nice GUI
 | option available       | description                                                                                                          
 | ---------------------- | ----------------------------------------------------------------------------------------------------  
 | `--listen`             | `<ip>:<port>` of proxy server. Your code should make connections to that address to make proxy work. Example: `--listen=:4040`        
-| `--mysql`              | MySQL server address. Example: `--mysql=192.168.0.195`
-| `--port`               | MySQL server port. Example: `--port=3306`          
-| `--addr`               | `<ip>:<port>` of embedded GUI. Example: `--addr=127.0.0.1:8081`
+| `--mysql`              | `<ip>:<port>` of MySQL server. Example: `--mysql=192.168.0.195:3306`
+| `--addr`               | `<ip>:<port>` of embedded GUI. Example: `--gui=127.0.0.1:8080`
 | `--verbose`            | Print debug information to console. Example: `--verbose=true`           
 
 # Default options
