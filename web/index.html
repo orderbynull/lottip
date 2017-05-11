@@ -1,149 +1,138 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Lottip</title>
+    <meta name="description" content="">
+    <meta name="author" content="">
+
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <link rel="stylesheet" href="css/bootstrap.min.css">
-    <link rel="stylesheet" href="css/bootstrap-theme.min.css">
-    <link rel="stylesheet" href="css/fonts.css">
-    <link rel="stylesheet" href="css/app.css">
-    <link rel="stylesheet" href="css/sidebar.css">
-</head>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"
+          integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css"
+          integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
+    <link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet">
 
-<body id="app" v-bind:class="{'toggled': !showSidebar}">
+    <link rel="icon" type="image/png" href="images/favicon.png">
+</head>
+<body id="bootstrap-override">
+
+<div id="app">
     <nav class="navbar navbar-inverse navbar-fixed-top">
         <div class="container-fluid">
-            <div id="navbar" class="navbar-collapse collapse">
 
-                <button class="btn btn-primary" id="menu-toggle" v-on:click="toggleSidebar()" v-bind:class="{'active': showSidebar}"><span class="glyphicon glyphicon-menu-hamburger" aria-hidden="true"></span></button>
-                |
-                <div class="btn-group" role="group" aria-label="...">
-                    <button type="button" class="btn btn-primary navbar-btn" v-bind:class="{'active': isConnected}" v-on:click="startWs()">Start</button>
-                    <button type="button" class="btn btn-primary navbar-btn" v-bind:class="{'active': !isConnected}" v-on:click="stopWs()">Stop</button>
-                    <button type="button" class="btn btn-primary navbar-btn" v-on:click="clearItems()">Clear</button>
+            <div class="navbar-header">
+
+                <div class="btn-group" role="group">
+                    <button
+                            type="button"
+                            class="btn btn-primary navbar-btn"
+                            @click="connect"
+                            v-bind:class="[connected ? 'active': '']"
+                    >
+                        Start
+                    </button>
+
+                    <button
+                            type="button"
+                            class="btn btn-primary navbar-btn"
+                            @click="disconnect"
+                            v-bind:class="[connected ? '': 'active']"
+                    >
+                        Stop
+                    </button>
+
+                    <button
+                            type="button"
+                            class="btn btn-primary navbar-btn"
+                            @click="clearAll"
+                    >
+                        Clear
+                    </button>
                 </div>
                 |
-                <div class="btn-group" role="group" aria-label="...">
-                    <button type="button" class="btn btn-primary navbar-btn" v-bind:class="{'active': isExpanded}" v-on:click="toggleExpanded()">Expand</button>
-                    <button type="button" class="btn btn-primary navbar-btn" v-bind:class="{'active': showId}" v-on:click="toggleShowId()">Show ID</button>
-                    <button type="button" class="btn btn-primary navbar-btn" v-bind:class="{'active': showTime}" v-on:click="toggleShowTime()">Show time</button>
+                <div class="btn-group" role="group">
+                    <button
+                            type="button"
+                            class="btn btn-primary navbar-btn"
+                            @click="toggleGlobalExpand"
+                            v-bind:class="[globalExpand ? 'active': '']"
+                    >
+                        Expand
+                    </button>
                 </div>
+            </div>
 
+            <div class="navbar-collapse collapse">
                 <p class="navbar-text navbar-right">
-                    Status: <span v-bind:class="{'label label-success': isConnected, 'label label-danger': !isConnected}">{{ isConnected ? 'connected' : 'disconnected' }}</span>                    Queries: <span class="label label-success">{{ items.length }}</span> Sessions: <span class="label label-success">{{ sessions.length }}</span>
+                    Status: {{connected ? 'connected' : 'disconnected'}}
+                    /
+                    Queries: {{queriesCount}}
                 </p>
             </div>
+
         </div>
     </nav>
 
-    <!-- Sidebar -->
-    <div id="sidebar-wrapper">
-        <div class="list-group">
-            <a href="#" v-on:click="setSession(session.id)" class="list-group-item" v-bind:class="{'enabled': session.id == activeSession}" v-for="session in sessions">
-                <span class="dot" v-bind:class="{'done': !session.inProgress, 'pending': session.inProgress}">&#x25CF;</span>
-                <span>Session #{{ session.id }}</span>
-                <span class="tag">{{ session.queries }}</span>
-            </a>
-        </div>
-    </div>
-    <!-- /#sidebar-wrapper -->
-
-    <div class="container-fluid">
-        <p class="text-center" v-if="!items.length">No queries yet</p>
-
-        <div class="row" v-if="items.length">
+    <div class="container-fluid" id="data">
+        <div class="row">
             <div class="col-sm-12">
 
-                <div class="panel panel-primary">
-                    <div class="panel-body">
-                        <table v-if="items.length" class="table table-condensed table-bordered">
-                            <tr>
-                                <td colspan="5" class="row">
-                                    <div class="input-group input-group-sm col-xs-12">
-                                        <input type="text" class="form-control" placeholder="Filter" v-model="filter">
-                                    </div>
+                <template v-for="connection, connId in connections">
+                    <p class="connection">
+                        <span>
+                            ↓ Connection #{{connId}} / {{isConnectionActive(connId) ? 'active' : 'finished'}} ↓
+                        </span>
+                    </p>
+                    <table class="table table-bordered">
+
+                        <tr style="display: none;">
+                            <th colspan="3">↓
+                            </th>
+                        </tr>
+
+                        <template v-for="query in connection">
+                            <tr v-bind:class="[query.result]">
+                                <td class="more" v-on:click.prevent="toggleExpandQuery(query.connId, query.cmdId)">
+                                    <a href="#">
+                                        <span class="glyphicon glyphicon-eye-open" aria-hidden="true"></span>
+                                    </a>
+                                </td>
+                                <td
+                                        class="query"
+                                        v-bind:class="[query.expanded || globalExpand ? 'grayed': '']"
+                                >
+                                    {{query.query}}
+                                </td>
+                                <td class="tiny">
+                                    {{query.duration}}s
                                 </td>
                             </tr>
-                            <tr>
-                                <th>*</th>
-                                <th v-if="showId">ID</th>
-                                <th v-if="showTime">Time</th>
-                                <th>Queries in session #{{activeSession}}</th>
+
+                            <tr v-if="query.expanded || globalExpand" v-bind:class="[query.result]">
+                                <td colspan="3" class="expanded">
+                                    <div class="error" v-if="query.error">
+                                        <code>{{query.error}}</code>
+                                    </div>
+                                    <code>{{query.query}}</code>
+                                </td>
                             </tr>
-                            <template v-for="item in items | exactFilterBy activeSession in 'sessId' | filterBy filter in 'query'">
-                                <tr v-bind:class="{'light': item.detailed || item.actions}">
-                                    <td class="tiny">
-                                        <a href="#" v-on:click.prevent="showDetails(item.id)" class="more"><span class="glyphicon glyphicon-eye-open" aria-hidden="true"></span></a>
-                                    </td>
-                                    <td class="tiny" v-if="showId">#{{ $index + 1 }}</td>
-                                    <td class="time" v-if="showTime">{{ item.time }}</td>
-                                    <td class="query" @mouseenter="toggleQueryActions(item.id)" @mouseleave="toggleQueryActions(item.id)">
-                                        <span>{{ item.query }}</span>
-                                        <span class="query-actions" v-if="item.actions">
-                                        <button type="button" class="btn btn-primary btn-xs" @click="copyDialog(item.id)">Copy</button>
-                                        <!--<button type="button" class="btn btn-primary btn-xs" @click="makeGist(item.id)">Gist</button>-->
-                                        <!--<button type="button" class="btn btn-primary btn-xs" v-on:click="executeSql(item.id)">Execute</button>-->
-                                        <!--<button type="button" class="btn btn-primary btn-xs">Explain</button>-->
-                                    </span>
-                                    </td>
-                                </tr>
-                                <tr v-show="item.detailed">
-                                    <td colspan="4" class="detail-view">
+                        </template>
 
-                                        <!--<div class="btn-group btn-group-xs" role="group">-->
-                                            <!--<button type="button" class="btn btn-primary" v-bind:class="{'active': item.showSql}" v-on:click="showSql(item.id) ">SQL</button>-->
-                                            <!--<button type="button" class="btn btn-primary" v-bind:class="{ 'active': item.showResults}" v-on:click="showResults(item.id)">Results</button>-->
-                                        <!--</div>-->
+                    </table>
+                </template>
 
-                                        <div class="query-sql" v-show="item.showSql">
-                                            <pre><code class="sql ">{{ item.query }}</code></pre>
-                                        </div>
-
-                                        <div class="query-results" v-show="item.showResults">
-                                            <demo-grid :data="gridData" :columns="gridColumns" :filter-key="searchQuery">
-                                            </demo-grid>
-                                        </div>
-                                    </td>
-                                </tr>
-                            </template>
-                        </table>
-                    </div>
-                </div>
             </div>
-
         </div>
     </div>
-
-    <script type="text/x-template" id="grid-template">
-        <table class="table table-condensed">
-            <thead>
-            <tr>
-                <th v-for="key in columns"
-                :class="{active: sortKey == key}">
-                {{key | capitalize}}
-                </th>
-            </tr>
-            </thead>
-            <tbody>
-            <tr v-for="
-                entry in data
-                | filterBy filterKey
-                | orderBy sortKey sortOrders[sortKey]">
-                <td v-for="key in columns">
-                {{entry[key]}}
-                </td>
-            </tr>
-            </tbody>
-        </table>
-    </script>
-
-    <script src="js/jquery.min.js "></script>
-    <script src="js/bootstrap.min.js "></script>
-    <script src="js/vue.min.js "></script>
-    <script src="js/app.js "></script>
+</div>
+<script src="js/vue.min.js" type="application/javascript"></script>
+<script src="js/app.js" type="application/javascript"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"
+        integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa"
+        crossorigin="anonymous"></script>
 </body>
-
 </html>

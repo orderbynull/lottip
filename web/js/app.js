@@ -1,248 +1,128 @@
-var ws = null;
-var queryID = 0;
+const connStateStarted = 0xf4;
+const connStateFinished = 0xf5;
+const cmdResultError = 0xff;
 
-$(document).ready(function () {
-    if (!window.WebSocket) alert("WebSocket not supported by this browser");
+var ws;
 
-    Vue.component('demo-grid', {
-        template: '#grid-template',
-        props: {
-            data: Array,
-            columns: Array,
-            filterKey: String
+new Vue({
+    el: '#app',
+    data: {
+        connected: false,
+        connections: {},
+        connectionsStates: {},
+        queriesCount: 0,
+        globalExpand: false
+    },
+    created: function () {
+        this.connect();
+    },
+    methods: {
+        disconnect: function () {
+            this.connected && ws.close();
         },
-        data: function () {
-            var sortOrders = {}
-            this.columns.forEach(function (key) {
-                sortOrders[key] = 1
-            })
-            return {
-                sortKey: '',
-                sortOrders: sortOrders
-            }
-        }
-    })
 
-    Vue.filter('exactFilterBy', function (array, needle, inKeyword, key) {
-        return array.filter(function (item) {
-            return item[key] == needle;
-        });
-    });
+        connect: function () {
+            var app = this;
 
-    var app = new Vue({
-        el: '#app',
-        data: {
-            earchQuery: '',
-            gridColumns: ['name', 'power'],
-            gridData: [
-                {name: 'Chuck Norris', power: Infinity},
-                {name: 'Bruce Lee', power: 9000},
-                {name: 'Jackie Chan', power: 7000},
-                {name: 'Jet Li', power: 8000}
-            ],
+            var parser = document.createElement('a');
+            parser.href = window.location;
 
-            showId: false,
-            showTime: false,
-            showSidebar: true,
-            isExpanded: false,
-            isConnected: false,
-            activeSession: 0,
-            activeSessionIndex: 1,
-            items: [],
-            sessions: [],
-        },
-        methods: {
-            copyDialog: function (id) {
-                window.prompt("Copy to clipboard: Ctrl+C, Enter", this.items[id].query);
-            },
+            ws = new WebSocket("ws://" + parser.host + "/ws");
 
-            makeGist: function (id) {
-            },
+            ws.onmessage = function (evt) {
+                var data = JSON.parse(evt.data);
 
-            toggleSidebar: function () {
-                this.showSidebar = !this.showSidebar;
-            },
-
-            executeSql: function (id) {
-                this.showResults(id);
-            },
-
-            showSql: function (id) {
-                this.items[id].detailed = true;
-                this.items[id].showSql = true;
-                this.items[id].showResults = false;
-            },
-
-            showResults: function (id) {
-                this.items[id].detailed = true;
-                this.items[id].showSql = false;
-                this.items[id].showResults = true;
-            },
-
-            getSessionIndex: function (sessionID) {
-                var key = null;
-
-                this.sessions.every(function (session, index) {
-                    if (session.id === sessionID) {
-                        key = index;
-                        return false;
-                    }
-                    return true;
-                });
-
-                return key;
-            },
-
-            /**
-             * Handle data that holds query came from WebSocket connection
-             */
-            handleQuery: function (json) {
-                if (!this.isConnected) {
+                //Cmd received
+                if ('Query' in data) {
+                    app.cmdReceived(data.ConnId, data.CmdId, data.Query);
                     return;
                 }
 
-                this.items.push({
-                    id: queryID++,
-                    time: new Date().toLocaleTimeString(),
-                    query: data.Query,
-                    detailed: this.isExpanded,
-                    sessId: data.SessionID,
-                    actions: false,
-                    showSql: true,
-                    showResults: false
-                });
-
-                if (this.activeSession === 0) {
-                    this.activeSession = data.SessionID;
+                //CmdResult received
+                if ('Result' in data) {
+                    app.cmdResultReceived(data.ConnId, data.CmdId, data.Result, data.Error, data.Duration);
+                    return;
                 }
 
-                var index = this.getSessionIndex(data.SessionID);
-
-                if (index === null) {
-                    this.sessions.push({
-                        id: data.SessionID,
-                        inProgress: true,
-                        queries: 1
-                    });
+                // ConnState received
+                if ('State' in data) {
+                    app.connStateReceived(data.ConnId, data.State);
                 }
-                else {
-                    this.sessions[index]['queries']++;
-                }
-            },
+            };
 
-            /**
-             * Handle data that holds session state(active/done) came from WebSocket connection
-             */
-            handleSession: function (json) {
-                for (var i in this.sessions) {
-                    if (this.sessions[i].id == data.SessionID) {
-                        this.sessions[i].inProgress = data.State;
-                    }
-                }
-            },
+            ws.onopen = function () {
+                app.connected = true;
+            };
 
-            /**
-             * Set currently active session that should be shown to user
-             */
-            setSession: function (sessionID, sessionIndex) {
-                this.activeSession = sessionID;
-                this.activeSessionIndex = sessionIndex;
-            },
+            ws.onclose = function () {
+                app.connected = false;
+            };
+        },
 
-            /**
-             * Toggle visibility of query id
-             */
-            toggleShowId: function () {
-                this.showId = !this.showId;
-            },
+        // Returns if connection is still active or not
+        isConnectionActive: function (connId) {
+            return this.connectionsStates[connId] === connStateStarted;
+        },
 
-            /**
-             * Toggle visibility of query datetime
-             */
-            toggleShowTime: function () {
-                this.showTime = !this.showTime;
-            },
+        // Clear all data to blank page
+        clearAll: function () {
+            this.connections = {};
+            this.queriesCount = 0;
+        },
 
-            /**
-             * Toggle all queries mode - expanded or collapsed
-             */
-            toggleExpanded: function () {
-                var v = this;
-                this.isExpanded = !this.isExpanded;
-                this.items.forEach(function (item, index) {
-                    item.detailed = v.isExpanded;
-                });
-            },
+        // Globally expand or collapse all queries
+        toggleGlobalExpand: function () {
+            this.globalExpand = !this.globalExpand;
+        },
 
-            /**
-             * Toggle single query mode - expanded or collapsed
-             */
-            showDetails: function (id) {
-                this.items[id].detailed = !this.items[id].detailed;
-            },
+        // Expand or collapse truncated query
+        toggleExpandQuery: function (connId, cmdId) {
+            this.connections[connId][cmdId].expanded =
+                !this.connections[connId][cmdId].expanded;
+        },
 
-            /**
-             * Toggle query actions buttons
-             */
-            toggleQueryActions: function (id) {
-                this.items[id].actions = !this.items[id].actions;
-            },
-
-            /**
-             * Remove all queries and sessions
-             */
-            clearItems: function () {
-                this.items = [];
-                this.sessions = [];
-                this.activeSession = 0;
-                this.activeSessionIndex = 1;
-                queryID = 0;
-            },
-
-            /**
-             * Init WebSocket connection
-             */
-            startWs: function () {
-                var vue = this;
-
-                var parser = document.createElement('a');
-                parser.href = window.location;
-
-                ws = new WebSocket("ws://" + parser.host + "/proxy");
-
-                ws.onopen = function (evt) {
-                    vue.isConnected = true;
-                }
-
-                ws.onclose = function (evt, reason) {
-                    vue.isConnected = false;
-                }
-
-                ws.onmessage = function (evt) {
-                    data = jQuery.parseJSON(evt.data);
-
-                    switch (data.Type) {
-                        case "Query":
-                            vue.handleQuery(data);
-                            break;
-
-                        case "State":
-                            vue.handleSession(data);
-                            break;
-                    }
-                }
-            },
-
-            /**
-             * Close WebSocket connection
-             */
-            stopWs: function () {
-                if (ws !== null) {
-                    ws.close();
-                }
+        // Fired when received Cmd data from websocket
+        cmdReceived: function (connId, cmdId, query) {
+            if (!(connId in this.connections)) {
+                Vue.set(this.connections, connId, {});
             }
-        }
-    });
 
-    app.startWs();
+            Vue.set(this.connections[connId], cmdId, {
+                connId: connId,
+                cmdId: cmdId,
+                expanded: false,
+                query: query,
+                result: 'result-pending',
+                duration: '?.??',
+                error: ''
+            });
+
+            this.queriesCount++;
+
+            Vue.set(this.connectionsStates, connId, connStateStarted);
+        },
+
+        // Fired when received CmdResult from websocket
+        cmdResultReceived: function (connId, cmdId, result, error, duration) {
+            if (this.connections[connId] !== undefined &&
+                this.connections[connId][cmdId] !== undefined) {
+                switch (result) {
+                    case cmdResultError:
+                        this.connections[connId][cmdId].result = 'result-error';
+                        break;
+                    default:
+                        this.connections[connId][cmdId].result = 'result-ok';
+                        break;
+                }
+
+                this.connections[connId][cmdId].duration = duration;
+                this.connections[connId][cmdId].error = error;
+            }
+        },
+
+        // Fired when received ConnState from websocket
+        connStateReceived: function (connId, state) {
+            Vue.set(this.connectionsStates, connId, state);
+        }
+    }
 });

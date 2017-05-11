@@ -1,0 +1,231 @@
+#bootstrap-override {
+    background-color: #f4f4f4;
+    font-family: 'Roboto', sans-serif;
+}
+
+#bootstrap-override p.connection{
+    text-align: center;
+}
+
+#bootstrap-override #data{
+    margin-top: 68px;
+}
+
+#bootstrap-override code {
+    white-space: pre-line;
+    background: none;
+    color: #272950;
+    background-color: rgba(51, 102, 153, 0.1);
+    border-radius: 2px;
+    padding-left: 5px;
+}
+#bootstrap-override div.error{
+    margin-bottom: 15px;
+}
+
+#bootstrap-override div.error code{
+    background-color: #d9534f;
+    color: #FFFFFF;
+}
+
+/*Navbar styles*/
+
+#bootstrap-override .navbar-inverse {
+    background-color: #336699;
+    background-image: none;
+    border: none;
+    border-radius: 0;
+}
+
+#bootstrap-override .navbar-text {
+    padding-right: 15px;
+}
+
+#bootstrap-override .navbar-inverse,
+#bootstrap-override .navbar-text {
+    color: #FFFFFF;
+}
+
+#bootstrap-override .btn:focus {
+    outline: none;
+}
+
+/*Table styles*/
+#bootstrap-override table {
+    background-color: #FFFFFF;
+    color: #272950;
+}
+
+#bootstrap-override table tr th{
+    text-align: center;
+    background-color: #f4f4f4;
+    border: none;
+}
+
+#bootstrap-override table tr.result-ok{
+    border-left: solid #5cb85c 3px;
+}
+
+#bootstrap-override table tr.result-pending{
+    border-left: solid #f0ad4e 3px;
+}
+
+#bootstrap-override table tr.result-error{
+    border-left: solid #d9534f 6px;
+}
+
+#bootstrap-override table tr td.more,
+#bootstrap-override table tr td.tiny{
+    width: 40px;
+}
+
+#bootstrap-override table tr td.more {
+    text-align: center;
+    cursor: pointer;
+}
+
+#bootstrap-override table tr td.more a{
+    cursor: pointer;
+}
+
+#bootstrap-override table tr td.query {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    table-layout: fixed;
+    max-width: 0;
+}
+
+#bootstrap-override table tr td.query.grayed{
+    color: gainsboro;
+}
+
+/*body {*/
+/*font-family: 'Open Sans', sans-serif;*/
+/*background-color: rgb(251, 252, 254);*/
+/*}*/
+
+/*#header {*/
+/*position: fixed;*/
+/*width: 100%;*/
+/*top: 0;*/
+/*background-color: rgb(244, 245, 247);*/
+/*z-index: 999;*/
+/*border-bottom: solid gainsboro 1px;*/
+/*vertical-align: middle;*/
+/*padding-top: 6px;*/
+/*padding-bottom: 6px;*/
+/*}*/
+
+/*#header,*/
+/*.query,*/
+/*.separator,*/
+/*button {*/
+/*color: #3f4f6a;*/
+/*}*/
+
+/*.container#main {*/
+/*margin-top: 50px;*/
+/*}*/
+
+/*input#filter {*/
+/*margin-bottom: 0;*/
+/*height: auto;*/
+/*}*/
+
+/*input#filter:focus {*/
+/*border: solid #eeeeee 1px;*/
+/*}*/
+
+/*.query {*/
+/*padding: 3px 7px 3px 7px;*/
+/*margin: 7px 0 7px 0;*/
+/*width: inherit;*/
+/*cursor: pointer;*/
+/*border-radius: 3px;*/
+/*white-space: nowrap;*/
+/*overflow: hidden;*/
+/*text-overflow: ellipsis;*/
+/*background-color: rgb(243, 244, 246);*/
+/*border: solid 1px gainsboro;*/
+/*}*/
+
+/*.query.expanded {*/
+/*white-space: normal;*/
+/*overflow: visible;*/
+/*}*/
+
+/*button {*/
+/*height: 28px;*/
+/*margin-bottom: 0;*/
+/*line-height: inherit;*/
+/*letter-spacing: inherit;*/
+/*padding: 0 15px;*/
+/*text-transform: none;*/
+/*font-size: inherit;*/
+/*font-weight: normal;*/
+/*background-color: rgb(244, 245, 247);*/
+/*}*/
+
+/*button.active {*/
+/*background-color: white;*/
+/*}*/
+
+/*button.connected {*/
+/*background-color: white;*/
+/*border: solid #3CA553 1px;*/
+/*}*/
+
+/*.seconds {*/
+/*color: #999999;*/
+/*padding-right: 7px;*/
+/*display: inline-block;*/
+/*}*/
+
+/*.success {*/
+/*border-left: solid #3CA553 4px;*/
+/*}*/
+
+/*.success:hover {*/
+/*background-color: rgba(60, 165, 83, 0.05);*/
+/*}*/
+
+/*.error {*/
+/*border-left: solid #CE0814 4px;*/
+/*background-color: rgba(206, 8, 20, 0.06)*/
+/*}*/
+
+/*.error:hover {*/
+/*background-color: rgba(206, 8, 20, 0.17)*/
+/*}*/
+
+/*.pending {*/
+/*border-left: solid #D99F43 4px;*/
+/*}*/
+
+/*.pending:hover {*/
+/*background-color: rgba(217, 159, 67, 0.06);*/
+/*}*/
+
+/*.separator {*/
+/*text-align: center;*/
+/*}*/
+
+/*.separator>span {*/
+/*padding-right: 30px;*/
+/*padding-left: 30px;*/
+/*}*/
+
+/*.separator span.active {*/
+/*background-image: url("../images/loader.svg");*/
+/*background-repeat: no-repeat;*/
+/*background-position: right;*/
+/*}*/
+
+/*.separator span span {*/
+/*color: #3CA553;*/
+/*}*/
+
+/*.separator span.active span {*/
+/*color: #D99F43;*/
+/*}*/

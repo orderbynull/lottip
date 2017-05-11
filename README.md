@@ -2,8 +2,8 @@
 
 Lottip is a proxy for **MySQL RDBMS** with simple and clean GUI. 
 It's goal is to help developers to debug persistence layer of their apps. 
-Lottip can **show SQL queries** within each connection, **filter** statements, create **SQL gists** and more.
-It consists of 2 parts: proxy server and embedded GUI for better experience.
+Lottip can **show SQL queries** within each connection, **filter** statements and more.
+It сomes as single  binary and consists of 2 parts: proxy server and embedded GUI for better experience.
 
 #Screenshots
 ![Example 1](https://raw.githubusercontent.com/orderbynull/lottip/master/shots/1.png)
@@ -25,23 +25,23 @@ TODO
 ###### Binary
 TODO
 
-# Usage
-Here's an example of how to run Lottip: `./server --listen=127.0.0.1:4040 --mysql=127.0.0.1:3306`
+# How to use
 
-This tells server to listen on local port **4040** for incoming MySQL connections and to proxy them to local MySQL server listening on default port **3306**.
+There're 4 simple steps to get everything up and running:
+1. Run Lottip binary from console like this: `./lottip --listen=127.0.0.1:4040 --mysql=127.0.0.1:3306`.
+2. Tell your app to connect to MySQL via port *4040* instead of *3306*.
+3. Go to [http://127.0.0.1:8080](http://127.0.0.1:8080) and you'll see nice GUI.
+4. Play with your app and see all SQL-queries flowing between your app and MySQL. No need for page refresh.
+
  
-Now go to [http://127.0.0.1:8080](http://127.0.0.1:8080) and you'll see nice GUI.
 
 # Options
-| option available       | description                                                                                                          
-| ---------------------- | ----------------------------------------------------------------------------------------------------  
-| `--listen`             | `<ip>:<port>` of proxy server. Your code should make connections to that address to make proxy work. Example: `--listen=:4040`        
-| `--mysql`              | `<ip>:<port>` of MySQL server. Example: `--mysql=192.168.0.195:3306`
-| `--addr`               | `<ip>:<port>` of embedded GUI. Example: `--gui=127.0.0.1:8080`
-| `--verbose`            | Print debug information to console. Example: `--verbose=true`           
-
-# Default options
-TODO
+| option available       |  default value  | description                                                                                                          
+| ---------------------- |-----------------|-------------------------------------------------------------------------------------------------  
+| `--listen`             | `127.0.0.1:4040`|`<ip>:<port>` of proxy server. Your code should make connections to that address to make proxy work. *Example: `--listen=:4040`*        
+| `--mysql`              | `127.0.0.1:3306`|`<ip>:<port>` of MySQL server. *Example: `--mysql=192.168.0.195:3306`*
+| `--gui`                | `127.0.0.1:8080`|`<ip>:<port>` of embedded GUI. *Example: `--gui=127.0.0.1:8080`*
+| `--verbose`            |      `false`    |Print debug information to console. *Example: `--verbose=true`*           
 
 # Change log
 TODO
