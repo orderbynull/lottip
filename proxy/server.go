@@ -101,6 +101,16 @@ func (ps *ProxyServer) extractAndForward(conn net.Conn, mysql net.Conn, connId i
 
 		cmdId++
 
+		// There're packets which have zero length payload
+		// and there's no need to analyze such packets.
+		if len(queryPacket) < 5 {
+			writePacket(queryPacket, mysql)
+			pkt, _ := readPacket(mysql)
+			writePacket(pkt, conn)
+
+			continue
+		}
+
 		switch queryPacket[4] {
 
 		// Received COM_QUERY from client
