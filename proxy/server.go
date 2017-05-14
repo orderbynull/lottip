@@ -92,6 +92,7 @@ func (ps *ProxyServer) handleConnection(connId int, conn net.Conn) {
 func (ps *ProxyServer) extractAndForward(conn net.Conn, mysql net.Conn, connId int) {
 	var cmdId int
 	for {
+
 		//Client query --> $queryPacket - -> mysql
 		queryPacket, err := readPacket(conn)
 		if err != nil {
@@ -163,7 +164,7 @@ func (ps *ProxyServer) Run() {
 	}
 	defer listener.Close()
 
-	go func(){
+	go func() {
 		ps.appReadyChan <- true
 		close(ps.appReadyChan)
 	}()

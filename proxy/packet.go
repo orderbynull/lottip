@@ -67,11 +67,12 @@ func readErrMessage(errPacket []byte) string {
 
 // readResponse ...
 func readResponse(conn net.Conn) ([]byte, byte, error) {
-
 	pkt, err := readPacket(conn)
 	if err != nil {
 		return []byte{}, 0, err
 	}
+
+	columns, _, _ := lenDecInt(pkt[4:])
 
 	switch pkt[4] {
 
@@ -85,10 +86,19 @@ func readResponse(conn net.Conn) ([]byte, byte, error) {
 
 	}
 
-	var eofCnt int
 	var data []byte
 
 	data = append(data, pkt...)
+
+	toRead := int(columns) + 1
+	for i := 0; i < toRead; i++ {
+		pkt, err := readPacket(conn)
+		if err != nil {
+			return []byte{}, 0, err
+		}
+
+		data = append(data, pkt...)
+	}
 
 	for {
 		pkt, err := readPacket(conn)
@@ -99,10 +109,6 @@ func readResponse(conn net.Conn) ([]byte, byte, error) {
 		data = append(data, pkt...)
 
 		if pkt[4] == responseEof {
-			eofCnt++
-		}
-
-		if eofCnt == 2 {
 			break
 		}
 	}
