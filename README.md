@@ -5,10 +5,14 @@ It's goal is to help developers to debug persistence layer of their apps.
 Lottip can **show SQL queries** within each connection, **filter** statements and more.
 It сomes as single  binary and consists of 2 parts: proxy server and embedded GUI for better experience.
 
-#Screenshots
+# Screenshots
+Here's how query list looks like:
 ![Example 1](https://raw.githubusercontent.com/orderbynull/lottip/master/shots/1.png)
+Each query can be expanded for detailed view:
 ![Example 2](https://raw.githubusercontent.com/orderbynull/lottip/master/shots/2.png)
+Bottom query freezed for 10 seconds:
 ![Example 3](https://raw.githubusercontent.com/orderbynull/lottip/master/shots/3.png)
+Ooops, query returned an error:
 ![Example 4](https://raw.githubusercontent.com/orderbynull/lottip/master/shots/4.png)
 
 # Main features
