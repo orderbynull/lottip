@@ -1,9 +1,8 @@
 # Lottip
 
-Lottip is a proxy for **MySQL RDBMS** with simple and clean GUI. 
-It's goal is to help developers to debug persistence layer of their apps. 
-Lottip can **show SQL queries** within each connection, **filter** statements and more.
-It сomes as single  binary and consists of 2 parts: proxy server and embedded GUI for better experience.
+Lottip is proxy for **MySQL RDBMS** with web GUI. It will show you what's happening under the hood of your ORM.
+As it sits between your application and MySQL server there's no need to use tools like Wireshark to see which queries are being executed.
+Lottip comes as single binary with zero dependencies and consists of 2 parts: proxy server and embedded GUI for better experience.
 
 # Screenshots
 Here's how query list looks like:
@@ -16,7 +15,23 @@ Ooops, query returned an error:
 ![Example 4](https://raw.githubusercontent.com/orderbynull/lottip/master/shots/4.png)
 
 # Main features
-TODO
+**Please note Lottip is on it's early stage of development.**
+
+For now you can:
+1. See all queries sent from your application to MySQL grouped by connection it belongs to.
+2. Track query execution result: success(green indicator), pending(yellow indicator) and error(red indicator).
+3. Expand/collapse each query to see more/less details.
+4. See query execution time.
+
+# ToDo
+- [ ] Write Unit tests
+- [ ] Implement every aspect of MySQL protocol
+- [ ] Add query filtering by string or by it's status
+- [ ] Add sql code highlighting
+- [ ] Add sql code formatting
+- [ ] Add possibility to execute/explain query right from GUI and see results
+- [ ] Add support of PostgreSQL protocol 
+- [ ] ... and more
 
 # Installation
 ###### From sources
