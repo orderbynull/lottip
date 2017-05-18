@@ -2,7 +2,7 @@ package main
 
 import (
 	"encoding/json"
-	"github.com/orderbynull/new/proxy"
+	"github.com/orderbynull/lottip/proxy"
 )
 
 // Hub ...

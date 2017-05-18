@@ -8,6 +8,8 @@ It сomes as single  binary and consists of 2 parts: proxy server and embedded G
 #Screenshots
 ![Example 1](https://raw.githubusercontent.com/orderbynull/lottip/master/shots/1.png)
 ![Example 2](https://raw.githubusercontent.com/orderbynull/lottip/master/shots/2.png)
+![Example 3](https://raw.githubusercontent.com/orderbynull/lottip/master/shots/3.png)
+![Example 4](https://raw.githubusercontent.com/orderbynull/lottip/master/shots/4.png)
 
 # Main features
 TODO

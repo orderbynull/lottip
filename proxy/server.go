@@ -83,14 +83,17 @@ func (ps *ProxyServer) handleConnection(connId int, conn net.Conn) {
 	defer ps.setConnectionState(connId, connStateFinished)
 	ps.setConnectionState(connId, connStateStarted)
 
-	processHandshake(conn, mysql)
+	serverCapabilities, clientCapabilities := processHandshake(conn, mysql)
 
-	ps.extractAndForward(conn, mysql, connId)
+	ps.extractAndForward(conn, mysql, connId, serverCapabilities, clientCapabilities)
 }
 
 // extractAndForward reads data from proxy client, extracts queries and forwards them to MySQL
-func (ps *ProxyServer) extractAndForward(conn net.Conn, mysql net.Conn, connId int) {
+func (ps *ProxyServer) extractAndForward(conn net.Conn, mysql net.Conn, connId int, serverCapabilities uint32, clientCapabilities uint32) {
 	var cmdId int
+	var deprecateEof = ((capabilityDeprecateEof & serverCapabilities) != 0) &&
+		((capabilityDeprecateEof & clientCapabilities) != 0)
+
 	for {
 
 		//Client query --> $queryPacket - -> mysql
@@ -121,7 +124,7 @@ func (ps *ProxyServer) extractAndForward(conn net.Conn, mysql net.Conn, connId i
 			start := time.Now()
 			writePacket(queryPacket, mysql)
 
-			response, result, err := readResponse(mysql)
+			response, result, err := readResponse(mysql, deprecateEof)
 			if err == nil {
 				if result == responseErr {
 					ps.setCommandResult(connId, cmdId, result, readErrMessage(response), time.Since(start))
@@ -150,7 +153,12 @@ func (ps *ProxyServer) extractAndForward(conn net.Conn, mysql net.Conn, connId i
 		// Received COM_STMT_EXECUTE from MySQL client
 		case requestCmdStmtExecute:
 			writePacket(queryPacket, mysql)
-			response, _, _ := readResponse(mysql)
+			response, _, _ := readResponse(mysql, deprecateEof)
+			writePacket(response, conn)
+
+		case requestCmdShowFields:
+			writePacket(queryPacket, mysql)
+			response, _, _ := readShowFieldsResponse(mysql)
 			writePacket(response, conn)
 
 		// Received COM_STMT_CLOSE from client

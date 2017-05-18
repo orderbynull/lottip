@@ -6,7 +6,7 @@ import (
 )
 
 const (
-	pingPeriod = time.Millisecond * 5000
+	pingPeriod          = time.Millisecond * 5000
 	writeDeadlinePeriod = time.Second * 2
 )
 

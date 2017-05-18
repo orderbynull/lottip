@@ -3,6 +3,7 @@ package proxy
 const (
 	// MySQL internal protocol constants
 	requestCmdQuery       = 0x03
+	requestCmdShowFields  = 0x04
 	requestCmdStmtPrepare = 0x16
 	requestCmdStmtExecute = 0x17
 	requestCmdStmtClose   = 0x19
@@ -11,6 +12,9 @@ const (
 	responsePrepareOk     = 0x00
 	responseErr           = 0xff
 	responseLocalinfile   = 0xfb
+
+	// Extended client capabilities
+	capabilityDeprecateEof = 0x100
 
 	// There is no code for Resultset in MySQL internal protocol
 	// so it's defined here for convenient usage

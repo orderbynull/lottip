@@ -9,8 +9,16 @@ import (
 // processHandshake handles handshake between client and MySQL server.
 // When client connects MySQL server for the first time "handshake"
 // packet is sent by MySQL server so it just should be delivered without analyzing.
-func processHandshake(app net.Conn, mysql net.Conn) {
+// Returns extended server and client capabilities flags
+func processHandshake(app net.Conn, mysql net.Conn) (uint32, uint32) {
+	serverPacket, _ := proxyPacket(mysql, app)
+	clientPacket, _ := proxyPacket(app, mysql)
 	proxyPacket(mysql, app)
+
+	serverCapabilities := uint32(binary.LittleEndian.Uint16(serverPacket[30: 30 + 2]));
+	clientCapabilities := uint32(binary.LittleEndian.Uint16(clientPacket[6: 6 + 2]));
+
+	return serverCapabilities, clientCapabilities
 }
 
 // readPrepareResponse reads response from MySQL server for COM_STMT_PREPARE
@@ -65,14 +73,16 @@ func readErrMessage(errPacket []byte) string {
 	return string(errPacket[13:])
 }
 
+func readShowFieldsResponse(conn net.Conn) ([]byte, byte, error) {
+	return readResponse(conn, true)
+}
+
 // readResponse ...
-func readResponse(conn net.Conn) ([]byte, byte, error) {
+func readResponse(conn net.Conn, deprecateEof bool) ([]byte, byte, error) {
 	pkt, err := readPacket(conn)
 	if err != nil {
 		return []byte{}, 0, err
 	}
-
-	columns, _, _ := lenDecInt(pkt[4:])
 
 	switch pkt[4] {
 
@@ -90,14 +100,19 @@ func readResponse(conn net.Conn) ([]byte, byte, error) {
 
 	data = append(data, pkt...)
 
-	toRead := int(columns) + 1
-	for i := 0; i < toRead; i++ {
-		pkt, err := readPacket(conn)
-		if err != nil {
-			return []byte{}, 0, err
-		}
+	if !deprecateEof {
+		columns, _, _ := lenDecInt(pkt[4:])
 
-		data = append(data, pkt...)
+		toRead := int(columns) + 1
+
+		for i := 0; i < toRead; i++ {
+			pkt, err := readPacket(conn)
+			if err != nil {
+				return []byte{}, 0, err
+			}
+
+			data = append(data, pkt...)
+		}
 	}
 
 	for {

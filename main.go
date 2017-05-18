@@ -4,7 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"github.com/gorilla/websocket"
-	"github.com/orderbynull/new/proxy"
+	"github.com/orderbynull/lottip/proxy"
 	"log"
 	"net/http"
 )
