@@ -2,7 +2,7 @@
 
 Lottip is proxy for **MySQL RDBMS** with web GUI. It will show you what's happening under the hood of your ORM.
 As it sits between your application and MySQL server there's no need to use tools like Wireshark to see which queries are being executed.
-Lottip comes as single binary with zero dependencies and consists of 2 parts: proxy server and embedded GUI for better experience.
+It comes as single binary with zero dependencies and consists of 2 parts: proxy server and embedded GUI for better experience.
 
 # Screenshots
 Here's how query list looks like:
@@ -15,7 +15,7 @@ Ooops, query returned an error:
 ![Example 4](https://raw.githubusercontent.com/orderbynull/lottip/master/shots/4.png)
 
 # Main features
-**Please note Lottip is on it's early stage of development.**
+**Please note lottip is on it's early stage of development.**
 
 For now you can:
 1. See all queries sent from your application to MySQL grouped by connection it belongs to.
@@ -48,7 +48,7 @@ Get binaries from [releases]([https://github.com/orderbynull/lottip/releases) pa
 
 # How to run
 There're 4 simple steps to get everything up and running:
-1. Run Lottip binary from console like this: `./lottip -mysql=127.0.0.1:3306 -gui=127.0.0.1:8888`.
+1. Run *lottip* binary from terminal like this: `./lottip -mysql=127.0.0.1:3306 -gui=127.0.0.1:8888`.
 2. Tell your app to connect to MySQL via port *4041* instead of *3306*.
 3. Go to [http://127.0.0.1:8888](http://127.0.0.1:8888) and you'll see nice GUI.
 4. Play with your app and see all SQL-queries flowing between your app and MySQL. No need for page refresh.
@@ -57,14 +57,14 @@ There're 4 simple steps to get everything up and running:
 Here're few use cases i use on my everyday basis so it may be helpful to someone.
 
 ###### Use locally
-Just run Lottip on your local machine and point your app to Lottip.
-You can also run few Lottip instances each on it's own port. 
-This is an easy way to keep multiple app separated and view belonging queries independently.
+Just run *lottip* on your local machine and point your app to it.
+You can also run few *lottip* instances each on it's own port. 
+This is an easy way to keep multiple app separated and view queries independently.
 
 ###### Use remotely
-Let's say you're writing your PHP code locally but run it on dev server and do not want to expose Lottip to outside world.
+Let's say you're writing your PHP code locally but run it on dev server and do not want to expose *lottip* to outside world.
 In this case here's what you may do:
-1. Upload Lottip binary to remote dev server and run it like this: `./lottip -mysql=127.0.0.1:3306 -gui=127.0.0.1:8888`
+1. Upload *lottip* binary to remote dev server and run it like this: `./lottip -mysql=127.0.0.1:3306 -gui=127.0.0.1:8888`
 2. Create ssh tunnel from your local machine to remote dev server like this: `ssh -nNT -L 8888:127.0.0.1:8888 user@your-devserver.com`.
    This command will map your local `:8888` to remote `:8888`
 3. Tell your remote app to use MySQL on port `:4041`
