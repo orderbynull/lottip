@@ -25,7 +25,7 @@ For now you can:
 
 # ToDo
 - [ ] Write Unit tests
-- [ ] Implement every aspect of MySQL protocol
+- [ ] Implement more features of MySQL protocol
 - [ ] Add query filtering by string or by it's status
 - [ ] Add sql code highlighting
 - [ ] Add sql code formatting
@@ -34,38 +34,51 @@ For now you can:
 - [ ] ... and more
 
 # Installation
-###### From sources
+###### From sources on Mac/Linux
     go get -t github.com/orderbynull/lottip
     go get github.com/mjibson/esc
     go install github.com/mjibson/esc
     cd $GOPATH/src/github.com/orderbynull/lottip
-    $GOPATH/bin/esc -o="embed/embed.go" -prefix="web" -ignore="\.idea.*|\.DS.*" -pkg="embed" web
-    go build -o server main.go
-    ./server --listen=:4040 --mysql=192.168.0.195 --port=3306
+    $GOPATH/bin/esc -o static.go -prefix web -include=".*\.css|.*\.js|.*\.html|.*\.png" web
+    go build -o lottip main.go static.go hub.go client.go
+    ./lottip
     
 ###### Binary
-TODO
+Get binaries from [releases]([https://github.com/orderbynull/lottip/releases) page
 
-# How to use
-
+# How to run
 There're 4 simple steps to get everything up and running:
-1. Run Lottip binary from console like this: `./lottip --listen=127.0.0.1:4040 --mysql=127.0.0.1:3306`.
-2. Tell your app to connect to MySQL via port *4040* instead of *3306*.
-3. Go to [http://127.0.0.1:8080](http://127.0.0.1:8080) and you'll see nice GUI.
+1. Run Lottip binary from console like this: `./lottip -mysql=127.0.0.1:3306 -gui=127.0.0.1:8888`.
+2. Tell your app to connect to MySQL via port *4041* instead of *3306*.
+3. Go to [http://127.0.0.1:8888](http://127.0.0.1:8888) and you'll see nice GUI.
 4. Play with your app and see all SQL-queries flowing between your app and MySQL. No need for page refresh.
 
- 
+# Use cases
+Here're few use cases i use on my everyday basis so it may be helpful to someone.
+
+###### Use locally
+Just run Lottip on your local machine and point your app to Lottip.
+You can also run few Lottip instances each on it's own port. 
+This is an easy way to keep multiple app separated and view belonging queries independently.
+
+###### Use remotely
+Let's say you're writing your PHP code locally but run it on dev server and do not want to expose Lottip to outside world.
+In this case here's what you may do:
+1. Upload Lottip binary to remote dev server and run it like this: `./lottip -mysql=127.0.0.1:3306 -gui=127.0.0.1:8888`
+2. Create ssh tunnel from your local machine to remote dev server like this: `ssh -nNT -L 8888:127.0.0.1:8888 user@your-devserver.com`.
+   This command will map your local `:8888` to remote `:8888`
+3. Tell your remote app to use MySQL on port `:4041`
+4. Open [http://127.0.0.1:8888](http://127.0.0.1:8888) locally.
 
 # Options
 | option available       |  default value  | description                                                                                                          
 | ---------------------- |-----------------|-------------------------------------------------------------------------------------------------  
-| `--listen`             | `127.0.0.1:4040`|`<ip>:<port>` of proxy server. Your code should make connections to that address to make proxy work. *Example: `--listen=:4040`*        
+| `--proxy`              | `127.0.0.1:4041`|`<ip>:<port>` of proxy server. Your code should make connections to that address to make proxy work. *Example: `--proxy=:4045`*        
 | `--mysql`              | `127.0.0.1:3306`|`<ip>:<port>` of MySQL server. *Example: `--mysql=192.168.0.195:3306`*
-| `--gui`                | `127.0.0.1:8080`|`<ip>:<port>` of embedded GUI. *Example: `--gui=127.0.0.1:8080`*
-| `--verbose`            |      `false`    |Print debug information to console. *Example: `--verbose=true`*           
+| `--gui`                | `127.0.0.1:9999`|`<ip>:<port>` of embedded GUI. *Example: `--gui=127.0.0.1:8080`*
 
-# Change log
-TODO
+# Contribute
+You're very welcome to report bugs, make pull requests, share your thoughts and ideas!
 
 # Licence
-TODO
+MIT

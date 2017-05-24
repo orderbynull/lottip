@@ -7,6 +7,7 @@ import (
 	"github.com/orderbynull/lottip/proxy"
 	"log"
 	"net/http"
+	"time"
 )
 
 const (
@@ -15,9 +16,9 @@ const (
 )
 
 var (
-	proxyAddr  = flag.String("proxy-addr", "127.0.0.1:4041", "Proxy <host>:<port>")
-	mysqlAddr  = flag.String("mysql-addr", "127.0.0.1:3306", "MySQL <host>:<port>")
-	guiAddr    = flag.String("gui-addr", "127.0.0.1:9999", "Web UI <host>:<port>")
+	proxyAddr  = flag.String("proxy", "127.0.0.1:4041", "Proxy <host>:<port>")
+	mysqlAddr  = flag.String("mysql", "127.0.0.1:3306", "MySQL <host>:<port>")
+	guiAddr    = flag.String("gui", "127.0.0.1:9999", "Web UI <host>:<port>")
 	useLocalUI = flag.Bool("use-local", false, "Use local UI instead of embed")
 )
 
@@ -53,6 +54,7 @@ func runStaticServer() {
 
 func appReadyInfo(appReadyChan chan bool) {
 	<-appReadyChan
+	time.Sleep(1 * time.Second)
 	fmt.Printf("Forwarding queries from `%s` to `%s` \n", *proxyAddr, *mysqlAddr)
 	fmt.Printf("Web gui available at `http://%s` \n", *guiAddr)
 }

@@ -15,8 +15,8 @@ func processHandshake(app net.Conn, mysql net.Conn) (uint32, uint32) {
 	clientPacket, _ := proxyPacket(app, mysql)
 	proxyPacket(mysql, app)
 
-	serverCapabilities := uint32(binary.LittleEndian.Uint16(serverPacket[30: 30 + 2]));
-	clientCapabilities := uint32(binary.LittleEndian.Uint16(clientPacket[6: 6 + 2]));
+	serverCapabilities := uint32(binary.LittleEndian.Uint16(serverPacket[30 : 30+2]))
+	clientCapabilities := uint32(binary.LittleEndian.Uint16(clientPacket[6 : 6+2]))
 
 	return serverCapabilities, clientCapabilities
 }
