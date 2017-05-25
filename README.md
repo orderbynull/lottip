@@ -77,6 +77,9 @@ In this case here's what you may do:
 | `--mysql`              | `127.0.0.1:3306`|`<ip>:<port>` of MySQL server. *Example: `--mysql=192.168.0.195:3306`*
 | `--gui`                | `127.0.0.1:9999`|`<ip>:<port>` of embedded GUI. *Example: `--gui=127.0.0.1:8080`*
 
+# Known problems
+Currently *lottip* does not support secure connections via ssl. The workaround is to disable SSL on MySQL server or connect with option like [--ssl-mode=DISABLED](https://dev.mysql.com/doc/refman/5.7/en/secure-connection-options.html#option_general_ssl-mode)
+
 # Contribute
 You're very welcome to report bugs, make pull requests, share your thoughts and ideas!
 
