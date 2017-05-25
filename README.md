@@ -44,7 +44,7 @@ For now you can:
     ./lottip
     
 ###### Binary
-Get binaries from [releases]([https://github.com/orderbynull/lottip/releases) page
+Get binaries from [releases](https://github.com/orderbynull/lottip/releases) page
 
 # How to run
 There're 4 simple steps to get everything up and running:
