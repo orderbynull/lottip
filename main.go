@@ -3,11 +3,14 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/gorilla/websocket"
-	"github.com/orderbynull/lottip/proxy"
 	"log"
 	"net/http"
 	"time"
+
+	"github.com/gorilla/websocket"
+	"github.com/orderbynull/lottip/proxy"
+	"github.com/orderbynull/lottip/pubsub"
+	"github.com/orderbynull/lottip/static"
 )
 
 const (
@@ -22,7 +25,7 @@ var (
 	useLocalUI = flag.Bool("use-local", false, "Use local UI instead of embed")
 )
 
-func runWsServer(hub *Hub) {
+func runWsServer(hub *pubsub.Hub) {
 	http.HandleFunc(wsRoute, func(w http.ResponseWriter, r *http.Request) {
 		upgr := websocket.Upgrader{CheckOrigin: func(r *http.Request) bool { return true }}
 
@@ -39,8 +42,9 @@ func runWsServer(hub *Hub) {
 			}
 		}()
 
-		client := NewClient(conn, hub)
-		hub.register <- client
+		client := pubsub.NewClient(conn, hub)
+
+		hub.RegisterClient(client)
 
 		go client.Process()
 	})
@@ -49,7 +53,7 @@ func runWsServer(hub *Hub) {
 }
 
 func runStaticServer() {
-	http.Handle(staticRoute, http.FileServer(FS(*useLocalUI)))
+	http.Handle(staticRoute, http.FileServer(static.FS(*useLocalUI)))
 }
 
 func appReadyInfo(appReadyChan chan bool) {
@@ -67,7 +71,7 @@ func main() {
 	connStateChan := make(chan proxy.ConnState)
 	appReadyChan := make(chan bool)
 
-	hub := NewHub(cmdChan, cmdResultChan, connStateChan)
+	hub := pubsub.NewHub(cmdChan, cmdResultChan, connStateChan)
 
 	go hub.Run()
 	go runWsServer(hub)

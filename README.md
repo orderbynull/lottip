@@ -35,12 +35,12 @@ For now you can:
 
 # Installation
 ###### From sources on Mac/Linux
-    go get -t github.com/orderbynull/lottip
+    go get github.com/orderbynull/lottip
     go get github.com/mjibson/esc
     go install github.com/mjibson/esc
     cd $GOPATH/src/github.com/orderbynull/lottip
-    $GOPATH/bin/esc -o static.go -prefix web -include=".*\.css|.*\.js|.*\.html|.*\.png" web
-    go build -o lottip main.go static.go hub.go client.go
+    $GOPATH/bin/esc -o static/static.go -pkg="static" -prefix web -include=".*\.css|.*\.js|.*\.html|.*\.png" web
+    go build
     ./lottip
     
 ###### Binary

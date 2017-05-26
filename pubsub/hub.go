@@ -1,4 +1,4 @@
-package main
+package pubsub
 
 import (
 	"encoding/json"
@@ -29,6 +29,11 @@ func NewHub(
 		cmdResultChan: cmdResultChan,
 		connStateChan: connStateChan,
 	}
+}
+
+// RegisterClient...
+func (h *Hub) RegisterClient(client *Client) {
+	h.register <- client
 }
 
 // Run ...
