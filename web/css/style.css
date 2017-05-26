@@ -1,6 +1,6 @@
 #bootstrap-override {
     background-color: #f4f4f4;
-    font-family: 'Roboto', sans-serif;
+    font-family: Arial, Helvetica, sans-serif;
 }
 
 #bootstrap-override p.connection{
@@ -28,6 +28,7 @@
     color: #FFFFFF;
 }
 
+
 /*Navbar styles*/
 
 #bootstrap-override .navbar-inverse {
@@ -51,6 +52,11 @@
 }
 
 /*Table styles*/
+#bootstrap-override .more-less{
+    text-decoration: none;
+    color: #336699;
+}
+
 #bootstrap-override table {
     background-color: #FFFFFF;
     color: #272950;
