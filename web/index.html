@@ -91,10 +91,11 @@
 
                         <template v-for="query in connection">
                             <tr v-bind:class="[query.result]">
-                                <td class="more" v-on:click.prevent="toggleExpandQuery(query.connId, query.cmdId)">
-                                    <a href="#" class="more-less">
-                                        {{query.expanded ? '&#10134;' : '&#10133;'}}
-                                    </a>
+                                <td
+                                        class="more"
+                                        v-on:click.prevent="toggleExpandQuery(query.connId, query.cmdId)"
+                                        v-bind:class="[query.expanded || globalExpand ? 'minus-sign': 'plus-sign']"
+                                >
                                 </td>
                                 <td
                                         class="query"

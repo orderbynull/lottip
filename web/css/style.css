@@ -52,10 +52,6 @@
 }
 
 /*Table styles*/
-#bootstrap-override .more-less{
-    text-decoration: none;
-}
-
 #bootstrap-override table {
     background-color: #FFFFFF;
     color: #272950;
@@ -87,6 +83,16 @@
 #bootstrap-override table tr td.more {
     text-align: center;
     cursor: pointer;
+}
+
+#bootstrap-override table tr td.plus-sign{
+    background: url('../images/plus.png') center center no-repeat;
+    background-size: 15px 15px;
+}
+
+#bootstrap-override table tr td.minus-sign{
+    background: url('../images/minus.png') center center no-repeat;
+    background-size: 15px 15px;
 }
 
 #bootstrap-override table tr td.more a{
