@@ -51,6 +51,7 @@ There're 4 simple steps to get everything up and running:
 You'll something like this:
 
     `Forwarding queries from '127.0.0.1:4041' to '127.0.0.1:3306'`
+    
     `Web gui available at 'http://127.0.0.1:9999'`
      
 2. Tell your app to connect to MySQL via port *4041* instead of *3306*.
