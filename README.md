@@ -23,16 +23,6 @@ For now you can:
 3. Expand/collapse each query to see more/less details.
 4. See query execution time.
 
-# ToDo
-- [ ] Write Unit tests
-- [ ] Implement more features of MySQL protocol
-- [ ] Add query filtering by string or by it's status
-- [ ] Add sql code highlighting
-- [ ] Add sql code formatting
-- [ ] Add possibility to execute/explain query right from GUI and see results
-- [ ] Add support of PostgreSQL protocol 
-- [ ] ... and more
-
 # Installation
 ###### Binary
 Get binaries from [releases](https://github.com/orderbynull/lottip/releases) page
@@ -51,6 +41,7 @@ There're 4 simple steps to get everything up and running:
 You'll something like this:
 
     `Forwarding queries from '127.0.0.1:4041' to '127.0.0.1:3306'`
+    
     `Web gui available at 'http://127.0.0.1:9999'`
      
 2. Tell your app to connect to MySQL via port *4041* instead of *3306*.
@@ -84,6 +75,16 @@ You can change default values to whatever you need.
 | `--proxy`              | `127.0.0.1:4041`|`<ip>:<port>` of proxy server. Your code should make connections to that address to make proxy work. *Example: `--proxy=127.0.0.1:4045`*        
 | `--mysql`              | `127.0.0.1:3306`|`<ip>:<port>` of MySQL server. *Example: `--mysql=192.168.0.195:3308`*
 | `--gui`                | `127.0.0.1:9999`|`<ip>:<port>` of embedded GUI. *Example: `--gui=127.0.0.1:8080`*
+
+# ToDo
+- [ ] Write Unit tests
+- [ ] Implement more features of MySQL protocol
+- [ ] Add query filtering by string or by it's status
+- [ ] Add sql code highlighting
+- [ ] Add sql code formatting
+- [ ] Add possibility to execute/explain query right from GUI and see results
+- [ ] Add support of PostgreSQL protocol 
+- [ ] ... and more
 
 # Known problems
 Currently lottip does not support secure connections via ssl. The workaround is to disable SSL on MySQL server or connect with option like [--ssl-mode=DISABLED](https://dev.mysql.com/doc/refman/5.7/en/secure-connection-options.html#option_general_ssl-mode)
