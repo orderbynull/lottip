@@ -59,6 +59,11 @@
                         Expand
                     </button>
                 </div>
+                |
+                <div class="btn-group" role="group">
+                    <input type="text" class="form-control" id="filter" placeholder="Filter" v-model="filterQuery">
+                </div>
+                {{tipMessage}}
             </div>
 
             <div class="navbar-collapse collapse">
@@ -125,6 +130,7 @@
         </div>
     </div>
 </div>
+<script src="js/lodash.min.js" type="application/javascript"></script>
 <script src="js/vue.min.js" type="application/javascript"></script>
 <script src="js/app.js" type="application/javascript"></script>
 <script src="js/jquery.min.js" type="application/javascript"></script>

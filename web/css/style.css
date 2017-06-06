@@ -38,6 +38,10 @@
     border-radius: 0;
 }
 
+#bootstrap-override #filter{
+    width: 400px;
+}
+
 #bootstrap-override .navbar-text {
     padding-right: 15px;
 }

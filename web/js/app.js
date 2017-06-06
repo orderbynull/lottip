@@ -1,6 +1,7 @@
 const connStateStarted = 0xf4;
 const connStateFinished = 0xf5;
 const cmdResultError = 0xff;
+const typingMessage = 'Waiting for you to stop typing...';
 
 var ws;
 
@@ -9,16 +10,69 @@ new Vue({
     data: {
         connected: false,
         connections: {},
+        backupConnections: null,
         connectionsStates: {},
         queriesCount: 0,
-        globalExpand: false
+        globalExpand: false,
+        filterQuery: '',
+        tipMessage: ''
     },
+
+    watch: {
+        filterQuery: function () {
+            console.log(this.filterQuery);
+            this.tipMessage = typingMessage;
+            this.getFilteredData();
+        }
+    },
+
     created: function () {
         this.connect();
     },
+
     methods: {
+        getFilteredData: _.debounce(function () {
+            this.tipMessage = '';
+
+            if (this.backupConnections === null) {
+                this.backupConnections = this.connections;
+            }
+
+            if (this.filterQuery === '') {
+                if (this.backupConnections !== null) {
+                    this.connections = this.backupConnections;
+                    this.backupConnections = null;
+                }
+                return;
+            }
+
+            var result = {};
+            var connections = this.backupConnections !== null ? this.backupConnections : this.connections;
+
+            for (conn in connections) {
+                if (connections.hasOwnProperty(conn)) {
+
+                    for (query in connections[conn]) {
+                        if (connections[conn].hasOwnProperty(query)) {
+
+                            if (connections[conn][query]['query'].toLowerCase().indexOf(this.filterQuery.toLowerCase()) >= 0) {
+                                if (!(result[conn])) {
+                                    result[conn] = {};
+                                }
+                                result[conn][query] = connections[conn][query];
+                            }
+
+                        }
+                    }
+                }
+            }
+
+            this.connections = result;
+        }, 500),
+
         disconnect: function () {
             this.connected && ws.close();
+            console.error(this.connections);
         },
 
         connect: function () {
