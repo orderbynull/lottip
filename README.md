@@ -22,6 +22,7 @@ For now you can:
 2. Track query execution result: success(green indicator), pending(yellow indicator) and error(red indicator).
 3. Expand/collapse each query to see more/less details.
 4. See query execution time.
+5. Filter queries by string
 
 # Installation
 ###### Binary
@@ -79,7 +80,8 @@ You can change default values to whatever you need.
 # ToDo
 - [ ] Write Unit tests
 - [ ] Implement more features of MySQL protocol
-- [ ] Add query filtering by string or by it's status
+- [x] Add query filtering by string
+- [ ] Add query filtering by it's status
 - [ ] Add sql code highlighting
 - [ ] Add sql code formatting
 - [ ] Add possibility to execute/explain query right from GUI and see results
