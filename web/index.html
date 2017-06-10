@@ -16,6 +16,7 @@
 <body id="bootstrap-override">
 
 <div id="app">
+
     <nav class="navbar navbar-inverse navbar-fixed-top">
         <div class="container-fluid">
 
@@ -81,6 +82,8 @@
         <div class="row">
             <div class="col-sm-12">
 
+                <p v-if="!queriesCount" class="text-center">No queries yet</p>
+
                 <template v-for="connection, connId in connections">
                     <p class="connection">
                         <span>
@@ -96,30 +99,86 @@
 
                         <template v-for="query in connection">
                             <tr v-bind:class="[query.result]">
+
+                                <!--Toggle expand column start-->
                                 <td
-                                        class="more"
+                                        class="tiny more"
                                         v-on:click.prevent="toggleExpandQuery(query.connId, query.cmdId)"
                                         v-bind:class="[query.expanded || globalExpand ? 'minus-sign': 'plus-sign']"
                                 >
+                                    <img src="images/plus.png" v-if="!(query.expanded || globalExpand)" width="15px" height="15px">
+                                    <img src="images/minus.png" v-if="query.expanded || globalExpand" width="15px" height="15px">
                                 </td>
+                                <!--Toggle expand column end-->
+
+                                <!--Query actions column start-->
+                                <td class="tiny">
+                                    <div class="dropdown">
+                                        <button
+                                                class="btn btn-default dropdown-toggle btn-xs"
+                                                type="button"
+                                                data-toggle="dropdown"
+                                                aria-haspopup="true"
+                                                aria-expanded="false"
+                                        >
+                                            <span class="caret"></span>
+                                        </button>
+                                        <ul class="dropdown-menu" aria-labelledby="dropdownMenu2">
+                                            <li><a href="#" v-on:click.prevent="copyQuery(connId, query.cmdId)">Copy</a></li>
+                                            <li><a href="#" v-on:click.prevent="executeQuery(connId, query.cmdId)">Execute</a></li>
+                                            <li><a href="#">Explain</a></li>
+                                        </ul>
+                                    </div>
+                                </td>
+                                <!--Query actions column end-->
+
+                                <!--Query column start-->
                                 <td
                                         class="query"
-                                        v-bind:class="[query.expanded || globalExpand ? 'grayed': '']"
+                                        v-bind:class="[query.expanded || globalExpand ? 'expanded': '']"
                                 >
-                                    {{query.query}}
+                                    <div v-if="query.expanded && query.executed" class="query-exec-buttons">
+                                        <button
+                                                v-bind:class="['btn btn-default btn-xs', !query.showExecResult ? 'active': '']"
+                                                @click="inverseShowExecResult(connId, query.cmdId)"
+                                        >
+                                            Query
+                                        </button>
+
+                                        <button
+                                                v-bind:class="['btn btn-default btn-xs',  query.showExecResult ? 'active': '']"
+                                                @click="inverseShowExecResult(connId, query.cmdId)"
+                                        >
+                                            Result
+                                        </button>
+                                    </div>
+
+                                    <span v-if="!query.expanded">{{query.query}}</span>
+
+                                    <!--Query error result block start-->
+                                    <template v-if="query.expanded">
+                                        <div class="error" v-if="query.error">
+                                            <code>{{query.error}}</code>
+                                        </div>
+                                    </template>
+                                    <!--Query error result block end-->
+
+                                    <span v-if="query.expanded && !query.showExecResult">{{query.query}}</span>
+
+                                    <pre
+                                            v-if="query.expanded && query.executed && query.showExecResult"
+                                            v-html="getQueryExecResult(connId, query.cmdId)"
+                                    >
+                                    </pre>
                                 </td>
+                                <!--Query column end-->
+
+                                <!--Duration column start-->
                                 <td class="tiny">
                                     {{query.duration}}s
                                 </td>
-                            </tr>
+                                <!--Duration column end-->
 
-                            <tr v-if="query.expanded || globalExpand" v-bind:class="[query.result]">
-                                <td colspan="3" class="expanded">
-                                    <div class="error" v-if="query.error">
-                                        <code>{{query.error}}</code>
-                                    </div>
-                                    <code>{{query.query}}</code>
-                                </td>
                             </tr>
                         </template>
 
@@ -132,8 +191,9 @@
 </div>
 <script src="js/lodash.min.js" type="application/javascript"></script>
 <script src="js/vue.min.js" type="application/javascript"></script>
-<script src="js/app.js" type="application/javascript"></script>
+<script src="js/clipboard.min.js" type="application/javascript"></script>
 <script src="js/jquery.min.js" type="application/javascript"></script>
 <script src="js/bootstrap.min.js" type="application/javascript"></script>
+<script src="js/app.js" type="application/javascript"></script>
 </body>
 </html>

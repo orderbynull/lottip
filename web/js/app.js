@@ -2,8 +2,13 @@ const connStateStarted = 0xf4;
 const connStateFinished = 0xf5;
 const cmdResultError = 0xff;
 const typingMessage = 'Waiting for you to stop typing...';
+const copyDoneMessage = 'Copied to clipboard';
 
 var ws;
+
+Vue.component('modal', {
+    template: '#modal-template'
+})
 
 new Vue({
     el: '#app',
@@ -12,10 +17,12 @@ new Vue({
         connections: {},
         backupConnections: null,
         connectionsStates: {},
+        queriesExecutionResults: {},
         queriesCount: 0,
         globalExpand: false,
         filterQuery: '',
-        tipMessage: ''
+        tipMessage: '',
+        showModal: false
     },
 
     watch: {
@@ -31,6 +38,52 @@ new Vue({
     },
 
     methods: {
+        copyQuery: function (connId, queryId) {
+            if (clipboard.copy(this.connections[connId][queryId]['query']) && 'Notification' in window) {
+
+                if (Notification.permission === 'granted') {
+                    var notification = new Notification(copyDoneMessage, {requireInteraction: false});
+                    setTimeout(notification.close.bind(notification), 2000);
+                }
+
+                else if (Notification.permission !== 'denied') {
+                    Notification.requestPermission(function (permission) {
+                        if (permission === 'granted') {
+                            var notification = new Notification(copyDoneMessage);
+                            setTimeout(notification.close.bind(notification), 2000);
+                        }
+                    });
+                }
+            }
+        },
+
+        executeQuery: function (connId, queryId) {
+            var vue = this;
+            $.post(
+                "/test",
+                {query: this.connections[connId][queryId]['query']},
+                function (data) {
+                    vue.setQueryExecResult(connId, queryId, data);
+                    vue.connections[connId][queryId]['expanded'] = true;
+                    vue.connections[connId][queryId]['executed'] = true;
+                    vue.connections[connId][queryId]['showExecResult'] = true;
+                }
+            );
+        },
+
+        setQueryExecResult: function (connId, queryId, result) {
+            Vue.set(this.queriesExecutionResults, connId + '_' + queryId, result);
+        },
+
+        getQueryExecResult: function (connId, queryId) {
+            return this.queriesExecutionResults[connId + '_' + queryId];
+        },
+
+        inverseShowExecResult: function (connId, queryId) {
+            this.connections[connId][queryId]['showExecResult'] =
+                !this.connections[connId][queryId]['showExecResult'];
+        },
+
         getFilteredData: _.debounce(function () {
             this.tipMessage = '';
 
@@ -145,6 +198,8 @@ new Vue({
                 connId: connId,
                 cmdId: cmdId,
                 expanded: false,
+                executed: false,
+                showExecResult: false,
                 query: query,
                 result: 'result-pending',
                 duration: '?.??',
