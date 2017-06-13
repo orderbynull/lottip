@@ -3,6 +3,7 @@ const connStateFinished = 0xf5;
 const cmdResultError = 0xff;
 const typingMessage = 'Waiting for you to stop typing...';
 const copyDoneMessage = 'Copied to clipboard';
+const executeUrl = '/execute';
 
 var ws;
 
@@ -17,17 +18,15 @@ new Vue({
         connections: {},
         backupConnections: null,
         connectionsStates: {},
-        queriesExecutionResults: {},
         queriesCount: 0,
         globalExpand: false,
         filterQuery: '',
         tipMessage: '',
-        showModal: false
+        modalQueryResult: ''
     },
 
     watch: {
         filterQuery: function () {
-            console.log(this.filterQuery);
             this.tipMessage = typingMessage;
             this.getFilteredData();
         }
@@ -60,28 +59,13 @@ new Vue({
         executeQuery: function (connId, queryId) {
             var vue = this;
             $.post(
-                "/test",
+                executeUrl,
                 {query: this.connections[connId][queryId]['query']},
                 function (data) {
-                    vue.setQueryExecResult(connId, queryId, data);
-                    vue.connections[connId][queryId]['expanded'] = true;
-                    vue.connections[connId][queryId]['executed'] = true;
-                    vue.connections[connId][queryId]['showExecResult'] = true;
+                    vue.modalQueryResult = data;
+                    $('#results').modal();
                 }
             );
-        },
-
-        setQueryExecResult: function (connId, queryId, result) {
-            Vue.set(this.queriesExecutionResults, connId + '_' + queryId, result);
-        },
-
-        getQueryExecResult: function (connId, queryId) {
-            return this.queriesExecutionResults[connId + '_' + queryId];
-        },
-
-        inverseShowExecResult: function (connId, queryId) {
-            this.connections[connId][queryId]['showExecResult'] =
-                !this.connections[connId][queryId]['showExecResult'];
         },
 
         getFilteredData: _.debounce(function () {
@@ -197,10 +181,8 @@ new Vue({
             Vue.set(this.connections[connId], cmdId, {
                 connId: connId,
                 cmdId: cmdId,
-                expanded: false,
-                executed: false,
-                showExecResult: false,
                 query: query,
+                expanded: true,
                 result: 'result-pending',
                 duration: '?.??',
                 error: ''

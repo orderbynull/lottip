@@ -1,4 +1,4 @@
-package pubsub
+package main
 
 import (
 	"encoding/json"
@@ -15,8 +15,8 @@ type Hub struct {
 	connStateChan chan proxy.ConnState
 }
 
-// NewHub ...
-func NewHub(
+// newHub ...
+func newHub(
 	cmdChan chan proxy.Cmd,
 	cmdResultChan chan proxy.CmdResult,
 	connStateChan chan proxy.ConnState,
@@ -31,27 +31,31 @@ func NewHub(
 	}
 }
 
-// RegisterClient...
-func (h *Hub) RegisterClient(client *Client) {
+// registerClient...
+func (h *Hub) registerClient(client *Client) {
 	h.register <- client
 }
 
-// Run ...
-func (h *Hub) Run() {
+// run ...
+func (h *Hub) run() {
 	var data []byte
 	for {
 		select {
 		case client := <-h.register:
 			h.clients[client] = true
+
 		case client := <-h.deregister:
 			if _, ok := h.clients[client]; ok {
 				delete(h.clients, client)
 				close(client.dataChan)
 			}
+
 		case cmd := <-h.cmdChan:
 			data, _ = json.Marshal(cmd)
+
 		case cmdResult := <-h.cmdResultChan:
 			data, _ = json.Marshal(cmdResult)
+
 		case connState := <-h.connStateChan:
 			data, _ = json.Marshal(connState)
 		}

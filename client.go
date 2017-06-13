@@ -1,4 +1,4 @@
-package pubsub
+package main
 
 import (
 	"github.com/gorilla/websocket"
@@ -10,15 +10,15 @@ const (
 	writeDeadlinePeriod = time.Second * 2
 )
 
-// Client ...
+// Client represents client connected via websocket
 type Client struct {
 	ws       *websocket.Conn
 	hub      *Hub
 	dataChan chan []byte
 }
 
-// NewClient ...
-func NewClient(ws *websocket.Conn, hub *Hub) *Client {
+// newClient creates new client instance
+func newClient(ws *websocket.Conn, hub *Hub) *Client {
 	return &Client{
 		ws:       ws,
 		hub:      hub,
@@ -46,6 +46,7 @@ func (c *Client) Process() {
 			if err := c.ws.WriteMessage(websocket.TextMessage, data); err != nil {
 				return
 			}
+
 		case <-ticker.C:
 			c.ws.SetWriteDeadline(time.Now().Add(writeDeadlinePeriod))
 			if err := c.ws.WriteMessage(websocket.PingMessage, []byte{}); err != nil {

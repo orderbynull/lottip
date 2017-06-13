@@ -3,31 +3,46 @@
     font-family: Arial, Helvetica, sans-serif;
 }
 
-#bootstrap-override p.connection{
+#bootstrap-override p.connection {
     text-align: center;
 }
 
-#bootstrap-override #data{
+#bootstrap-override #data {
     margin-top: 68px;
 }
 
-#bootstrap-override code {
-    white-space: pre-line;
-    background: none;
-    color: #272950;
-    background-color: rgba(51, 102, 153, 0.1);
-    border-radius: 2px;
-    padding-left: 5px;
+#bootstrap-override pre {
+    background-color: #FFFFFF;
+    border: none;
+    margin: 0;
+    padding: 0;
 }
-#bootstrap-override div.error{
+
+#bootstrap-override div.error {
     margin-bottom: 15px;
 }
 
-#bootstrap-override div.error code{
+#bootstrap-override div.error code {
     background-color: #d9534f;
     color: #FFFFFF;
 }
 
+#bootstrap-override .modal-dialog {
+    position: relative;
+    display: table; /* This is important */
+    overflow-y: auto;
+    overflow-x: auto;
+    width: auto;
+    min-width: 300px;
+}
+
+#bootstrap-override .modal-content {
+    max-width: 1024px;
+}
+
+#bootstrap-override .modal-body {
+    text-align: center;
+}
 
 /*Navbar styles*/
 
@@ -38,7 +53,7 @@
     border-radius: 0;
 }
 
-#bootstrap-override #filter{
+#bootstrap-override #filter {
     width: 400px;
 }
 
@@ -61,30 +76,30 @@
     color: #272950;
 }
 
-#bootstrap-override table tr th{
+#bootstrap-override table tr th {
     text-align: center;
     background-color: #f4f4f4;
     border: none;
 }
 
-#bootstrap-override table tr.result-ok{
+#bootstrap-override table tr.result-ok {
     border-left: solid #5cb85c 3px;
 }
 
-#bootstrap-override table tr.result-pending{
+#bootstrap-override table tr.result-pending {
     border-left: solid #f0ad4e 3px;
 }
 
-#bootstrap-override table tr.result-error{
+#bootstrap-override table tr.result-error {
     border-left: solid #d9534f 6px;
 }
 
-#bootstrap-override table tr td.tiny{
+#bootstrap-override table tr td.tiny {
     width: 40px;
     text-align: center;
 }
 
-#bootstrap-override table tr td.more{
+#bootstrap-override table tr td.more {
     cursor: pointer;
 }
 
@@ -94,19 +109,9 @@
     text-overflow: ellipsis;
     table-layout: fixed;
     max-width: 0;
+    cursor: pointer;
 }
 
-#bootstrap-override table tr td.expanded{
+#bootstrap-override table tr td.expanded {
     white-space: normal;
-}
-
-#bootstrap-override table tr td pre{
-    background-color: #FFFFFF;
-    border: none;
-    margin: 0;
-    padding: 0;
-}
-
-#bootstrap-override table tr td .query-exec-buttons{
-    margin-bottom: 10px;
 }
