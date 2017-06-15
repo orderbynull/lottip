@@ -16,6 +16,7 @@
     border: none;
     margin: 0;
     padding: 0;
+    word-wrap: initial;
 }
 
 #bootstrap-override div.error {
