@@ -53,15 +53,17 @@ new Vue({
         },
 
         executeQuery: function (connId, queryId) {
-            var vue = this;
-            $.post(
-                executeUrl,
-                {query: this.connections[connId][queryId]['query']},
-                function (data) {
-                    vue.modalQueryResult = data;
-                    $('#results').modal();
-                }
-            );
+            if (this.connections[connId][queryId]['executable']) {
+                var vue = this;
+                $.post(
+                    executeUrl,
+                    {query: this.connections[connId][queryId]['query']},
+                    function (data) {
+                        vue.modalQueryResult = data;
+                        $('#results').modal();
+                    }
+                );
+            }
         },
 
         getFilteredData: _.debounce(function () {
@@ -121,7 +123,7 @@ new Vue({
 
                 //Cmd received
                 if ('Query' in data) {
-                    app.cmdReceived(data.ConnId, data.CmdId, data.Query);
+                    app.cmdReceived(data.ConnId, data.CmdId, data.Query, data.Executable);
                     return;
                 }
 
@@ -169,7 +171,7 @@ new Vue({
         },
 
         // Fired when received Cmd data from websocket
-        cmdReceived: function (connId, cmdId, query) {
+        cmdReceived: function (connId, cmdId, query, executable) {
             if (!(connId in this.connections)) {
                 Vue.set(this.connections, connId, {});
             }
@@ -179,6 +181,7 @@ new Vue({
                 cmdId: cmdId,
                 query: query,
                 expanded: true,
+                executable: executable,
                 result: 'result-pending',
                 duration: '?.??',
                 error: ''

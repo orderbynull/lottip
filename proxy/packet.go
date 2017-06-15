@@ -43,7 +43,6 @@ func readPrepareResponse(conn net.Conn) ([]byte, byte, error) {
 	}
 
 	switch pkt[4] {
-
 	case responsePrepareOk:
 		var data []byte
 		var eofCnt int
@@ -85,7 +84,6 @@ func readResponse(conn net.Conn, deprecateEof bool) ([]byte, byte, error) {
 	}
 
 	switch pkt[4] {
-
 	case responseOk:
 		return pkt, responseOk, nil
 
@@ -93,7 +91,6 @@ func readResponse(conn net.Conn, deprecateEof bool) ([]byte, byte, error) {
 		return pkt, responseErr, nil
 
 	case responseLocalinfile:
-
 	}
 
 	var data []byte
@@ -160,7 +157,7 @@ func readPacket(conn net.Conn) ([]byte, error) {
 func writePacket(pkt []byte, conn net.Conn) (int, error) {
 	n, err := conn.Write(pkt)
 	if err != nil {
-		return 0, ErrWritePacket
+		return 0, errWritePacket
 	}
 
 	return n, nil
@@ -187,5 +184,5 @@ func getQueryString(pkt []byte) (string, error) {
 		return string(pkt[5:]), nil
 	}
 
-	return "", ErrNoQueryPacket
+	return "", errNoQueryPacket
 }

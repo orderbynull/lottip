@@ -14,7 +14,7 @@ const (
 	webRoute       = "/"
 )
 
-func runHttpServer(hub *Hub) {
+func runHttpServer(hub *hub) {
 
 	// Websockets endpoint
 	http.HandleFunc(websocketRoute, func(w http.ResponseWriter, r *http.Request) {
@@ -38,7 +38,7 @@ func runHttpServer(hub *Hub) {
 
 		hub.registerClient(client)
 
-		go client.Process()
+		go client.process()
 	})
 
 	// Query execution endpoint
@@ -63,7 +63,7 @@ func runHttpServer(hub *Hub) {
 			table.AppendBulk(rows)
 			table.Render()
 		} else {
-			fmt.Fprint(w, "Got empty response")
+			fmt.Fprint(w, "Empty response")
 		}
 	})
 

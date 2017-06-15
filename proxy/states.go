@@ -5,6 +5,7 @@ type Cmd struct {
 	ConnId int
 	CmdId  int
 	Query  string
+	Executable bool
 }
 
 // CmdResult represents MySQL command execution result.

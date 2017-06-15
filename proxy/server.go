@@ -7,8 +7,8 @@ import (
 	"time"
 )
 
-// ProxyServer implements server for capturing and forwarding MySQL traffic
-type ProxyServer struct {
+// proxyServer implements server for capturing and forwarding MySQL traffic
+type proxyServer struct {
 	cmdChan       chan Cmd
 	cmdStateChan  chan CmdResult
 	connStateChan chan ConnState
@@ -17,20 +17,20 @@ type ProxyServer struct {
 	proxyHost     string
 }
 
-// NewProxyServer returns new ProxyServer with connections params for proxy and mysql hosts.
+// NewProxyServer returns new proxyServer with connections params for proxy and mysql hosts.
 // Returns error if either proxyHost or mysqlHost not set.
-func NewProxyServer(proxyHost string, mysqlHost string) (*ProxyServer, error) {
+func NewProxyServer(proxyHost string, mysqlHost string) (*proxyServer, error) {
 	if proxyHost == "" || mysqlHost == "" {
-		return nil, ErrInvalidProxyParams
+		return nil, errInvalidProxyParams
 	}
 
-	return &ProxyServer{proxyHost: proxyHost, mysqlHost: mysqlHost}, nil
+	return &proxyServer{proxyHost: proxyHost, mysqlHost: mysqlHost}, nil
 }
 
-// SetChannels assigns user defined channels to ProxyServer.
+// SetChannels assigns user defined channels to proxyServer.
 // This channels are used to transfer captured command(query), command state and
 // connection state to corresponding routine.
-func (ps *ProxyServer) SetChannels(
+func (ps *proxyServer) SetChannels(
 	cmdChan chan Cmd,
 	cmdStateChan chan CmdResult,
 	connStateChan chan ConnState,
@@ -44,13 +44,13 @@ func (ps *ProxyServer) SetChannels(
 
 // setCommand writes command string representation and it's id to command channel
 // provided by caller code via NewProxyServer routine
-func (ps *ProxyServer) setCommand(connId int, cmdId int, query string) {
-	ps.cmdChan <- Cmd{ConnId: connId, CmdId: cmdId, Query: query}
+func (ps *proxyServer) setCommand(connID int, cmdID int, query string, executable bool) {
+	ps.cmdChan <- Cmd{ConnId: connID, CmdId: cmdID, Query: query, Executable: executable}
 }
 
 // setCommandResult writes command execution result to command result channel
 // provided by caller code via NewProxyServer routine
-func (ps *ProxyServer) setCommandResult(connId int, cmdId int, cmdState byte, error string, duration time.Duration) {
+func (ps *proxyServer) setCommandResult(connId int, cmdId int, cmdState byte, error string, duration time.Duration) {
 	ps.cmdStateChan <- CmdResult{
 		ConnId:   connId,
 		CmdId:    cmdId,
@@ -62,12 +62,12 @@ func (ps *ProxyServer) setCommandResult(connId int, cmdId int, cmdState byte, er
 
 // setConnectionState writes TCP connection state to connection state channel
 // provided by caller code via NewProxyServer routine
-func (ps *ProxyServer) setConnectionState(connId int, state byte) {
+func (ps *proxyServer) setConnectionState(connId int, state byte) {
 	ps.connStateChan <- ConnState{ConnId: connId, State: state}
 }
 
 // handleConnection ...
-func (ps *ProxyServer) handleConnection(connId int, conn net.Conn) {
+func (ps *proxyServer) handleConnection(connID int, conn net.Conn) {
 	defer conn.Close()
 
 	// Establishing connection to MySQL server for proxying packets
@@ -80,16 +80,16 @@ func (ps *ProxyServer) handleConnection(connId int, conn net.Conn) {
 
 	// Both calls to setConnectionState used to update connection state
 	// on connection open and close events
-	defer ps.setConnectionState(connId, connStateFinished)
-	ps.setConnectionState(connId, connStateStarted)
+	defer ps.setConnectionState(connID, connStateFinished)
+	ps.setConnectionState(connID, connStateStarted)
 
 	serverCapabilities, clientCapabilities := processHandshake(conn, mysql)
 
-	ps.extractAndForward(conn, mysql, connId, serverCapabilities, clientCapabilities)
+	ps.extractAndForward(conn, mysql, connID, serverCapabilities, clientCapabilities)
 }
 
 // extractAndForward reads data from proxy client, extracts queries and forwards them to MySQL
-func (ps *ProxyServer) extractAndForward(conn net.Conn, mysql net.Conn, connId int, serverCapabilities uint32, clientCapabilities uint32) {
+func (ps *proxyServer) extractAndForward(conn net.Conn, mysql net.Conn, connID int, serverCapabilities uint32, clientCapabilities uint32) {
 	var cmdId int
 	var deprecateEof = ((capabilityDeprecateEof & serverCapabilities) != 0) &&
 		((capabilityDeprecateEof & clientCapabilities) != 0)
@@ -119,7 +119,7 @@ func (ps *ProxyServer) extractAndForward(conn net.Conn, mysql net.Conn, connId i
 		// Received COM_QUERY from client
 		case requestCmdQuery:
 			query, _ := getQueryString(queryPacket)
-			ps.setCommand(connId, cmdId, query)
+			ps.setCommand(connID, cmdId, query, true)
 
 			start := time.Now()
 			writePacket(queryPacket, mysql)
@@ -127,9 +127,9 @@ func (ps *ProxyServer) extractAndForward(conn net.Conn, mysql net.Conn, connId i
 			response, result, err := readResponse(mysql, deprecateEof)
 			if err == nil {
 				if result == responseErr {
-					ps.setCommandResult(connId, cmdId, result, readErrMessage(response), time.Since(start))
+					ps.setCommandResult(connID, cmdId, result, readErrMessage(response), time.Since(start))
 				} else {
-					ps.setCommandResult(connId, cmdId, result, "", time.Since(start))
+					ps.setCommandResult(connID, cmdId, result, "", time.Since(start))
 				}
 
 				writePacket(response, conn)
@@ -138,14 +138,14 @@ func (ps *ProxyServer) extractAndForward(conn net.Conn, mysql net.Conn, connId i
 		// Received COM_STMT_PREPARE from client
 		case requestCmdStmtPrepare:
 			query, _ := getQueryString(queryPacket)
-			ps.setCommand(connId, cmdId, query)
+			ps.setCommand(connID, cmdId, query, false)
 
 			start := time.Now()
 			writePacket(queryPacket, mysql)
 
 			response, result, err := readPrepareResponse(mysql)
 			if err == nil {
-				ps.setCommandResult(connId, cmdId, result, "", time.Since(start))
+				ps.setCommandResult(connID, cmdId, result, "", time.Since(start))
 
 				writePacket(response, conn)
 			}
@@ -175,7 +175,7 @@ func (ps *ProxyServer) extractAndForward(conn net.Conn, mysql net.Conn, connId i
 
 // Run starts accepting TCP connections and forwarding them to MySQL server.
 // Each incoming TCP connection is handled in own goroutine.
-func (ps *ProxyServer) Run() {
+func (ps *proxyServer) Run() {
 	listener, err := net.Listen("tcp", ps.proxyHost)
 	if err != nil {
 		log.Fatal(err.Error())
@@ -187,15 +187,15 @@ func (ps *ProxyServer) Run() {
 		close(ps.appReadyChan)
 	}()
 
-	var connectionId int
+	var connectionID int
 	for {
 		conn, err := listener.Accept()
 		if err != nil {
 			log.Print(err.Error())
 		}
 
-		connectionId++
+		connectionID++
 
-		go ps.handleConnection(connectionId, conn)
+		go ps.handleConnection(connectionID, conn)
 	}
 }

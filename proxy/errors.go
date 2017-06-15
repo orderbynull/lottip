@@ -2,6 +2,6 @@ package proxy
 
 import "errors"
 
-var ErrWritePacket = errors.New("error while writing packet payload")
-var ErrNoQueryPacket = errors.New("malformed packet")
-var ErrInvalidProxyParams = errors.New("both proxy and mysql hosts must be set")
+var errWritePacket = errors.New("error while writing packet payload")
+var errNoQueryPacket = errors.New("malformed packet")
+var errInvalidProxyParams = errors.New("both proxy and mysql hosts must be set")

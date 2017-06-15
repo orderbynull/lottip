@@ -137,7 +137,7 @@
                                             <!--Copy button end-->
 
                                             <!--Execute button begin-->
-                                            <li>
+                                            <li v-bind:class="[query.executable ? '' : 'disabled']">
                                                 <a href="#" v-on:click.prevent="executeQuery(connId, query.cmdId)">Execute</a>
                                             </li>
                                             <!--Execute button end-->

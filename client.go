@@ -10,24 +10,24 @@ const (
 	writeDeadlinePeriod = time.Second * 2
 )
 
-// Client represents client connected via websocket
-type Client struct {
+// client represents client connected via websocket
+type client struct {
 	ws       *websocket.Conn
-	hub      *Hub
+	hub      *hub
 	dataChan chan []byte
 }
 
 // newClient creates new client instance
-func newClient(ws *websocket.Conn, hub *Hub) *Client {
-	return &Client{
+func newClient(ws *websocket.Conn, hub *hub) *client {
+	return &client{
 		ws:       ws,
 		hub:      hub,
 		dataChan: make(chan []byte),
 	}
 }
 
-// Process ...
-func (c *Client) Process() {
+// process ...
+func (c *client) process() {
 	ticker := time.NewTicker(pingPeriod)
 
 	defer func() {

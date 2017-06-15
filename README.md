@@ -39,7 +39,7 @@ Get binaries from [releases](https://github.com/orderbynull/lottip/releases) pag
 # How to run
 There're 4 simple steps to get everything up and running:
 1. Run binary from terminal like this: `./lottip_darwin_386`.
-You'll something like this:
+You'll see something like this:
 
     `Forwarding queries from '127.0.0.1:4041' to '127.0.0.1:3306'`
     
@@ -81,10 +81,10 @@ You can change default values to whatever you need.
 - [ ] Write Unit tests
 - [ ] Implement more features of MySQL protocol
 - [x] Add query filtering by string
-- [ ] Add query filtering by it's status
 - [ ] Add sql code highlighting
 - [ ] Add sql code formatting
-- [ ] Add possibility to execute/explain query right from GUI and see results
+- [x] Add possibility to execute query right from GUI and see results
+- [ ] Add ssl support
 - [ ] Add support of PostgreSQL protocol 
 - [ ] ... and more
 

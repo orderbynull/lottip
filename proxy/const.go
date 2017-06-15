@@ -17,7 +17,7 @@ const (
 	capabilityDeprecateEof = 0x100
 
 	// There is no code for Resultset in MySQL internal protocol
-	// so it's defined here for convenient usage
+	// so it's defined here for convenience
 	responseResultset = 0xbb
 
 	// MySQL connection state constants
