@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/orderbynull/lottip/chat"
 	"github.com/orderbynull/lottip/proxy"
 )
 
@@ -31,9 +32,9 @@ func main() {
 	connStateChan := make(chan proxy.ConnState)
 	appReadyChan := make(chan bool)
 
-	hub := newHub(cmdChan, cmdResultChan, connStateChan)
+	hub := chat.NewHub(cmdChan, cmdResultChan, connStateChan)
 
-	go hub.run()
+	go hub.Run()
 	go runHttpServer(hub)
 	go appReadyInfo(appReadyChan)
 

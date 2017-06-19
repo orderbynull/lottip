@@ -1,4 +1,4 @@
-package main
+package chat
 
 import (
 	"github.com/gorilla/websocket"
@@ -10,24 +10,24 @@ const (
 	writeDeadlinePeriod = time.Second * 2
 )
 
-// client represents client connected via websocket
-type client struct {
+// Client represents client(browser) connected via websocket
+type Client struct {
 	ws       *websocket.Conn
-	hub      *hub
+	hub      *Hub
 	dataChan chan []byte
 }
 
-// newClient creates new client instance
-func newClient(ws *websocket.Conn, hub *hub) *client {
-	return &client{
+// NewClient creates new Client instance
+func NewClient(ws *websocket.Conn, hub *Hub) *Client {
+	return &Client{
 		ws:       ws,
 		hub:      hub,
 		dataChan: make(chan []byte),
 	}
 }
 
-// process ...
-func (c *client) process() {
+// Process ...
+func (c *Client) Process() {
 	ticker := time.NewTicker(pingPeriod)
 
 	defer func() {

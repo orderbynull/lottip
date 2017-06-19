@@ -1,43 +1,43 @@
-package main
+package chat
 
 import (
 	"encoding/json"
 	"github.com/orderbynull/lottip/proxy"
 )
 
-// hub ...
-type hub struct {
-	clients       map[*client]bool
-	register      chan *client
-	deregister    chan *client
+// Hub ...
+type Hub struct {
+	clients       map[*Client]bool
+	register      chan *Client
+	deregister    chan *Client
 	cmdChan       chan proxy.Cmd
 	cmdResultChan chan proxy.CmdResult
 	connStateChan chan proxy.ConnState
 }
 
-// newHub ...
-func newHub(
+// NewHub ...
+func NewHub(
 	cmdChan chan proxy.Cmd,
 	cmdResultChan chan proxy.CmdResult,
 	connStateChan chan proxy.ConnState,
-) *hub {
-	return &hub{
-		clients:       make(map[*client]bool),
-		register:      make(chan *client),
-		deregister:    make(chan *client),
+) *Hub {
+	return &Hub{
+		clients:       make(map[*Client]bool),
+		register:      make(chan *Client),
+		deregister:    make(chan *Client),
 		cmdChan:       cmdChan,
 		cmdResultChan: cmdResultChan,
 		connStateChan: connStateChan,
 	}
 }
 
-// registerClient...
-func (h *hub) registerClient(client *client) {
+// RegisterClient...
+func (h *Hub) RegisterClient(client *Client) {
 	h.register <- client
 }
 
-// run ...
-func (h *hub) run() {
+// Run ...
+func (h *Hub) Run() {
 	var data []byte
 	for {
 		select {

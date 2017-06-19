@@ -2,9 +2,9 @@ package proxy
 
 // Cmd represents MySQL command to be executed.
 type Cmd struct {
-	ConnId int
-	CmdId  int
-	Query  string
+	ConnId     int
+	CmdId      int
+	Query      string
 	Executable bool
 }
 

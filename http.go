@@ -7,6 +7,7 @@ import (
 
 	"github.com/gorilla/websocket"
 	"github.com/olekukonko/tablewriter"
+	"github.com/orderbynull/lottip/chat"
 )
 
 const (
@@ -14,7 +15,7 @@ const (
 	webRoute       = "/"
 )
 
-func runHttpServer(hub *hub) {
+func runHttpServer(hub *chat.Hub) {
 
 	// Websockets endpoint
 	http.HandleFunc(websocketRoute, func(w http.ResponseWriter, r *http.Request) {
@@ -26,19 +27,19 @@ func runHttpServer(hub *hub) {
 			return
 		}
 
-		//Proper handling 'close' message from the peer
-		//https://godoc.org/github.com/gorilla/websocket#hdr-Control_Messages
+		// Proper handling 'close' message from the peer
+		// See https://godoc.org/github.com/gorilla/websocket#hdr-Control_Messages for details
 		go func() {
 			if _, _, err := conn.NextReader(); err != nil {
 				conn.Close()
 			}
 		}()
 
-		client := newClient(conn, hub)
+		client := chat.NewClient(conn, hub)
 
-		hub.registerClient(client)
+		hub.RegisterClient(client)
 
-		go client.process()
+		go client.Process()
 	})
 
 	// Query execution endpoint
