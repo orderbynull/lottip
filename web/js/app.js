@@ -28,51 +28,61 @@ new Vue({
         }
     },
 
+    // Fired after app created
     created: function () {
         this.connect();
     },
 
     methods: {
+        // Copies query string into clipboard
         copyQuery: function (connId, queryId) {
             if (clipboard.copy(this.connections[connId][queryId]['query']) && 'Notification' in window) {
 
-                if (Notification.permission === 'granted') {
+                const notify = function () {
                     var notification = new Notification(copyDoneMessage, {requireInteraction: false});
                     setTimeout(notification.close.bind(notification), 2000);
-                }
+                };
 
+                if (Notification.permission === 'granted') {
+                    notify();
+                }
                 else if (Notification.permission !== 'denied') {
                     Notification.requestPermission(function (permission) {
                         if (permission === 'granted') {
-                            var notification = new Notification(copyDoneMessage);
-                            setTimeout(notification.close.bind(notification), 2000);
+                            notify();
                         }
                     });
                 }
             }
         },
 
+        // Sends query string to http endpoint and shows result in modal window
         executeQuery: function (connId, queryId) {
             if (this.connections[connId][queryId]['executable']) {
                 var vue = this;
+                
+                $('#results').modal();
+
                 $.post(
                     executeUrl,
                     {query: this.connections[connId][queryId]['query']},
                     function (data) {
                         vue.modalQueryResult = data;
-                        $('#results').modal();
                     }
                 );
             }
         },
 
+        // Filters queries by user provided string
         getFilteredData: _.debounce(function () {
             this.tipMessage = '';
 
+            // Backup raw data if there's no backup yet
             if (this.backupConnections === null) {
                 this.backupConnections = this.connections;
             }
 
+            // Restore backup if filter is empty and backup exists
             if (this.filterQuery === '') {
                 if (this.backupConnections !== null) {
                     this.connections = this.backupConnections;
@@ -105,17 +115,19 @@ new Vue({
             this.connections = result;
         }, 500),
 
+        // Disconnects from websocket server
         disconnect: function () {
             this.connected && ws.close();
             console.error(this.connections);
         },
 
+        // Connects to websocket server
         connect: function () {
             var app = this;
 
+            // Connect back to the same addr this page was loaded from
             var parser = document.createElement('a');
             parser.href = window.location;
-
             ws = new WebSocket("ws://" + parser.host + "/ws");
 
             ws.onmessage = function (evt) {

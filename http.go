@@ -52,7 +52,7 @@ func runHttpServer(hub *chat.Hub) {
 
 		query := r.PostFormValue("query")
 
-		columns, rows, err := getQueryResults(query)
+		columns, rows, err := getQueryResults(query, *mysqlDsn)
 		if err != nil {
 			log.Println(err)
 			return

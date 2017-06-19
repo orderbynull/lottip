@@ -6,10 +6,10 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
-func getQueryResults(query string) ([]string, [][]string, error) {
+func getQueryResults(query string, dsn string) ([]string, [][]string, error) {
 
 	// Open database
-	db, err := sql.Open("mysql", "root:root@/")
+	db, err := sql.Open("mysql", dsn)
 	if err != nil {
 		return nil, nil, err
 	}
