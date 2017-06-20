@@ -4,6 +4,7 @@ const cmdResultError = 0xff;
 const typingMessage = 'Waiting for you to stop typing...';
 const copyDoneMessage = 'Copied to clipboard';
 const executeUrl = '/execute';
+const notificationShowTimeMs = 2000;
 
 var ws;
 
@@ -40,7 +41,7 @@ new Vue({
 
                 const notify = function () {
                     var notification = new Notification(copyDoneMessage, {requireInteraction: false});
-                    setTimeout(notification.close.bind(notification), 2000);
+                    setTimeout(notification.close.bind(notification), notificationShowTimeMs);
                 };
 
                 if (Notification.permission === 'granted') {

@@ -6,19 +6,34 @@ import (
 	"net"
 )
 
+//...
+type handshake struct {
+	//...
+	clientCapabilities uint32
+
+	//...
+	serverCapabilities uint32
+}
+
+//...
+func (h *handshake) deprecateEOF() bool {
+	return ((capabilityDeprecateEof & h.serverCapabilities) != 0) &&
+		((capabilityDeprecateEof & h.clientCapabilities) != 0)
+}
+
 // processHandshake handles handshake between client and MySQL server.
 // When client connects MySQL server for the first time "handshake"
 // packet is sent by MySQL server so it just should be delivered without analyzing.
 // Returns extended server and client capabilities flags
-func processHandshake(app net.Conn, mysql net.Conn) (uint32, uint32) {
+func processHandshake(app net.Conn, mysql net.Conn) *handshake {
 	serverPacket, _ := proxyPacket(mysql, app)
 	clientPacket, _ := proxyPacket(app, mysql)
 	proxyPacket(mysql, app)
 
-	serverCapabilities := uint32(binary.LittleEndian.Uint16(serverPacket[30 : 30+2]))
-	clientCapabilities := uint32(binary.LittleEndian.Uint16(clientPacket[6 : 6+2]))
-
-	return serverCapabilities, clientCapabilities
+	return &handshake{
+		clientCapabilities: uint32(binary.LittleEndian.Uint16(clientPacket[6 : 6+2])),
+		serverCapabilities: uint32(binary.LittleEndian.Uint16(serverPacket[30 : 30+2])),
+	}
 }
 
 // readPrepareResponse reads response from MySQL server for COM_STMT_PREPARE

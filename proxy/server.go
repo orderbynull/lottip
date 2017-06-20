@@ -9,12 +9,26 @@ import (
 
 // proxyServer implements server for capturing and forwarding MySQL traffic
 type proxyServer struct {
-	cmdChan       chan Cmd
-	cmdStateChan  chan CmdResult
+	//...
+	handshakes map[int]*handshake
+
+	//...
+	cmdChan chan Cmd
+
+	//...
+	cmdStateChan chan CmdResult
+
+	//...
 	connStateChan chan ConnState
-	appReadyChan  chan bool
-	mysqlHost     string
-	proxyHost     string
+
+	//...
+	appReadyChan chan bool
+
+	//...
+	mysqlHost string
+
+	//...
+	proxyHost string
 }
 
 // NewProxyServer returns new proxyServer with connections params for proxy and mysql hosts.
@@ -24,7 +38,23 @@ func NewProxyServer(proxyHost string, mysqlHost string) (*proxyServer, error) {
 		return nil, errInvalidProxyParams
 	}
 
-	return &proxyServer{proxyHost: proxyHost, mysqlHost: mysqlHost}, nil
+	return &proxyServer{handshakes: make(map[int]*handshake), proxyHost: proxyHost, mysqlHost: mysqlHost}, nil
+}
+
+//...
+//@TODO check for existence of handshake
+func (ps *proxyServer) getHandshake(connID int) *handshake {
+	return ps.handshakes[connID]
+}
+
+//...
+func (ps *proxyServer) setHandshake(connID int, handshake *handshake) {
+	ps.handshakes[connID] = handshake
+}
+
+//...
+func (ps *proxyServer) removeHandshake(connID int) {
+	delete(ps.handshakes, connID)
 }
 
 // SetChannels assigns user defined channels to proxyServer.
@@ -69,6 +99,7 @@ func (ps *proxyServer) setConnectionState(connId int, state byte) {
 // handleConnection ...
 func (ps *proxyServer) handleConnection(connID int, conn net.Conn) {
 	defer conn.Close()
+	defer ps.removeHandshake(connID)
 
 	// Establishing connection to MySQL server for proxying packets
 	// New connection is made per each TCP request to proxy server
@@ -83,19 +114,17 @@ func (ps *proxyServer) handleConnection(connID int, conn net.Conn) {
 	defer ps.setConnectionState(connID, connStateFinished)
 	ps.setConnectionState(connID, connStateStarted)
 
-	serverCapabilities, clientCapabilities := processHandshake(conn, mysql)
+	ps.setHandshake(connID, processHandshake(conn, mysql))
 
-	ps.extractAndForward(conn, mysql, connID, serverCapabilities, clientCapabilities)
+	ps.extractAndForward(conn, mysql, connID)
 }
 
 // extractAndForward reads data from proxy client, extracts queries and forwards them to MySQL
-func (ps *proxyServer) extractAndForward(conn net.Conn, mysql net.Conn, connID int, serverCapabilities uint32, clientCapabilities uint32) {
+func (ps *proxyServer) extractAndForward(conn net.Conn, mysql net.Conn, connID int) {
 	var cmdId int
-	var deprecateEof = ((capabilityDeprecateEof & serverCapabilities) != 0) &&
-		((capabilityDeprecateEof & clientCapabilities) != 0)
+	var deprecateEof = ps.getHandshake(connID).deprecateEOF()
 
 	for {
-
 		//Client query --> $queryPacket - -> mysql
 		queryPacket, err := readPacket(conn)
 		if err != nil {

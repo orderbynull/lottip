@@ -54,7 +54,7 @@ func runHttpServer(hub *chat.Hub) {
 
 		columns, rows, err := getQueryResults(query, *mysqlDsn)
 		if err != nil {
-			log.Println(err)
+			fmt.Fprint(w, err.Error())
 			return
 		}
 
