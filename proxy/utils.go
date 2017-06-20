@@ -1,5 +1,7 @@
 package proxy
 
+import "strings"
+
 func lenDecInt(b []byte) (uint64, uint64, bool) {
 	if len(b) == 0 {
 		return 0, 0, true
@@ -19,4 +21,15 @@ func lenDecInt(b []byte) (uint64, uint64, bool) {
 	default:
 		return uint64(b[0]), 1, false
 	}
+}
+
+func haventYetDecidedFuncName(query string) string {
+	var db = ""
+
+	words := strings.Fields(query)
+	if len(words) == 2 && strings.ToUpper(words[0]) == "USE" {
+		db = words[1]
+	}
+
+	return db
 }

@@ -13,12 +13,25 @@ type handshake struct {
 
 	//...
 	serverCapabilities uint32
+
+	//...
+	selectedDb string
 }
 
 //...
 func (h *handshake) deprecateEOF() bool {
 	return ((capabilityDeprecateEof & h.serverCapabilities) != 0) &&
 		((capabilityDeprecateEof & h.clientCapabilities) != 0)
+}
+
+//...
+func (h *handshake) setSelectedDb(db string) {
+	h.selectedDb = db
+}
+
+//...
+func (h *handshake) getSelectedDb() string {
+	return h.selectedDb
 }
 
 // processHandshake handles handshake between client and MySQL server.

@@ -6,6 +6,7 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
+//...
 func getQueryResults(query string, dsn string) ([]string, [][]string, error) {
 
 	// Open database

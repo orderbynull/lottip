@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"strings"
 	"time"
 )
 
@@ -148,6 +149,12 @@ func (ps *proxyServer) extractAndForward(conn net.Conn, mysql net.Conn, connID i
 		// Received COM_QUERY from client
 		case requestCmdQuery:
 			query, _ := getQueryString(queryPacket)
+
+			selectedDb := haventYetDecidedFuncName(query)
+			if len(selectedDb) > 0 {
+				ps.getHandshake(connID).setSelectedDb(selectedDb)
+			}
+
 			ps.setCommand(connID, cmdId, query, true)
 
 			start := time.Now()
@@ -167,6 +174,12 @@ func (ps *proxyServer) extractAndForward(conn net.Conn, mysql net.Conn, connID i
 		// Received COM_STMT_PREPARE from client
 		case requestCmdStmtPrepare:
 			query, _ := getQueryString(queryPacket)
+
+			selectedDb := haventYetDecidedFuncName(query)
+			if len(selectedDb) > 0 {
+				ps.getHandshake(connID).setSelectedDb(selectedDb)
+			}
+
 			ps.setCommand(connID, cmdId, query, false)
 
 			start := time.Now()
