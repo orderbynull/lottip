@@ -60,7 +60,9 @@ new Vue({
         executeQuery: function (connId, queryId) {
             if (this.connections[connId][queryId]['executable']) {
                 var vue = this;
-                
+
+                vue.modalQueryResult = '';
+
                 $('#results').modal();
 
                 $.post(

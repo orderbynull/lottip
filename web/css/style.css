@@ -116,3 +116,10 @@
 #bootstrap-override table tr td.expanded {
     white-space: normal;
 }
+
+/*Modal window styles*/
+#bootstrap-override #results #modal-preloader {
+    text-align: center;
+    font-size: 17px;
+    color: #FFFFFF;
+}
