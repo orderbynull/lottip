@@ -3,11 +3,12 @@ package main
 import (
 	"database/sql"
 
+	"fmt"
 	_ "github.com/go-sql-driver/mysql"
 )
 
 //...
-func getQueryResults(query string, dsn string) ([]string, [][]string, error) {
+func getQueryResults(database, query, dsn string) ([]string, [][]string, error) {
 
 	// Open database
 	db, err := sql.Open("mysql", dsn)
@@ -15,6 +16,13 @@ func getQueryResults(query string, dsn string) ([]string, [][]string, error) {
 		return nil, nil, err
 	}
 	defer db.Close()
+
+	if len(database) > 0 {
+		_, err = db.Exec(fmt.Sprintf("USE %s;", database))
+		if err != nil {
+			return nil, nil, err
+		}
+	}
 
 	// Execute query
 	rows, err := db.Query(query)

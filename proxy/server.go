@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"net"
-	"strings"
 	"time"
 )
 
@@ -75,8 +74,8 @@ func (ps *proxyServer) SetChannels(
 
 // setCommand writes command string representation and it's id to command channel
 // provided by caller code via NewProxyServer routine
-func (ps *proxyServer) setCommand(connID int, cmdID int, query string, executable bool) {
-	ps.cmdChan <- Cmd{ConnId: connID, CmdId: cmdID, Query: query, Executable: executable}
+func (ps *proxyServer) setCommand(connID int, cmdID int, database string, query string, executable bool) {
+	ps.cmdChan <- Cmd{ConnId: connID, CmdId: cmdID, Database: database, Query: query, Executable: executable}
 }
 
 // setCommandResult writes command execution result to command result channel
@@ -155,7 +154,7 @@ func (ps *proxyServer) extractAndForward(conn net.Conn, mysql net.Conn, connID i
 				ps.getHandshake(connID).setSelectedDb(selectedDb)
 			}
 
-			ps.setCommand(connID, cmdId, query, true)
+			ps.setCommand(connID, cmdId, ps.getHandshake(connID).getSelectedDb(), query, true)
 
 			start := time.Now()
 			writePacket(queryPacket, mysql)
@@ -180,7 +179,7 @@ func (ps *proxyServer) extractAndForward(conn net.Conn, mysql net.Conn, connID i
 				ps.getHandshake(connID).setSelectedDb(selectedDb)
 			}
 
-			ps.setCommand(connID, cmdId, query, false)
+			ps.setCommand(connID, cmdId, ps.getHandshake(connID).getSelectedDb(), query, false)
 
 			start := time.Now()
 			writePacket(queryPacket, mysql)

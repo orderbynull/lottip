@@ -4,6 +4,7 @@ package proxy
 type Cmd struct {
 	ConnId     int
 	CmdId      int
+	Database   string
 	Query      string
 	Executable bool
 }
