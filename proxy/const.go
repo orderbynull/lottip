@@ -15,8 +15,9 @@ const (
 	responseLocalinfile = 0xfb
 
 	// MySQL field types constants
-	fieldTypeString = 0xfd
+	fieldTypeString   = 0xfd
 	fieldTypeLongLong = 0x08
+	fieldTypeDouble   = 0x05
 
 	// Extended client capabilities
 	capabilityDeprecateEof = 0x100

@@ -5,6 +5,7 @@ import (
 	"encoding/binary"
 	"errors"
 	"io"
+	"math"
 	"strconv"
 )
 
@@ -105,24 +106,39 @@ func DecodeComStmtExecuteRequest(packet []byte, paramsCount int) (*ComStmtExecut
 		for index, parameter := range parameters {
 			switch parameter.FieldType {
 
-			//MYSQL_TYPE_VAR_STRING
+			// MYSQL_TYPE_VAR_STRING
+			// It's length encoded string
 			case fieldTypeString:
 				// Read first byte of parameter value to know buffer length for whole value
 				stringLengthBuf := make([]byte, 1)
 				reader.Read(stringLengthBuf)
+
 				stringLength, _, _ := readLenEncodedInt(stringLengthBuf)
 				reader.UnreadByte()
 
 				// Read whole length encoded string
 				stringValueBuf := make([]byte, stringLength+1)
 				reader.Read(stringValueBuf)
+
 				_, stringValue = readLenEncodedString(stringValueBuf)
 
-			//MYSQL_TYPE_LONGLONG
+			// MYSQL_TYPE_LONGLONG
 			case fieldTypeLongLong:
 				var bigIntValue int64
 				binary.Read(reader, binary.LittleEndian, &bigIntValue)
+
 				stringValue = strconv.FormatInt(bigIntValue, 10)
+
+			// MYSQL_TYPE_DOUBLE
+			case fieldTypeDouble:
+				// Read 8 bytes required for float64
+				doubleLengthBuf := make([]byte, 8)
+				reader.Read(doubleLengthBuf)
+
+				doubleBits := binary.LittleEndian.Uint64(doubleLengthBuf)
+				doubleValue := math.Float64frombits(doubleBits)
+
+				stringValue = strconv.FormatFloat(doubleValue, 'f', 6, 64)
 			}
 
 			parameters[index].Value = stringValue
