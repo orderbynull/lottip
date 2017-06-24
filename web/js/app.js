@@ -16,7 +16,6 @@ new Vue({
         backupConnections: null,
         connectionsStates: {},
         queriesCount: 0,
-        globalExpand: false,
         filterQuery: '',
         tipMessage: '',
         modalQueryResult: ''
@@ -175,11 +174,6 @@ new Vue({
         clearAll: function () {
             this.connections = {};
             this.queriesCount = 0;
-        },
-
-        // Globally expand or collapse all queries
-        toggleGlobalExpand: function () {
-            this.globalExpand = !this.globalExpand;
         },
 
         // Expand or collapse truncated query

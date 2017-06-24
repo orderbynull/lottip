@@ -19,7 +19,7 @@ type handshake struct {
 }
 
 //...
-func (h *handshake) deprecateEOF() bool {
+func (h *handshake) isDeprecateEOFSet() bool {
 	return ((capabilityDeprecateEof & h.serverCapabilities) != 0) &&
 		((capabilityDeprecateEof & h.clientCapabilities) != 0)
 }
@@ -126,7 +126,7 @@ func readResponse(conn net.Conn, deprecateEof bool) ([]byte, byte, error) {
 	data = append(data, pkt...)
 
 	if !deprecateEof {
-		columns, _, _ := lenDecInt(pkt[4:])
+		columns, _, _ := readLenEncodedInt(pkt[4:])
 
 		toRead := int(columns) + 1
 

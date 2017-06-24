@@ -122,7 +122,7 @@ func (ps *proxyServer) handleConnection(connID int, conn net.Conn) {
 // extractAndForward reads data from proxy client, extracts queries and forwards them to MySQL
 func (ps *proxyServer) extractAndForward(conn net.Conn, mysql net.Conn, connID int) {
 	var cmdId int
-	var deprecateEof = ps.getHandshake(connID).deprecateEOF()
+	var deprecateEof = ps.getHandshake(connID).isDeprecateEOFSet()
 
 	for {
 		//Client query --> $queryPacket - -> mysql
@@ -146,7 +146,7 @@ func (ps *proxyServer) extractAndForward(conn net.Conn, mysql net.Conn, connID i
 		switch queryPacket[4] {
 
 		// Received COM_QUERY from client
-		case requestCmdQuery:
+		case requestComQuery:
 			query, _ := getQueryString(queryPacket)
 
 			selectedDb := haventYetDecidedFuncName(query)
@@ -171,7 +171,7 @@ func (ps *proxyServer) extractAndForward(conn net.Conn, mysql net.Conn, connID i
 			}
 
 		// Received COM_STMT_PREPARE from client
-		case requestCmdStmtPrepare:
+		case requestComStmtPrepare:
 			query, _ := getQueryString(queryPacket)
 
 			selectedDb := haventYetDecidedFuncName(query)
@@ -191,19 +191,19 @@ func (ps *proxyServer) extractAndForward(conn net.Conn, mysql net.Conn, connID i
 				writePacket(response, conn)
 			}
 
-		// Received COM_STMT_EXECUTE from MySQL client
-		case requestCmdStmtExecute:
+		// Received requestComStmtExecute from MySQL client
+		case requestComStmtExecute:
 			writePacket(queryPacket, mysql)
 			response, _, _ := readResponse(mysql, deprecateEof)
 			writePacket(response, conn)
 
-		case requestCmdShowFields:
+		case requestComShowFields:
 			writePacket(queryPacket, mysql)
 			response, _, _ := readShowFieldsResponse(mysql)
 			writePacket(response, conn)
 
 		// Received COM_STMT_CLOSE from client
-		case requestCmdStmtClose:
+		case requestComStmtClose:
 			continue
 
 		default:
