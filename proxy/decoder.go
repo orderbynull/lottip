@@ -20,14 +20,18 @@ type PreparedParameter struct {
 	Value     string
 }
 
-//[0,1,2]:  int<3> PacketLength
-//[3]: 	    int<1> PacketNumber
-//[4]:      int<1> COM_STMT_EXECUTE (0x17)
-//[5,6,7]:  int<4> StatementID
-//[8]:      int<1> Flags
-//[9,10,11] int<4> IterationCount = 1
-// 			if (ParamCount > 0)
-//			{
+// DecodeComStmtExecuteRequest decodes COM_STMT_EXECUTE packet sent by MySQL client.
+// Basic packet structure shown below.
+// For more details see https://mariadb.com/kb/en/mariadb/com_stmt_execute/
+
+// [0,1,2]:  int<3> PacketLength
+// [3]: 	 int<1> PacketNumber
+// [4]:      int<1> COM_STMT_EXECUTE (0x17)
+// [5,6,7]:  int<4> StatementID
+// [8]:      int<1> Flags
+// [9,10,11] int<4> IterationCount = 1
+// 			 if (ParamCount > 0)
+//			 {
 // 				byte<(ParamCount + 7) / 8> NullBitmap
 // 				byte<1>: SendTypeToServer = 0 or 1
 // 				if (SendTypeToServer)
@@ -42,12 +46,16 @@ type PreparedParameter struct {
 //				{
 // 					byte<n> BinaryParameterValue
 //				}
-//			}
+//			 }
 func DecodeComStmtExecuteRequest(packet []byte, paramsCount int) (*ComStmtExecuteRequest, error) {
+
+	// Min packet length = header(4 bytes) + command(1 byte) + statementID(4 bytes)
+	// + flags(1 byte) + iteration count(4 bytes)
 	if len(packet) < 14 {
 		return nil, errInvalidPacketLength
 	}
 
+	// Fifth byte is command
 	if packet[4] != requestComStmtExecute {
 		return nil, errInvalidPacketType
 	}
@@ -57,7 +65,6 @@ func DecodeComStmtExecuteRequest(packet []byte, paramsCount int) (*ComStmtExecut
 	// Skip to statementID position
 	reader.Seek(5, io.SeekStart)
 
-	//TODO: проверить как в драйвере MySQL считывается это значение
 	// Read StatementID value
 	statementIDBuf := make([]byte, 4)
 	reader.Read(statementIDBuf)
