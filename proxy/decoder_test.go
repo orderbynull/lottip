@@ -43,9 +43,8 @@ func TestDecodeComStmtExecuteRequestWithIncorrectPacketSize(t *testing.T) {
 }
 
 func TestDecodeComStmtExecuteRequestCorrectPacketWithStringParams(t *testing.T) {
-
-	const packetParametersCount = 3
 	validPacketParametersValues := []string{"1.2345678910111E+21", "XYZZZZ", "ABCDEFGHIKLMONPQRSTYW"}
+	packetParametersCount := len(validPacketParametersValues)
 	validPacket := []byte{
 		0x43, 0x00, 0x00, 0x00, requestComStmtExecute, 0x01, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00,
 		0x00, 0x00, 0x01, 0xfd, 0x00, 0xfd, 0x00, 0xfd, 0x00, 0x13, 0x31, 0x2e, 0x32, 0x33, 0x34, 0x35,
@@ -71,6 +70,32 @@ func TestDecodeComStmtExecuteRequestCorrectPacketWithStringParams(t *testing.T) 
 	for i := 0; i < packetParametersCount; i++ {
 		if decoded.PreparedParameters[i].FieldType != fieldTypeString {
 			t.Fatalf("Expected: 0x%x, got 0x%x", fieldTypeString, decoded.PreparedParameters[i].FieldType)
+		}
+
+		if decoded.PreparedParameters[i].Value != validPacketParametersValues[i] {
+			t.Fatalf("Expected %s, got %s", validPacketParametersValues[i], decoded.PreparedParameters[i].Value)
+		}
+	}
+}
+
+func TestDecodeComStmtExecuteRequestCorrectPacketWithLongLongParam(t *testing.T) {
+	validPacketParametersValues := []string{"12345", "-54321"}
+	packetParametersCount := len(validPacketParametersValues)
+	validPacket := []byte{
+		0x20, 0x00, 0x00, 0x00, requestComStmtExecute, 0x01, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x01,
+		0x08, 0x00, 0x08, 0x00, 0x39, 0x30, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xcf, 0x2b, 0xff, 0xff,
+		0xff, 0xff, 0xff, 0xff,
+	}
+
+	decoded, err := DecodeComStmtExecuteRequest(validPacket, packetParametersCount)
+
+	if err != nil {
+		t.Fatalf("Expected nil, got: '%s'", err.Error())
+	}
+
+	for i := 0; i < packetParametersCount; i++ {
+		if decoded.PreparedParameters[i].FieldType != fieldTypeLongLong {
+			t.Fatalf("Expected: 0x%x, got 0x%x", fieldTypeLongLong, decoded.PreparedParameters[i].FieldType)
 		}
 
 		if decoded.PreparedParameters[i].Value != validPacketParametersValues[i] {

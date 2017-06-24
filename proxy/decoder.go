@@ -2,8 +2,10 @@ package proxy
 
 import (
 	"bytes"
+	"encoding/binary"
 	"errors"
 	"io"
+	"strconv"
 )
 
 var errInvalidPacketLength = errors.New("Invalid packet length")
@@ -98,8 +100,12 @@ func DecodeComStmtExecuteRequest(packet []byte, paramsCount int) (*ComStmtExecut
 			}
 		}
 
+		var stringValue string
+
 		for index, parameter := range parameters {
 			switch parameter.FieldType {
+
+			//MYSQL_TYPE_VAR_STRING
 			case fieldTypeString:
 				// Read first byte of parameter value to know buffer length for whole value
 				stringLengthBuf := make([]byte, 1)
@@ -110,10 +116,16 @@ func DecodeComStmtExecuteRequest(packet []byte, paramsCount int) (*ComStmtExecut
 				// Read whole length encoded string
 				stringValueBuf := make([]byte, stringLength+1)
 				reader.Read(stringValueBuf)
-				_, stringValue := readLenEncodedString(stringValueBuf)
+				_, stringValue = readLenEncodedString(stringValueBuf)
 
-				parameters[index].Value = stringValue
+			//MYSQL_TYPE_LONGLONG
+			case fieldTypeLongLong:
+				var bigIntValue int64
+				binary.Read(reader, binary.LittleEndian, &bigIntValue)
+				stringValue = strconv.FormatInt(bigIntValue, 10)
 			}
+
+			parameters[index].Value = stringValue
 		}
 	}
 

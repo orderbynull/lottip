@@ -16,6 +16,7 @@ const (
 
 	// MySQL field types constants
 	fieldTypeString = 0xfd
+	fieldTypeLongLong = 0x08
 
 	// Extended client capabilities
 	capabilityDeprecateEof = 0x100
