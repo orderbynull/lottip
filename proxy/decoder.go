@@ -106,7 +106,7 @@ type PreparedParameter struct {
 // 					byte<n> BinaryParameterValue
 //				 }
 //			  }
-func DecodeComStmtExecuteRequest(packet []byte, paramsCount int) (*ComStmtExecuteRequest, error) {
+func DecodeComStmtExecuteRequest(packet []byte, paramsCount uint16) (*ComStmtExecuteRequest, error) {
 
 	// Min packet length = header(4 bytes) + command(1 byte) + statementID(4 bytes)
 	// + flags(1 byte) + iteration count(4 bytes)
@@ -143,7 +143,7 @@ func DecodeComStmtExecuteRequest(packet []byte, paramsCount int) (*ComStmtExecut
 		// Read SendTypeToServer value
 		sendTypeToServerBuf := make([]byte, 1)
 		reader.Read(sendTypeToServerBuf)
-		sendTypeToServer, _, _ := readLenEncodedInt(sendTypeToServerBuf)
+		sendTypeToServer, _, _ := ReadLenEncodedInt(sendTypeToServerBuf)
 
 		if sendTypeToServer == 1 {
 			for index, _ := range parameters {
@@ -169,14 +169,17 @@ func DecodeComStmtExecuteRequest(packet []byte, paramsCount int) (*ComStmtExecut
 				stringLengthBuf := make([]byte, 1)
 				reader.Read(stringLengthBuf)
 
-				stringLength, _, _ := readLenEncodedInt(stringLengthBuf)
+				stringLength, _, _ := ReadLenEncodedInt(stringLengthBuf)
 				reader.UnreadByte()
 
-				// Read whole length encoded string
-				stringValueBuf := make([]byte, stringLength+1)
-				reader.Read(stringValueBuf)
+				// Packets with 0 length parameter are also possible
+				if stringLength > 0 {
+					// Read whole length encoded string
+					stringValueBuf := make([]byte, stringLength+1)
+					reader.Read(stringValueBuf)
 
-				_, stringValue = readLenEncodedString(stringValueBuf)
+					stringValue, _ = ReadLenEncodedString(stringValueBuf)
+				}
 
 			// MYSQL_TYPE_LONGLONG
 			case fieldTypeLongLong:
@@ -204,7 +207,7 @@ func DecodeComStmtExecuteRequest(packet []byte, paramsCount int) (*ComStmtExecut
 	return &ComStmtExecuteRequest{StatementID: statementID, PreparedParameters: parameters}, nil
 }
 
-func readLenEncodedInt(b []byte) (uint64, uint64, bool) {
+func ReadLenEncodedInt(b []byte) (uint64, uint64, bool) {
 	if len(b) == 0 {
 		return 0, 0, true
 	}
@@ -225,8 +228,9 @@ func readLenEncodedInt(b []byte) (uint64, uint64, bool) {
 	}
 }
 
-func readLenEncodedString(b []byte) (uint64, string) {
-	strLen, offset, _ := readLenEncodedInt(b)
+// ReadLenEncodedString returns length decoded string and it's length
+func ReadLenEncodedString(b []byte) (string, uint64) {
+	strLen, offset, _ := ReadLenEncodedInt(b)
 
-	return strLen, string(b[offset : offset+strLen])
+	return string(b[offset : offset+strLen]), strLen
 }

@@ -74,8 +74,27 @@ func (ps *proxyServer) SetChannels(
 
 // setCommand writes command string representation and it's id to command channel
 // provided by caller code via NewProxyServer routine
-func (ps *proxyServer) setCommand(connID int, cmdID int, database string, query string, executable bool) {
-	ps.cmdChan <- Cmd{ConnId: connID, CmdId: cmdID, Database: database, Query: query, Executable: executable}
+func (ps *proxyServer) setCommand(
+	connID int,
+	cmdID int,
+	database string,
+	query string,
+	params []PreparedParameter,
+	executable bool,
+) {
+	var parametersSlice []string
+	for _, parameter := range params {
+		parametersSlice = append(parametersSlice, parameter.Value)
+	}
+
+	ps.cmdChan <- Cmd{
+		ConnId:     connID,
+		CmdId:      cmdID,
+		Database:   database,
+		Query:      query,
+		Executable: executable,
+		Parameters: parametersSlice,
+	}
 }
 
 // setCommandResult writes command execution result to command result channel
@@ -122,6 +141,8 @@ func (ps *proxyServer) handleConnection(connID int, conn net.Conn) {
 // extractAndForward reads data from proxy client, extracts queries and forwards them to MySQL
 func (ps *proxyServer) extractAndForward(conn net.Conn, mysql net.Conn, connID int) {
 	var cmdId int
+	var preparedQuery string
+	var preparedParamsCount uint16
 	var deprecateEof = ps.getHandshake(connID).isDeprecateEOFSet()
 
 	for {
@@ -154,7 +175,14 @@ func (ps *proxyServer) extractAndForward(conn net.Conn, mysql net.Conn, connID i
 				ps.getHandshake(connID).setSelectedDb(selectedDb)
 			}
 
-			ps.setCommand(connID, cmdId, ps.getHandshake(connID).getSelectedDb(), query, true)
+			ps.setCommand(
+				connID,
+				cmdId,
+				ps.getHandshake(connID).getSelectedDb(),
+				query,
+				[]PreparedParameter{},
+				true,
+			)
 
 			start := time.Now()
 			writePacket(queryPacket, mysql)
@@ -179,20 +207,48 @@ func (ps *proxyServer) extractAndForward(conn net.Conn, mysql net.Conn, connID i
 				ps.getHandshake(connID).setSelectedDb(selectedDb)
 			}
 
-			ps.setCommand(connID, cmdId, ps.getHandshake(connID).getSelectedDb(), query, false)
+			//ps.setCommand(
+			//	connID,
+			//	cmdId,
+			//	ps.getHandshake(connID).getSelectedDb(),
+			//	query,
+			//	[]PreparedParameter{},
+			//	true,
+			//)
 
-			start := time.Now()
+			//start := time.Now()
 			writePacket(queryPacket, mysql)
 
-			response, result, err := readPrepareResponse(mysql)
+			response, _, err := readPrepareResponse(mysql)
 			if err == nil {
-				ps.setCommandResult(connID, cmdId, result, "", time.Since(start))
+				//ps.setCommandResult(connID, cmdId, result, "", time.Since(start))
+
+				decodedResponse, err := DecodeComStmtPrepareOkResponse(response)
+				if err == nil {
+					preparedParamsCount = decodedResponse.ParametersNum
+					preparedQuery = query
+					println(query)
+				}
 
 				writePacket(response, conn)
 			}
 
 		// Received requestComStmtExecute from MySQL client
 		case requestComStmtExecute:
+			decodedRequest, err := DecodeComStmtExecuteRequest(queryPacket, preparedParamsCount)
+			if err == nil {
+				//println(preparedQuery, decodedRequest.StatementID, preparedParamsCount)
+
+				ps.setCommand(
+					connID,
+					cmdId,
+					ps.getHandshake(connID).getSelectedDb(),
+					preparedQuery,
+					decodedRequest.PreparedParameters,
+					true,
+				)
+			}
+
 			writePacket(queryPacket, mysql)
 			response, _, _ := readResponse(mysql, deprecateEof)
 			writePacket(response, conn)

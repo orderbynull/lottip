@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 
+	"encoding/json"
 	"github.com/gorilla/websocket"
 	"github.com/olekukonko/tablewriter"
 	"github.com/orderbynull/lottip/chat"
@@ -50,10 +51,17 @@ func runHttpServer(hub *chat.Hub) {
 			return
 		}
 
-		database := r.PostFormValue("database")
-		query := r.PostFormValue("query")
+		type Data struct {
+			Database   string
+			Query      string
+			Parameters []string
+		}
 
-		columns, rows, err := getQueryResults(database, query, *mysqlDsn)
+		var parsedData Data
+		data := r.PostFormValue("data")
+		json.Unmarshal([]byte(data), &parsedData)
+
+		columns, rows, err := getQueryResults(parsedData.Database, parsedData.Query, parsedData.Parameters, *mysqlDsn)
 		if err != nil {
 			fmt.Fprint(w, err.Error())
 			return

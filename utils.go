@@ -8,7 +8,8 @@ import (
 )
 
 //...
-func getQueryResults(database, query, dsn string) ([]string, [][]string, error) {
+func getQueryResults(database, query string, params []string, dsn string) ([]string, [][]string, error) {
+	//isPrepared := true
 
 	// Open database
 	db, err := sql.Open("mysql", dsn)
@@ -24,8 +25,14 @@ func getQueryResults(database, query, dsn string) ([]string, [][]string, error) 
 		}
 	}
 
+	// Prepare params
+	var interfaceSlice []interface{} = make([]interface{}, len(params))
+	for i, d := range params {
+		interfaceSlice[i] = d
+	}
+
 	// Execute query
-	rows, err := db.Query(query)
+	rows, err := db.Query(query, interfaceSlice...)
 	if err != nil {
 		return nil, nil, err
 	}

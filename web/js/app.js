@@ -68,8 +68,11 @@ new Vue({
                 $.post(
                     executeUrl,
                     {
-                        database: this.connections[connId][queryId]['database'],
-                        query: this.connections[connId][queryId]['query']
+                        data: JSON.stringify({
+                            databse:this.connections[connId][queryId]['database'],
+                            query: this.connections[connId][queryId]['query'],
+                            parameters: this.connections[connId][queryId]['parameters']
+                        })
                     },
                     function (data) {
                         vue.modalQueryResult = data;
@@ -140,7 +143,8 @@ new Vue({
 
                 //Cmd received
                 if ('Query' in data) {
-                    app.cmdReceived(data.ConnId, data.CmdId, data.Database, data.Query, data.Executable);
+                    console.log(data);
+                    app.cmdReceived(data.ConnId, data.CmdId, data.Database, data.Query, data.Parameters, data.Executable);
                     return;
                 }
 
@@ -183,7 +187,7 @@ new Vue({
         },
 
         // Fired when received Cmd data from websocket
-        cmdReceived: function (connId, cmdId, database, query, executable) {
+        cmdReceived: function (connId, cmdId, database, query, parameters, executable) {
             if (!(connId in this.connections)) {
                 Vue.set(this.connections, connId, {});
             }
@@ -193,6 +197,7 @@ new Vue({
                 cmdId: cmdId,
                 database: database,
                 query: query,
+                parameters: parameters,
                 expanded: true,
                 executable: executable,
                 result: 'result-pending',

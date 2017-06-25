@@ -6,6 +6,7 @@ type Cmd struct {
 	CmdId      int
 	Database   string
 	Query      string
+	Parameters []string
 	Executable bool
 }
 
