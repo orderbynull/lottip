@@ -12,7 +12,7 @@ func TestReadLenEncodedStringWithValidData(t *testing.T) {
 	_, str := readLenEncodedString(validStringBytes)
 
 	if str != expectedStr {
-		t.Fatalf("Expected '%s', got '%s'", expectedStr, str)
+		t.Errorf("Expected '%s', got '%s'", expectedStr, str)
 	}
 }
 
@@ -28,7 +28,7 @@ func TestDecodeComStmtExecuteRequestWithIncorrectPacketType(t *testing.T) {
 	_, err := DecodeComStmtExecuteRequest(invalidTypePacket, 0)
 
 	if err == nil {
-		t.Fatalf("Expected '%s', got nil", errInvalidPacketType)
+		t.Errorf("Expected '%s', got nil", errInvalidPacketType)
 	}
 }
 
@@ -38,7 +38,7 @@ func TestDecodeComStmtExecuteRequestWithIncorrectPacketSize(t *testing.T) {
 	_, err := DecodeComStmtExecuteRequest(invalidLengthPacket, 0)
 
 	if err == nil {
-		t.Fatalf("Expected '%s', got nil", errInvalidPacketLength)
+		t.Errorf("Expected '%s', got nil", errInvalidPacketLength)
 	}
 }
 
@@ -56,20 +56,20 @@ func TestDecodeComStmtExecuteRequestCorrectPacketWithStringParams(t *testing.T) 
 	decoded, err := DecodeComStmtExecuteRequest(validPacket, packetParametersCount)
 
 	if err != nil {
-		t.Fatalf("Expected nil, got: '%s'", err.Error())
+		t.Errorf("Expected nil, got: '%s'", err.Error())
 	}
 
 	if decoded.StatementID != 1 {
-		t.Fatalf("Expected %d, got %d", 1, decoded.StatementID)
+		t.Errorf("Expected %d, got %d", 1, decoded.StatementID)
 	}
 
 	if len(decoded.PreparedParameters) != packetParametersCount {
-		t.Fatalf("Expected: %d, got %d", packetParametersCount, len(decoded.PreparedParameters))
+		t.Errorf("Expected: %d, got %d", packetParametersCount, len(decoded.PreparedParameters))
 	}
 
 	for i := 0; i < packetParametersCount; i++ {
 		if decoded.PreparedParameters[i].Value != validPacketParametersValues[i] {
-			t.Fatalf("Expected %s, got %s", validPacketParametersValues[i], decoded.PreparedParameters[i].Value)
+			t.Errorf("Expected %s, got %s", validPacketParametersValues[i], decoded.PreparedParameters[i].Value)
 		}
 	}
 }
@@ -87,12 +87,44 @@ func TestDecodeComStmtExecuteRequestCorrectPacketWithNumericParams(t *testing.T)
 	decoded, err := DecodeComStmtExecuteRequest(validPacket, packetParametersCount)
 
 	if err != nil {
-		t.Fatalf("Expected nil, got: '%s'", err.Error())
+		t.Errorf("Expected nil, got: '%s'", err.Error())
 	}
 
 	for i := 0; i < packetParametersCount; i++ {
 		if decoded.PreparedParameters[i].Value != validPacketParametersValues[i] {
-			t.Fatalf("Expected %s, got %s", validPacketParametersValues[i], decoded.PreparedParameters[i].Value)
+			t.Errorf("Expected %s, got %s", validPacketParametersValues[i], decoded.PreparedParameters[i].Value)
 		}
+	}
+}
+
+func TestDecodeComStmtPrepareOkResponseWithInvalidPacket(t *testing.T) {
+	invalidPacket := []byte{
+		0x0c, 0x00, 0x00, 0x01, 0x00, 0x01, 0x00, 0x00, 0x00, 0x04, 0x00, 0x04,
+	}
+
+	_, err := DecodeComStmtPrepareOkResponse(invalidPacket)
+
+	if err == nil {
+		t.Errorf("Expected '%s', got: nil", err.Error())
+	}
+}
+
+func TestDecodeComStmtPrepareOkResponseWithValidPacket(t *testing.T) {
+	validPacket := []byte{
+		0x0c, 0x00, 0x00, 0x01, 0x00, 0x01, 0x00, 0x00, 0x00, 0x04, 0x00, 0x04, 0x00, 0x00, 0x00, 0x00,
+	}
+
+	decoded, err := DecodeComStmtPrepareOkResponse(validPacket)
+
+	if err != nil {
+		t.Errorf("Expected nil, got: '%s'", err.Error())
+	}
+
+	if decoded.StatementID != 1 {
+		t.Errorf("Expected 1, got: %d", decoded.StatementID)
+	}
+
+	if decoded.ParametersNum != 4 {
+		t.Errorf("Expected 4, got: %d", decoded.ParametersNum)
 	}
 }

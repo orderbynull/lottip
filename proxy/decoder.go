@@ -12,44 +12,100 @@ import (
 var errInvalidPacketLength = errors.New("Invalid packet length")
 var errInvalidPacketType = errors.New("Invalid packet type")
 
+// ComStmtPrepareOkResponse represents COM_STMT_PREPARE_OK response structure
+type ComStmtPrepareOkResponse struct {
+
+	// StatementID is an ID of prepared statement
+	StatementID uint32
+
+	// ParametersNum is num of prepared parameters
+	ParametersNum uint16
+}
+
+// DecodeComStmtPrepareOkResponse decodes COM_STMT_PREPARE_OK response from MySQL server
+// Basic packet structure shown below.
+// For more details see https://mariadb.com/kb/en/mariadb/com_stmt_prepare/#COM_STMT_PREPARE_OK
+
+// [0,1,2]:   int<3> PacketLength
+// [3]: 	  int<1> PacketNumber
+// [4]:       int<1> COM_STMT_PREPARE_OK (0x00)
+// [5,6,7,8]: int<4> StatementID
+// [9,10]:    int<2> NumberOfColumns
+// [11,12]:   int<2> NumberOfParameters
+// [13]:      string<1> <not used>
+// [14,15]:   int<2> NumberOfWarnings
+func DecodeComStmtPrepareOkResponse(packet []byte) (*ComStmtPrepareOkResponse, error) {
+	// Min packet length = header(4 bytes) + command(1 byte) + statementID(4 bytes)
+	// + number of columns (2 bytes) + number of parameters (2 bytes)
+	// + <not used> (1 byte) + number of warnings (2 bytes)
+	if len(packet) < 16 {
+		return nil, errInvalidPacketLength
+	}
+
+	// Fifth byte is command
+	if packet[4] != responsePrepareOk {
+		return nil, errInvalidPacketType
+	}
+
+	statementID := binary.LittleEndian.Uint32(packet[5:9])
+	parametersNum := binary.LittleEndian.Uint16(packet[11:13])
+
+	return &ComStmtPrepareOkResponse{StatementID: statementID, ParametersNum: parametersNum}, nil
+}
+
+// ComStmtExecuteRequest represents COM_STMT_EXECUTE request structure
 type ComStmtExecuteRequest struct {
-	StatementID        uint64
+
+	// StatementID is an ID of prepared statement
+	StatementID uint32
+
+	// PreparedParameters is a slice of prepared parameters
 	PreparedParameters []PreparedParameter
 }
 
+// PreparedParameter structure represents single prepared parameter structure
+// for COM_STMT_EXECUTE request
 type PreparedParameter struct {
+
+	// FieldType is type of prepared parameter
+	// See https://mariadb.com/kb/en/mariadb/resultset/#field-types
 	FieldType byte
-	Flag      byte
-	Value     string
+
+	// Flags is unused
+	Flag byte
+
+	// Value is string presentation of any prepared parameter passed
+	// with COM_STMT_EXECUTE request
+	Value string
 }
 
 // DecodeComStmtExecuteRequest decodes COM_STMT_EXECUTE packet sent by MySQL client.
 // Basic packet structure shown below.
 // For more details see https://mariadb.com/kb/en/mariadb/com_stmt_execute/
 
-// [0,1,2]:  int<3> PacketLength
-// [3]: 	 int<1> PacketNumber
-// [4]:      int<1> COM_STMT_EXECUTE (0x17)
-// [5,6,7]:  int<4> StatementID
-// [8]:      int<1> Flags
-// [9,10,11] int<4> IterationCount = 1
-// 			 if (ParamCount > 0)
-//			 {
-// 				byte<(ParamCount + 7) / 8> NullBitmap
-// 				byte<1>: SendTypeToServer = 0 or 1
-// 				if (SendTypeToServer)
-//				{
+// [0,1,2]:   int<3> PacketLength
+// [3]: 	  int<1> PacketNumber
+// [4]:       int<1> COM_STMT_EXECUTE (0x17)
+// [5,6,7,8]: int<4> StatementID
+// [9]:       int<1> Flags
+// [10,11,12] int<4> IterationCount = 1
+// 			  if (ParamCount > 0)
+//			  {
+// 				 byte<(ParamCount + 7) / 8> NullBitmap
+// 				 byte<1>: SendTypeToServer = 0 or 1
+// 				 if (SendTypeToServer)
+//				 {
 // 					Foreach parameter
 //					{
 // 						byte<1>: FieldType
 //						byte<1>: ParameterFlag
 //					}
-//				}
-// 				Foreach parameter
-//				{
+//				 }
+// 				 Foreach parameter
+//				 {
 // 					byte<n> BinaryParameterValue
-//				}
-//			 }
+//				 }
+//			  }
 func DecodeComStmtExecuteRequest(packet []byte, paramsCount int) (*ComStmtExecuteRequest, error) {
 
 	// Min packet length = header(4 bytes) + command(1 byte) + statementID(4 bytes)
@@ -71,7 +127,7 @@ func DecodeComStmtExecuteRequest(packet []byte, paramsCount int) (*ComStmtExecut
 	// Read StatementID value
 	statementIDBuf := make([]byte, 4)
 	reader.Read(statementIDBuf)
-	statementID, _, _ := readLenEncodedInt(statementIDBuf)
+	statementID := binary.LittleEndian.Uint32(statementIDBuf)
 
 	// Skip to NullBitmap position
 	reader.Seek(5, io.SeekCurrent)
