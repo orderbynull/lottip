@@ -142,6 +142,11 @@
                                     <!--Query error result block end-->
 
                                     {{query.query}}
+
+                                    <div v-if="query.parameters">
+                                        Params:
+                                        <span class="label label-primary" v-for="param in query.parameters">{{param}}</span>
+                                    </div>
                                 </td>
                                 <!--Query column end-->
 

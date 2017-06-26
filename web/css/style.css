@@ -45,7 +45,11 @@
     text-align: center;
 }
 
-/*Navbar styles*/
+#bootstrap-override .label{
+    margin-right: 3px;
+}
+
+    /*Navbar styles*/
 
 #bootstrap-override .navbar-inverse {
     background-color: #336699;
