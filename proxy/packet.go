@@ -7,43 +7,28 @@ import (
 )
 
 //...
-type handshake struct {
-	//...
+type ConnSettings struct {
 	clientCapabilities uint32
-
-	//...
 	serverCapabilities uint32
-
-	//...
-	selectedDb string
+	SelectedDb         string
 }
 
 //...
-func (h *handshake) isDeprecateEOFSet() bool {
+func (h *ConnSettings) DeprecateEOFSet() bool {
 	return ((capabilityDeprecateEof & h.serverCapabilities) != 0) &&
 		((capabilityDeprecateEof & h.clientCapabilities) != 0)
 }
 
-//...
-func (h *handshake) setSelectedDb(db string) {
-	h.selectedDb = db
-}
-
-//...
-func (h *handshake) getSelectedDb() string {
-	return h.selectedDb
-}
-
-// processHandshake handles handshake between client and MySQL server.
-// When client connects MySQL server for the first time "handshake"
+// processHandshake handles ConnSettings between client and MySQL server.
+// When client connects MySQL server for the first time "ConnSettings"
 // packet is sent by MySQL server so it just should be delivered without analyzing.
 // Returns extended server and client capabilities flags
-func processHandshake(app net.Conn, mysql net.Conn) *handshake {
-	serverPacket, _ := proxyPacket(mysql, app)
-	clientPacket, _ := proxyPacket(app, mysql)
-	proxyPacket(mysql, app)
+func processHandshake(app net.Conn, mysql net.Conn) *ConnSettings {
+	serverPacket, _ := ProxyPacket(mysql, app)
+	clientPacket, _ := ProxyPacket(app, mysql)
+	ProxyPacket(mysql, app)
 
-	return &handshake{
+	return &ConnSettings{
 		clientCapabilities: uint32(binary.LittleEndian.Uint16(clientPacket[6 : 6+2])),
 		serverCapabilities: uint32(binary.LittleEndian.Uint16(serverPacket[30 : 30+2])),
 	}
@@ -53,7 +38,7 @@ func processHandshake(app net.Conn, mysql net.Conn) *handshake {
 // query issued by client.
 // ...
 func readPrepareResponse(conn net.Conn) ([]byte, byte, error) {
-	pkt, err := readPacket(conn)
+	pkt, err := ReadPacket(conn)
 	if err != nil {
 		return []byte{}, 0, err
 	}
@@ -79,7 +64,7 @@ func readPrepareResponse(conn net.Conn) ([]byte, byte, error) {
 
 		for i := 1; i <= packetsExpected; i++ {
 			eofCnt++
-			pkt, err = readPacket(conn)
+			pkt, err = ReadPacket(conn)
 			if err != nil {
 				return []byte{}, 0, err
 			}
@@ -101,12 +86,12 @@ func readErrMessage(errPacket []byte) string {
 }
 
 func readShowFieldsResponse(conn net.Conn) ([]byte, byte, error) {
-	return readResponse(conn, true)
+	return ReadResponse(conn, true)
 }
 
-// readResponse ...
-func readResponse(conn net.Conn, deprecateEof bool) ([]byte, byte, error) {
-	pkt, err := readPacket(conn)
+// ReadResponse ...
+func ReadResponse(conn net.Conn, deprecateEof bool) ([]byte, byte, error) {
+	pkt, err := ReadPacket(conn)
 	if err != nil {
 		return []byte{}, 0, err
 	}
@@ -131,7 +116,7 @@ func readResponse(conn net.Conn, deprecateEof bool) ([]byte, byte, error) {
 		toRead := int(columns) + 1
 
 		for i := 0; i < toRead; i++ {
-			pkt, err := readPacket(conn)
+			pkt, err := ReadPacket(conn)
 			if err != nil {
 				return []byte{}, 0, err
 			}
@@ -141,7 +126,7 @@ func readResponse(conn net.Conn, deprecateEof bool) ([]byte, byte, error) {
 	}
 
 	for {
-		pkt, err := readPacket(conn)
+		pkt, err := ReadPacket(conn)
 		if err != nil {
 			return []byte{}, 0, err
 		}
@@ -156,8 +141,8 @@ func readResponse(conn net.Conn, deprecateEof bool) ([]byte, byte, error) {
 	return data, responseResultset, nil
 }
 
-// readPacket ...
-func readPacket(conn net.Conn) ([]byte, error) {
+// ReadPacket ...
+func ReadPacket(conn net.Conn) ([]byte, error) {
 
 	header := []byte{0, 0, 0, 0}
 
@@ -181,8 +166,8 @@ func readPacket(conn net.Conn) ([]byte, error) {
 	return append(header, body[0:n]...), nil
 }
 
-// writePacket ...
-func writePacket(pkt []byte, conn net.Conn) (int, error) {
+// WritePacket ...
+func WritePacket(pkt []byte, conn net.Conn) (int, error) {
 	n, err := conn.Write(pkt)
 	if err != nil {
 		return 0, errWritePacket
@@ -191,26 +176,17 @@ func writePacket(pkt []byte, conn net.Conn) (int, error) {
 	return n, nil
 }
 
-// proxyPacket ...
-func proxyPacket(src, dst net.Conn) ([]byte, error) {
-	pkt, err := readPacket(src)
+// ProxyPacket ...
+func ProxyPacket(src, dst net.Conn) ([]byte, error) {
+	pkt, err := ReadPacket(src)
 	if err != nil {
 		return nil, err
 	}
 
-	_, err = writePacket(pkt, dst)
+	_, err = WritePacket(pkt, dst)
 	if err != nil {
 		return nil, err
 	}
 
 	return pkt, nil
-}
-
-// getQueryString ...
-func getQueryString(pkt []byte) (string, error) {
-	if len(pkt) > 5 {
-		return string(pkt[5:]), nil
-	}
-
-	return "", errNoQueryPacket
 }

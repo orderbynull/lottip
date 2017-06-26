@@ -7,17 +7,17 @@ const expectedNilGotS = "Expected `nil`, got `%s`"
 const expectedSGotS = "Expected `%s`, got `%s`"
 const expectedDGotD = "Expected `%d`, got `%d`"
 
-func TestDecodeComQueryRequestWithIncorrectPacketSize(t *testing.T) {
+func TestDecodeQueryRequestWithIncorrectPacketSize(t *testing.T) {
 	packet := []byte{0x00, 0x00, 0x00, 0x00, 0x00}
 
-	_, err := DecodeComQueryRequest(packet)
+	_, err := DecodeQueryRequest(packet)
 
 	if err == nil {
 		t.Errorf(expectedSGotNil, errInvalidPacketLength.Error())
 	}
 }
 
-func TestDecodeComQueryRequestWithValidPacket(t *testing.T) {
+func TestDecodeQueryRequestWithValidPacket(t *testing.T) {
 	expected := "select database(), schema(), left(user(),instr(concat(user(),'@'),'@')-1)"
 	packet := []byte{
 		0x4a, 0x00, 0x00, 0x00, 0x03, 0x73, 0x65, 0x6c, 0x65, 0x63, 0x74, 0x20, 0x64, 0x61, 0x74, 0x61,
@@ -27,7 +27,7 @@ func TestDecodeComQueryRequestWithValidPacket(t *testing.T) {
 		0x29, 0x2c, 0x27, 0x40, 0x27, 0x29, 0x2c, 0x27, 0x40, 0x27, 0x29, 0x2d, 0x31, 0x29,
 	}
 
-	decoded, err := DecodeComQueryRequest(packet)
+	decoded, err := DecodeQueryRequest(packet)
 
 	if err != nil {
 		t.Errorf(expectedNilGotS, err.Error())

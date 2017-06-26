@@ -9,26 +9,13 @@ import (
 
 // proxyServer implements server for capturing and forwarding MySQL traffic
 type proxyServer struct {
-	//...
-	handshakes map[int]*handshake
-
-	//...
-	cmdChan chan Cmd
-
-	//...
-	cmdStateChan chan CmdResult
-
-	//...
+	handshakes    map[int]*ConnSettings
+	cmdChan       chan Cmd
+	cmdStateChan  chan CmdResult
 	connStateChan chan ConnState
-
-	//...
-	appReadyChan chan bool
-
-	//...
-	mysqlHost string
-
-	//...
-	proxyHost string
+	appReadyChan  chan bool
+	mysqlHost     string
+	proxyHost     string
 }
 
 // NewProxyServer returns new proxyServer with connections params for proxy and mysql hosts.
@@ -38,17 +25,17 @@ func NewProxyServer(proxyHost string, mysqlHost string) (*proxyServer, error) {
 		return nil, errInvalidProxyParams
 	}
 
-	return &proxyServer{handshakes: make(map[int]*handshake), proxyHost: proxyHost, mysqlHost: mysqlHost}, nil
+	return &proxyServer{handshakes: make(map[int]*ConnSettings), proxyHost: proxyHost, mysqlHost: mysqlHost}, nil
 }
 
 //...
-//@TODO check for existence of handshake
-func (ps *proxyServer) getHandshake(connID int) *handshake {
+//@TODO check for existence of ConnSettings
+func (ps *proxyServer) getHandshake(connID int) *ConnSettings {
 	return ps.handshakes[connID]
 }
 
 //...
-func (ps *proxyServer) setHandshake(connID int, handshake *handshake) {
+func (ps *proxyServer) setHandshake(connID int, handshake *ConnSettings) {
 	ps.handshakes[connID] = handshake
 }
 
@@ -143,11 +130,11 @@ func (ps *proxyServer) extractAndForward(conn net.Conn, mysql net.Conn, connID i
 	var cmdId int
 	var preparedQuery string
 	var preparedParamsCount uint16
-	var deprecateEof = ps.getHandshake(connID).isDeprecateEOFSet()
+	var deprecateEof = ps.getHandshake(connID).DeprecateEOFSet()
 
 	for {
 		//Client query --> $requestPacket --> mysql
-		requestPacket, err := readPacket(conn)
+		requestPacket, err := ReadPacket(conn)
 		if err != nil {
 			break
 		}
@@ -157,9 +144,9 @@ func (ps *proxyServer) extractAndForward(conn net.Conn, mysql net.Conn, connID i
 		// There're packets which have zero length payload
 		// and there's no need to analyze such packets.
 		if len(requestPacket) < 5 {
-			writePacket(requestPacket, mysql)
-			pkt, _ := readPacket(mysql)
-			writePacket(pkt, conn)
+			WritePacket(requestPacket, mysql)
+			pkt, _ := ReadPacket(mysql)
+			WritePacket(pkt, conn)
 
 			continue
 		}
@@ -168,26 +155,26 @@ func (ps *proxyServer) extractAndForward(conn net.Conn, mysql net.Conn, connID i
 
 		// Received COM_QUERY from client
 		case requestComQuery:
-			decoded, _ := DecodeComQueryRequest(requestPacket)
+			decoded, _ := DecodeQueryRequest(requestPacket)
 
 			selectedDb := haventYetDecidedFuncName(decoded.Query)
 			if len(selectedDb) > 0 {
-				ps.getHandshake(connID).setSelectedDb(selectedDb)
+				ps.getHandshake(connID).SelectedDb = selectedDb
 			}
 
 			ps.setCommand(
 				connID,
 				cmdId,
-				ps.getHandshake(connID).getSelectedDb(),
+				ps.getHandshake(connID).SelectedDb,
 				decoded.Query,
 				[]PreparedParameter{},
 				true,
 			)
 
 			start := time.Now()
-			writePacket(requestPacket, mysql)
+			WritePacket(requestPacket, mysql)
 
-			response, result, err := readResponse(mysql, deprecateEof)
+			response, result, err := ReadResponse(mysql, deprecateEof)
 			if err == nil {
 				if result == responseErr {
 					ps.setCommandResult(connID, cmdId, result, readErrMessage(response), time.Since(start))
@@ -195,29 +182,29 @@ func (ps *proxyServer) extractAndForward(conn net.Conn, mysql net.Conn, connID i
 					ps.setCommandResult(connID, cmdId, result, "", time.Since(start))
 				}
 
-				writePacket(response, conn)
+				WritePacket(response, conn)
 			}
 
 		// Received COM_STMT_PREPARE from client
 		case requestComStmtPrepare:
-			query, _ := getQueryString(requestPacket)
+			decoded, _ := DecodeQueryRequest(requestPacket)
 
-			selectedDb := haventYetDecidedFuncName(query)
+			selectedDb := haventYetDecidedFuncName(decoded.Query)
 			if len(selectedDb) > 0 {
-				ps.getHandshake(connID).setSelectedDb(selectedDb)
+				ps.getHandshake(connID).SelectedDb = selectedDb
 			}
 
-			writePacket(requestPacket, mysql)
+			WritePacket(requestPacket, mysql)
 
 			response, _, err := readPrepareResponse(mysql)
 			if err == nil {
 				decodedResponse, err := DecodeComStmtPrepareOkResponse(response)
 				if err == nil {
 					preparedParamsCount = decodedResponse.ParametersNum
-					preparedQuery = query
+					preparedQuery = decoded.Query
 				}
 
-				writePacket(response, conn)
+				WritePacket(response, conn)
 			}
 
 		// Received requestComStmtExecute from MySQL client
@@ -234,7 +221,7 @@ func (ps *proxyServer) extractAndForward(conn net.Conn, mysql net.Conn, connID i
 			ps.setCommand(
 				connID,
 				cmdId,
-				ps.getHandshake(connID).getSelectedDb(),
+				ps.getHandshake(connID).SelectedDb,
 				preparedQuery,
 				preparedParameters,
 				executable,
@@ -242,24 +229,24 @@ func (ps *proxyServer) extractAndForward(conn net.Conn, mysql net.Conn, connID i
 
 			start := time.Now()
 
-			writePacket(requestPacket, mysql)
-			response, result, _ := readResponse(mysql, deprecateEof)
+			WritePacket(requestPacket, mysql)
+			response, result, _ := ReadResponse(mysql, deprecateEof)
 			ps.setCommandResult(connID, cmdId, result, "", time.Since(start))
-			writePacket(response, conn)
+			WritePacket(response, conn)
 
 		case requestComShowFields:
-			writePacket(requestPacket, mysql)
+			WritePacket(requestPacket, mysql)
 			response, _, _ := readShowFieldsResponse(mysql)
-			writePacket(response, conn)
+			WritePacket(response, conn)
 
 		// Received COM_STMT_CLOSE from client
 		case requestComStmtClose:
 			continue
 
 		default:
-			writePacket(requestPacket, mysql)
-			pkt, _ := readPacket(mysql)
-			writePacket(pkt, conn)
+			WritePacket(requestPacket, mysql)
+			pkt, _ := ReadPacket(mysql)
+			WritePacket(pkt, conn)
 		}
 	}
 }

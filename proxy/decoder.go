@@ -13,24 +13,23 @@ var errInvalidPacketLength = errors.New("Invalid packet length")
 var errInvalidPacketType = errors.New("Invalid packet type")
 var errFieldTypeNotImplementedYet = errors.New("Required field type not implemented yet")
 
-// ComQueryRequest represents COM_QUERY command sent by client to server
-// to be executed immediately.
-type ComQueryRequest struct {
+// QueryRequest represents COM_QUERY or COM_STMT_PREPARE command sent by client to server.
+type QueryRequest struct {
 	Query string // SQL query value
 }
 
 // [0,1,2]:   int<3> PacketLength
 // [3]: 	  int<1> PacketNumber
-// [4]:       int<1> Command COM_QUERY (0x03)
+// [4]:       int<1> Command COM_QUERY (0x03) or COM_STMT_PREPARE (0x16)
 // [5, ...]   string<EOF> SQLStatement
-func DecodeComQueryRequest(packet []byte) (*ComQueryRequest, error) {
+func DecodeQueryRequest(packet []byte) (*QueryRequest, error) {
 
 	// Min packet length = header(4 bytes) + command(1 byte) + SQLStatement(at least 1 byte)
 	if len(packet) < 6 {
 		return nil, errInvalidPacketLength
 	}
 
-	return &ComQueryRequest{DecodeEOFLengthString(packet[5:])}, nil
+	return &QueryRequest{DecodeEOFLengthString(packet[5:])}, nil
 }
 
 // ComStmtPrepareOkResponse represents COM_STMT_PREPARE_OK response structure.
