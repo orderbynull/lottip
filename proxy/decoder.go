@@ -215,7 +215,7 @@ func DecodeComStmtExecuteRequest(packet []byte, paramsCount uint16) (*ComStmtExe
 	return &ComStmtExecuteRequest{StatementID: statementID, PreparedParameters: parameters}, nil
 }
 
-// DecodeLenEncodedInteger returns length-encoded integer and it's offset
+// DecodeLenEncodedInteger returns parsed length-encoded integer and it's offset
 // For more details see https://mariadb.com/kb/en/mariadb/protocol-data-types/#length-encoded-integers
 func DecodeLenEncodedInteger(data []byte) (value uint64, offset uint64) {
 	if len(data) == 0 {
@@ -250,7 +250,7 @@ func DecodeLenEncodedInteger(data []byte) (value uint64, offset uint64) {
 	return value, offset
 }
 
-// DecodeLenEncodedString returns length-encoded string and it's length
+// DecodeLenEncodedString returns parsed length-encoded string and it's length
 // Length-encoded strings are prefixed by a length-encoded integer which describes
 // the length of the string, followed by the string value.
 // For more details see https://mariadb.com/kb/en/mariadb/protocol-data-types/#length-encoded-strings
