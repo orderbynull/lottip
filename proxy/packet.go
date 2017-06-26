@@ -126,7 +126,7 @@ func readResponse(conn net.Conn, deprecateEof bool) ([]byte, byte, error) {
 	data = append(data, pkt...)
 
 	if !deprecateEof {
-		columns, _, _ := ReadLenEncodedInt(pkt[4:])
+		columns, _ := DecodeLenEncodedInteger(pkt[4:])
 
 		toRead := int(columns) + 1
 

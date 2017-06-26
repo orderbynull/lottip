@@ -9,7 +9,7 @@ func TestReadLenEncodedStringWithValidData(t *testing.T) {
 		0x51, 0x52, 0x53, 0x54, 0x59, 0x57,
 	}
 
-	str, _ := ReadLenEncodedString(validStringBytes)
+	str, _ := DecodeLenEncodedString(validStringBytes)
 
 	if str != expectedStr {
 		t.Errorf("Expected '%s', got '%s'", expectedStr, str)

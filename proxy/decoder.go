@@ -145,10 +145,10 @@ func DecodeComStmtExecuteRequest(packet []byte, paramsCount uint16) (*ComStmtExe
 		// Read SendTypeToServer value
 		sendTypeToServerBuf := make([]byte, 1)
 		reader.Read(sendTypeToServerBuf)
-		sendTypeToServer, _, _ := ReadLenEncodedInt(sendTypeToServerBuf)
+		sendTypeToServer, _ := DecodeLenEncodedInteger(sendTypeToServerBuf)
 
 		if sendTypeToServer == 1 {
-			for index, _ := range parameters {
+			for index := range parameters {
 
 				// Read parameter FieldType and ParameterFlag
 				parameterMeta := make([]byte, 2)
@@ -171,7 +171,7 @@ func DecodeComStmtExecuteRequest(packet []byte, paramsCount uint16) (*ComStmtExe
 				stringLengthBuf := make([]byte, 1)
 				reader.Read(stringLengthBuf)
 
-				stringLength, _, _ := ReadLenEncodedInt(stringLengthBuf)
+				stringLength, _ := DecodeLenEncodedInteger(stringLengthBuf)
 				reader.UnreadByte()
 
 				// Packets with 0 length parameter are also possible
@@ -180,7 +180,7 @@ func DecodeComStmtExecuteRequest(packet []byte, paramsCount uint16) (*ComStmtExe
 					stringValueBuf := make([]byte, stringLength+1)
 					reader.Read(stringValueBuf)
 
-					stringValue, _ = ReadLenEncodedString(stringValueBuf)
+					stringValue, _ = DecodeLenEncodedString(stringValueBuf)
 				}
 
 			// MYSQL_TYPE_LONGLONG
@@ -212,35 +212,47 @@ func DecodeComStmtExecuteRequest(packet []byte, paramsCount uint16) (*ComStmtExe
 	return &ComStmtExecuteRequest{StatementID: statementID, PreparedParameters: parameters}, nil
 }
 
-// ReadLenEncodedInt returns length-encoded string and it's offset
+// DecodeLenEncodedInteger returns length-encoded integer and it's offset
 // For more details see https://mariadb.com/kb/en/mariadb/protocol-data-types/#length-encoded-integers
-func ReadLenEncodedInt(b []byte) (uint64, uint64, bool) {
+func DecodeLenEncodedInteger(b []byte) (value uint64, offset uint64) {
 	if len(b) == 0 {
-		return 0, 0, true
+		value = 0
+		offset = 0
 	}
 
 	switch b[0] {
 	case 0xfb:
-		return 0, 1, true
+		value = 0
+		offset = 1
+
 	case 0xfc:
-		return uint64(b[1]) | uint64(b[2])<<8, 3, false
+		value = uint64(b[1]) | uint64(b[2])<<8
+		offset = 3
+
 	case 0xfd:
-		return uint64(b[1]) | uint64(b[2])<<8 | uint64(b[3])<<16, 4, false
+		value = uint64(b[1]) | uint64(b[2])<<8 | uint64(b[3])<<16
+		offset = 4
+
 	case 0xfe:
-		return uint64(b[1]) | uint64(b[2])<<8 | uint64(b[3])<<16 |
+		value = uint64(b[1]) | uint64(b[2])<<8 | uint64(b[3])<<16 |
 			uint64(b[4])<<24 | uint64(b[5])<<32 | uint64(b[6])<<40 |
-			uint64(b[7])<<48 | uint64(b[8])<<56, 9, false
+			uint64(b[7])<<48 | uint64(b[8])<<56
+		offset = 9
+
 	default:
-		return uint64(b[0]), 1, false
+		value = uint64(b[0])
+		offset = 1
 	}
+
+	return value, offset
 }
 
-// ReadLenEncodedString returns length-encoded string and it's length
+// DecodeLenEncodedString returns length-encoded string and it's length
 // Length-encoded strings are prefixed by a length-encoded integer which describes
 // the length of the string, followed by the string value.
 // For more details see https://mariadb.com/kb/en/mariadb/protocol-data-types/#length-encoded-strings
-func ReadLenEncodedString(b []byte) (string, uint64) {
-	strLen, offset, _ := ReadLenEncodedInt(b)
+func DecodeLenEncodedString(b []byte) (string, uint64) {
+	strLen, offset := DecodeLenEncodedInteger(b)
 
 	return string(b[offset : offset+strLen]), strLen
 }
