@@ -16,7 +16,7 @@ var errFieldTypeNotImplementedYet = errors.New("Required field type not implemen
 // ComQueryRequest represents COM_QUERY command sent by client to server
 // to be executed immediately.
 type ComQueryRequest struct {
-	Query string
+	Query string // SQL query value
 }
 
 // [0,1,2]:   int<3> PacketLength
@@ -35,12 +35,8 @@ func DecodeComQueryRequest(packet []byte) (*ComQueryRequest, error) {
 
 // ComStmtPrepareOkResponse represents COM_STMT_PREPARE_OK response structure.
 type ComStmtPrepareOkResponse struct {
-
-	// StatementID is an ID of prepared statement
-	StatementID uint32
-
-	// ParametersNum is num of prepared parameters
-	ParametersNum uint16
+	StatementID   uint32 // ID of prepared statement
+	ParametersNum uint16 // Num of prepared parameters
 }
 
 // DecodeComStmtPrepareOkResponse decodes COM_STMT_PREPARE_OK response from MySQL server
@@ -77,28 +73,15 @@ func DecodeComStmtPrepareOkResponse(packet []byte) (*ComStmtPrepareOkResponse, e
 
 // ComStmtExecuteRequest represents COM_STMT_EXECUTE request structure
 type ComStmtExecuteRequest struct {
-
-	// StatementID is an ID of prepared statement
-	StatementID uint32
-
-	// PreparedParameters is a slice of prepared parameters
-	PreparedParameters []PreparedParameter
+	StatementID        uint32              // ID of prepared statement
+	PreparedParameters []PreparedParameter // Slice of prepared parameters
 }
 
-// PreparedParameter structure represents single prepared parameter structure
-// for COM_STMT_EXECUTE request
+// PreparedParameter structure represents single prepared parameter structure for COM_STMT_EXECUTE request
 type PreparedParameter struct {
-
-	// FieldType is type of prepared parameter
-	// See https://mariadb.com/kb/en/mariadb/resultset/#field-types
-	FieldType byte
-
-	// Flags is unused
-	Flag byte
-
-	// Value is string presentation of any prepared parameter passed
-	// with COM_STMT_EXECUTE request
-	Value string
+	FieldType byte   // Type of prepared parameter. See https://mariadb.com/kb/en/mariadb/resultset/#field-types
+	Flag      byte   // Unused
+	Value     string // String value of any prepared parameter passed with COM_STMT_EXECUTE request
 }
 
 // DecodeComStmtExecuteRequest decodes COM_STMT_EXECUTE packet sent by MySQL client.
