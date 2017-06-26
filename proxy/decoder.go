@@ -11,6 +11,7 @@ import (
 
 var errInvalidPacketLength = errors.New("Invalid packet length")
 var errInvalidPacketType = errors.New("Invalid packet type")
+var errFieldTypeNotImplementedYet = errors.New("Required field type not implemented yet")
 
 // ComStmtPrepareOkResponse represents COM_STMT_PREPARE_OK response structure
 type ComStmtPrepareOkResponse struct {
@@ -35,6 +36,7 @@ type ComStmtPrepareOkResponse struct {
 // [13]:      string<1> <not used>
 // [14,15]:   int<2> NumberOfWarnings
 func DecodeComStmtPrepareOkResponse(packet []byte) (*ComStmtPrepareOkResponse, error) {
+
 	// Min packet length = header(4 bytes) + command(1 byte) + statementID(4 bytes)
 	// + number of columns (2 bytes) + number of parameters (2 bytes)
 	// + <not used> (1 byte) + number of warnings (2 bytes)
@@ -83,29 +85,29 @@ type PreparedParameter struct {
 // Basic packet structure shown below.
 // For more details see https://mariadb.com/kb/en/mariadb/com_stmt_execute/
 
-// [0,1,2]:   int<3> PacketLength
-// [3]: 	  int<1> PacketNumber
-// [4]:       int<1> COM_STMT_EXECUTE (0x17)
-// [5,6,7,8]: int<4> StatementID
-// [9]:       int<1> Flags
-// [10,11,12] int<4> IterationCount = 1
-// 			  if (ParamCount > 0)
-//			  {
-// 				 byte<(ParamCount + 7) / 8> NullBitmap
-// 				 byte<1>: SendTypeToServer = 0 or 1
-// 				 if (SendTypeToServer)
-//				 {
-// 					Foreach parameter
-//					{
-// 						byte<1>: FieldType
-//						byte<1>: ParameterFlag
-//					}
-//				 }
-// 				 Foreach parameter
-//				 {
-// 					byte<n> BinaryParameterValue
-//				 }
-//			  }
+// [0,1,2]:       int<3> PacketLength
+// [3]: 	      int<1> PacketNumber
+// [4]:           int<1> COM_STMT_EXECUTE (0x17)
+// [5,6,7,8]:     int<4> StatementID
+// [9]:           int<1> Flags
+// [10,11,12, 13] int<4> IterationCount = 1
+// 			  	  if (ParamCount > 0)
+//			      {
+// 				     byte<(ParamCount + 7) / 8> NullBitmap
+// 				     byte<1>: SendTypeToServer = 0 or 1
+// 				     if (SendTypeToServer)
+//				     {
+// 					    Foreach parameter
+//					    {
+// 						   byte<1>: FieldType
+//						   byte<1>: ParameterFlag
+//					    }
+//				     }
+// 				    Foreach parameter
+//				    {
+// 					   byte<n> BinaryParameterValue
+//				    }
+//			     }
 func DecodeComStmtExecuteRequest(packet []byte, paramsCount uint16) (*ComStmtExecuteRequest, error) {
 
 	// Min packet length = header(4 bytes) + command(1 byte) + statementID(4 bytes)
@@ -198,6 +200,9 @@ func DecodeComStmtExecuteRequest(packet []byte, paramsCount uint16) (*ComStmtExe
 				doubleValue := math.Float64frombits(doubleBits)
 
 				stringValue = strconv.FormatFloat(doubleValue, 'f', 6, 64)
+
+			default:
+				return nil, errFieldTypeNotImplementedYet
 			}
 
 			parameters[index].Value = stringValue
@@ -207,6 +212,8 @@ func DecodeComStmtExecuteRequest(packet []byte, paramsCount uint16) (*ComStmtExe
 	return &ComStmtExecuteRequest{StatementID: statementID, PreparedParameters: parameters}, nil
 }
 
+// ReadLenEncodedInt returns length-encoded string and it's offset
+// For more details see https://mariadb.com/kb/en/mariadb/protocol-data-types/#length-encoded-integers
 func ReadLenEncodedInt(b []byte) (uint64, uint64, bool) {
 	if len(b) == 0 {
 		return 0, 0, true
@@ -228,7 +235,10 @@ func ReadLenEncodedInt(b []byte) (uint64, uint64, bool) {
 	}
 }
 
-// ReadLenEncodedString returns length decoded string and it's length
+// ReadLenEncodedString returns length-encoded string and it's length
+// Length-encoded strings are prefixed by a length-encoded integer which describes
+// the length of the string, followed by the string value.
+// For more details see https://mariadb.com/kb/en/mariadb/protocol-data-types/#length-encoded-strings
 func ReadLenEncodedString(b []byte) (string, uint64) {
 	strLen, offset, _ := ReadLenEncodedInt(b)
 

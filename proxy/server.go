@@ -207,27 +207,14 @@ func (ps *proxyServer) extractAndForward(conn net.Conn, mysql net.Conn, connID i
 				ps.getHandshake(connID).setSelectedDb(selectedDb)
 			}
 
-			//ps.setCommand(
-			//	connID,
-			//	cmdId,
-			//	ps.getHandshake(connID).getSelectedDb(),
-			//	query,
-			//	[]PreparedParameter{},
-			//	true,
-			//)
-
-			//start := time.Now()
 			writePacket(queryPacket, mysql)
 
 			response, _, err := readPrepareResponse(mysql)
 			if err == nil {
-				//ps.setCommandResult(connID, cmdId, result, "", time.Since(start))
-
 				decodedResponse, err := DecodeComStmtPrepareOkResponse(response)
 				if err == nil {
 					preparedParamsCount = decodedResponse.ParametersNum
 					preparedQuery = query
-					println(query)
 				}
 
 				writePacket(response, conn)
@@ -235,22 +222,29 @@ func (ps *proxyServer) extractAndForward(conn net.Conn, mysql net.Conn, connID i
 
 		// Received requestComStmtExecute from MySQL client
 		case requestComStmtExecute:
+			var preparedParameters []PreparedParameter
+			var executable bool
+
 			decodedRequest, err := DecodeComStmtExecuteRequest(queryPacket, preparedParamsCount)
 			if err == nil {
-				//println(preparedQuery, decodedRequest.StatementID, preparedParamsCount)
-
-				ps.setCommand(
-					connID,
-					cmdId,
-					ps.getHandshake(connID).getSelectedDb(),
-					preparedQuery,
-					decodedRequest.PreparedParameters,
-					true,
-				)
+				preparedParameters = decodedRequest.PreparedParameters
+				executable = true
 			}
 
+			ps.setCommand(
+				connID,
+				cmdId,
+				ps.getHandshake(connID).getSelectedDb(),
+				preparedQuery,
+				preparedParameters,
+				executable,
+			)
+
+			start := time.Now()
+
 			writePacket(queryPacket, mysql)
-			response, _, _ := readResponse(mysql, deprecateEof)
+			response, result, _ := readResponse(mysql, deprecateEof)
+			ps.setCommandResult(connID, cmdId, result, "", time.Since(start))
 			writePacket(response, conn)
 
 		case requestComShowFields:
