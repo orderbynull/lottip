@@ -13,7 +13,27 @@ var errInvalidPacketLength = errors.New("Invalid packet length")
 var errInvalidPacketType = errors.New("Invalid packet type")
 var errFieldTypeNotImplementedYet = errors.New("Required field type not implemented yet")
 
-// ComStmtPrepareOkResponse represents COM_STMT_PREPARE_OK response structure
+// ComQueryRequest represents COM_QUERY command sent by client to server
+// to be executed immediately.
+type ComQueryRequest struct {
+	Query string
+}
+
+// [0,1,2]:   int<3> PacketLength
+// [3]: 	  int<1> PacketNumber
+// [4]:       int<1> Command COM_QUERY (0x03)
+// [5, ...]   string<EOF> SQLStatement
+func DecodeComQueryRequest(packet []byte) (*ComQueryRequest, error) {
+
+	// Min packet length = header(4 bytes) + command(1 byte) + SQLStatement(at least 1 byte)
+	if len(packet) < 6 {
+		return nil, errInvalidPacketLength
+	}
+
+	return &ComQueryRequest{DecodeEOFLengthString(packet[5:])}, nil
+}
+
+// ComStmtPrepareOkResponse represents COM_STMT_PREPARE_OK response structure.
 type ComStmtPrepareOkResponse struct {
 
 	// StatementID is an ID of prepared statement
@@ -29,7 +49,7 @@ type ComStmtPrepareOkResponse struct {
 
 // [0,1,2]:   int<3> PacketLength
 // [3]: 	  int<1> PacketNumber
-// [4]:       int<1> COM_STMT_PREPARE_OK (0x00)
+// [4]:       int<1> Command COM_STMT_PREPARE_OK (0x00)
 // [5,6,7,8]: int<4> StatementID
 // [9,10]:    int<2> NumberOfColumns
 // [11,12]:   int<2> NumberOfParameters
@@ -214,33 +234,33 @@ func DecodeComStmtExecuteRequest(packet []byte, paramsCount uint16) (*ComStmtExe
 
 // DecodeLenEncodedInteger returns length-encoded integer and it's offset
 // For more details see https://mariadb.com/kb/en/mariadb/protocol-data-types/#length-encoded-integers
-func DecodeLenEncodedInteger(b []byte) (value uint64, offset uint64) {
-	if len(b) == 0 {
+func DecodeLenEncodedInteger(data []byte) (value uint64, offset uint64) {
+	if len(data) == 0 {
 		value = 0
 		offset = 0
 	}
 
-	switch b[0] {
+	switch data[0] {
 	case 0xfb:
 		value = 0
 		offset = 1
 
 	case 0xfc:
-		value = uint64(b[1]) | uint64(b[2])<<8
+		value = uint64(data[1]) | uint64(data[2])<<8
 		offset = 3
 
 	case 0xfd:
-		value = uint64(b[1]) | uint64(b[2])<<8 | uint64(b[3])<<16
+		value = uint64(data[1]) | uint64(data[2])<<8 | uint64(data[3])<<16
 		offset = 4
 
 	case 0xfe:
-		value = uint64(b[1]) | uint64(b[2])<<8 | uint64(b[3])<<16 |
-			uint64(b[4])<<24 | uint64(b[5])<<32 | uint64(b[6])<<40 |
-			uint64(b[7])<<48 | uint64(b[8])<<56
+		value = uint64(data[1]) | uint64(data[2])<<8 | uint64(data[3])<<16 |
+			uint64(data[4])<<24 | uint64(data[5])<<32 | uint64(data[6])<<40 |
+			uint64(data[7])<<48 | uint64(data[8])<<56
 		offset = 9
 
 	default:
-		value = uint64(b[0])
+		value = uint64(data[0])
 		offset = 1
 	}
 
@@ -251,8 +271,15 @@ func DecodeLenEncodedInteger(b []byte) (value uint64, offset uint64) {
 // Length-encoded strings are prefixed by a length-encoded integer which describes
 // the length of the string, followed by the string value.
 // For more details see https://mariadb.com/kb/en/mariadb/protocol-data-types/#length-encoded-strings
-func DecodeLenEncodedString(b []byte) (string, uint64) {
-	strLen, offset := DecodeLenEncodedInteger(b)
+func DecodeLenEncodedString(data []byte) (string, uint64) {
+	strLen, offset := DecodeLenEncodedInteger(data)
 
-	return string(b[offset : offset+strLen]), strLen
+	return string(data[offset : offset+strLen]), strLen
+}
+
+// DecodeEOFLengthString returns parsed EOF-length string.
+// EOF-length strings are those strings whose length will be calculated by the packet remaining length.
+// For more details see https://mariadb.com/kb/en/mariadb/protocol-data-types/#end-of-file-length-strings
+func DecodeEOFLengthString(data []byte) string {
+	return string(data)
 }

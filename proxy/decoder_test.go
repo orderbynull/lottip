@@ -2,22 +2,58 @@ package proxy
 
 import "testing"
 
+const expectedSGotNil = "Expected `%s`, got `nil`"
+const expectedNilGotS = "Expected `nil`, got `%s`"
+const expectedSGotS = "Expected `%s`, got `%s`"
+const expectedDGotD = "Expected `%d`, got `%d`"
+
+func TestDecodeComQueryRequestWithIncorrectPacketSize(t *testing.T) {
+	packet := []byte{0x00, 0x00, 0x00, 0x00, 0x00}
+
+	_, err := DecodeComQueryRequest(packet)
+
+	if err == nil {
+		t.Errorf(expectedSGotNil, errInvalidPacketLength.Error())
+	}
+}
+
+func TestDecodeComQueryRequestWithValidPacket(t *testing.T) {
+	expected := "select database(), schema(), left(user(),instr(concat(user(),'@'),'@')-1)"
+	packet := []byte{
+		0x4a, 0x00, 0x00, 0x00, 0x03, 0x73, 0x65, 0x6c, 0x65, 0x63, 0x74, 0x20, 0x64, 0x61, 0x74, 0x61,
+		0x62, 0x61, 0x73, 0x65, 0x28, 0x29, 0x2c, 0x20, 0x73, 0x63, 0x68, 0x65, 0x6d, 0x61, 0x28, 0x29,
+		0x2c, 0x20, 0x6c, 0x65, 0x66, 0x74, 0x28, 0x75, 0x73, 0x65, 0x72, 0x28, 0x29, 0x2c, 0x69, 0x6e,
+		0x73, 0x74, 0x72, 0x28, 0x63, 0x6f, 0x6e, 0x63, 0x61, 0x74, 0x28, 0x75, 0x73, 0x65, 0x72, 0x28,
+		0x29, 0x2c, 0x27, 0x40, 0x27, 0x29, 0x2c, 0x27, 0x40, 0x27, 0x29, 0x2d, 0x31, 0x29,
+	}
+
+	decoded, err := DecodeComQueryRequest(packet)
+
+	if err != nil {
+		t.Errorf(expectedNilGotS, err.Error())
+	}
+
+	if decoded.Query != expected {
+		t.Errorf(expectedSGotS, expected, decoded.Query)
+	}
+}
+
 func TestReadLenEncodedStringWithValidData(t *testing.T) {
-	expectedStr := "ABCDEFGHIKLMONPQRSTYW"
-	validStringBytes := []byte{
+	expected := "ABCDEFGHIKLMONPQRSTYW"
+	packet := []byte{
 		0x15, 0x41, 0x42, 0x43, 0x44, 0x45, 0x46, 0x47, 0x48, 0x49, 0x4b, 0x4c, 0x4d, 0x4f, 0x4e, 0x50,
 		0x51, 0x52, 0x53, 0x54, 0x59, 0x57,
 	}
 
-	str, _ := DecodeLenEncodedString(validStringBytes)
+	decoded, _ := DecodeLenEncodedString(packet)
 
-	if str != expectedStr {
-		t.Errorf("Expected '%s', got '%s'", expectedStr, str)
+	if decoded != expected {
+		t.Errorf(expectedSGotS, expected, decoded)
 	}
 }
 
 func TestDecodeComStmtExecuteRequestWithIncorrectPacketType(t *testing.T) {
-	invalidTypePacket := []byte{
+	packet := []byte{
 		0x43, 0x00, 0x00, 0x00, 0x18, 0x01, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x01,
 		0xfd, 0x00, 0xfd, 0x00, 0xfd, 0x00, 0x13, 0x31, 0x2e, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38,
 		0x39, 0x31, 0x30, 0x31, 0x31, 0x31, 0x45, 0x2b, 0x32, 0x31, 0x06, 0x58, 0x59, 0x5a, 0x5a, 0x5a,
@@ -25,27 +61,27 @@ func TestDecodeComStmtExecuteRequestWithIncorrectPacketType(t *testing.T) {
 		0x50, 0x51, 0x52, 0x53, 0x54, 0x59, 0x57,
 	}
 
-	_, err := DecodeComStmtExecuteRequest(invalidTypePacket, 0)
+	_, err := DecodeComStmtExecuteRequest(packet, 0)
 
 	if err == nil {
-		t.Errorf("Expected '%s', got nil", errInvalidPacketType)
+		t.Errorf(expectedSGotNil, errInvalidPacketType.Error())
 	}
 }
 
 func TestDecodeComStmtExecuteRequestWithIncorrectPacketSize(t *testing.T) {
-	invalidLengthPacket := []byte{0x43, 0x00, 0x00, 0x00, 0x17}
+	packet := []byte{0x43, 0x00, 0x00, 0x00, 0x17}
 
-	_, err := DecodeComStmtExecuteRequest(invalidLengthPacket, 0)
+	_, err := DecodeComStmtExecuteRequest(packet, 0)
 
 	if err == nil {
-		t.Errorf("Expected '%s', got nil", errInvalidPacketLength)
+		t.Errorf(expectedSGotNil, errInvalidPacketLength.Error())
 	}
 }
 
 func TestDecodeComStmtExecuteRequestCorrectPacketWithStringParams(t *testing.T) {
-	validPacketParametersValues := []string{"1.2345678910111E+21", "XYZZZZ", "ABCDEFGHIKLMONPQRSTYW"}
-	packetParametersCount := len(validPacketParametersValues)
-	validPacket := []byte{
+	packetParams := []string{"1.2345678910111E+21", "XYZZZZ", "ABCDEFGHIKLMONPQRSTYW"}
+	paramsCount := len(packetParams)
+	packet := []byte{
 		0x43, 0x00, 0x00, 0x00, 0x17, 0x01, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x01,
 		0xfd, 0x00, 0xfd, 0x00, 0xfd, 0x00, 0x13, 0x31, 0x2e, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38,
 		0x39, 0x31, 0x30, 0x31, 0x31, 0x31, 0x45, 0x2b, 0x32, 0x31, 0x06, 0x58, 0x59, 0x5a, 0x5a, 0x5a,
@@ -53,23 +89,23 @@ func TestDecodeComStmtExecuteRequestCorrectPacketWithStringParams(t *testing.T) 
 		0x50, 0x51, 0x52, 0x53, 0x54, 0x59, 0x57,
 	}
 
-	decoded, err := DecodeComStmtExecuteRequest(validPacket, uint16(packetParametersCount))
+	decoded, err := DecodeComStmtExecuteRequest(packet, uint16(paramsCount))
 
 	if err != nil {
-		t.Errorf("Expected nil, got: '%s'", err.Error())
+		t.Errorf(expectedNilGotS, err.Error())
 	}
 
 	if decoded.StatementID != 1 {
-		t.Errorf("Expected %d, got %d", 1, decoded.StatementID)
+		t.Errorf(expectedDGotD, 1, decoded.StatementID)
 	}
 
-	if len(decoded.PreparedParameters) != packetParametersCount {
-		t.Errorf("Expected: %d, got %d", packetParametersCount, len(decoded.PreparedParameters))
+	if len(decoded.PreparedParameters) != paramsCount {
+		t.Errorf(expectedDGotD, paramsCount, len(decoded.PreparedParameters))
 	}
 
-	for i := 0; i < packetParametersCount; i++ {
-		if decoded.PreparedParameters[i].Value != validPacketParametersValues[i] {
-			t.Errorf("Expected %s, got %s", validPacketParametersValues[i], decoded.PreparedParameters[i].Value)
+	for i := 0; i < paramsCount; i++ {
+		if decoded.PreparedParameters[i].Value != packetParams[i] {
+			t.Errorf(expectedSGotS, packetParams[i], decoded.PreparedParameters[i].Value)
 		}
 	}
 }
@@ -90,7 +126,7 @@ func TestDecodeComStmtExecuteRequestCorrectPacketWithZeroLengthParameter(t *test
 	_, err := DecodeComStmtExecuteRequest(packet, 9)
 
 	if err != nil {
-		println(err.Error())
+		t.Errorf(expectedNilGotS, err.Error())
 	}
 }
 
@@ -107,12 +143,12 @@ func TestDecodeComStmtExecuteRequestCorrectPacketWithNumericParams(t *testing.T)
 	decoded, err := DecodeComStmtExecuteRequest(validPacket, uint16(packetParametersCount))
 
 	if err != nil {
-		t.Errorf("Expected nil, got: '%s'", err.Error())
+		t.Errorf(expectedNilGotS, err.Error())
 	}
 
 	for i := 0; i < packetParametersCount; i++ {
 		if decoded.PreparedParameters[i].Value != validPacketParametersValues[i] {
-			t.Errorf("Expected %s, got %s", validPacketParametersValues[i], decoded.PreparedParameters[i].Value)
+			t.Errorf(expectedSGotS, validPacketParametersValues[i], decoded.PreparedParameters[i].Value)
 		}
 	}
 }
@@ -125,7 +161,7 @@ func TestDecodeComStmtPrepareOkResponseWithInvalidPacket(t *testing.T) {
 	_, err := DecodeComStmtPrepareOkResponse(invalidPacket)
 
 	if err == nil {
-		t.Errorf("Expected '%s', got: nil", errInvalidPacketLength)
+		t.Errorf(expectedSGotNil, errInvalidPacketLength)
 	}
 }
 
@@ -137,14 +173,28 @@ func TestDecodeComStmtPrepareOkResponseWithValidPacket(t *testing.T) {
 	decoded, err := DecodeComStmtPrepareOkResponse(validPacket)
 
 	if err != nil {
-		t.Errorf("Expected nil, got: '%s'", err.Error())
+		t.Errorf(expectedNilGotS, err.Error())
 	}
 
 	if decoded.StatementID != 1 {
-		t.Errorf("Expected 1, got: %d", decoded.StatementID)
+		t.Errorf(expectedDGotD, 1, decoded.StatementID)
 	}
 
 	if decoded.ParametersNum != 4 {
-		t.Errorf("Expected 4, got: %d", decoded.ParametersNum)
+		t.Errorf(expectedDGotD, 4, decoded.ParametersNum)
+	}
+}
+
+func TestDecodeEOFLengthString(t *testing.T) {
+	expected := "SET sql_mode='STRICT_TRANS_TABLES'"
+	encoded := []byte{
+		0x53, 0x45, 0x54, 0x20, 0x73, 0x71, 0x6c, 0x5f, 0x6d, 0x6f, 0x64, 0x65, 0x3d, 0x27, 0x53, 0x54, 0x52,
+		0x49, 0x43, 0x54, 0x5f, 0x54, 0x52, 0x41, 0x4e, 0x53, 0x5f, 0x54, 0x41, 0x42, 0x4c, 0x45, 0x53, 0x27,
+	}
+
+	decoded := DecodeEOFLengthString(encoded)
+
+	if decoded != expected {
+		t.Errorf(expectedSGotS, expected, decoded)
 	}
 }
