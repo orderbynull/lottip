@@ -18,10 +18,10 @@ type QueryRequest struct {
 	Query string // SQL query value
 }
 
-// [0,1,2]:   int<3> PacketLength
-// [3]: 	  int<1> PacketNumber
-// [4]:       int<1> Command COM_QUERY (0x03) or COM_STMT_PREPARE (0x16)
-// [5, ...]   string<EOF> SQLStatement
+// int<3> PacketLength
+// int<1> PacketNumber
+// int<1> Command COM_QUERY (0x03) or COM_STMT_PREPARE (0x16)
+// string<EOF> SQLStatement
 func DecodeQueryRequest(packet []byte) (*QueryRequest, error) {
 
 	// Min packet length = header(4 bytes) + command(1 byte) + SQLStatement(at least 1 byte)
@@ -41,15 +41,15 @@ type ComStmtPrepareOkResponse struct {
 // DecodeComStmtPrepareOkResponse decodes COM_STMT_PREPARE_OK response from MySQL server
 // Basic packet structure shown below.
 // For more details see https://mariadb.com/kb/en/mariadb/com_stmt_prepare/#COM_STMT_PREPARE_OK
-
-// [0,1,2]:   int<3> PacketLength
-// [3]: 	  int<1> PacketNumber
-// [4]:       int<1> Command COM_STMT_PREPARE_OK (0x00)
-// [5,6,7,8]: int<4> StatementID
-// [9,10]:    int<2> NumberOfColumns
-// [11,12]:   int<2> NumberOfParameters
-// [13]:      string<1> <not used>
-// [14,15]:   int<2> NumberOfWarnings
+//
+// int<3> PacketLength
+// int<1> PacketNumber
+// int<1> Command COM_STMT_PREPARE_OK (0x00)
+// int<4> StatementID
+// int<2> NumberOfColumns
+// int<2> NumberOfParameters
+// string<1> <not used>
+// int<2> NumberOfWarnings
 func DecodeComStmtPrepareOkResponse(packet []byte) (*ComStmtPrepareOkResponse, error) {
 
 	// Min packet length = header(4 bytes) + command(1 byte) + statementID(4 bytes)
@@ -87,29 +87,29 @@ type PreparedParameter struct {
 // Basic packet structure shown below.
 // For more details see https://mariadb.com/kb/en/mariadb/com_stmt_execute/
 
-// [0,1,2]:       int<3> PacketLength
-// [3]: 	      int<1> PacketNumber
-// [4]:           int<1> COM_STMT_EXECUTE (0x17)
-// [5,6,7,8]:     int<4> StatementID
-// [9]:           int<1> Flags
-// [10,11,12, 13] int<4> IterationCount = 1
-// 			  	  if (ParamCount > 0)
-//			      {
-// 				     byte<(ParamCount + 7) / 8> NullBitmap
-// 				     byte<1>: SendTypeToServer = 0 or 1
-// 				     if (SendTypeToServer)
-//				     {
-// 					    Foreach parameter
-//					    {
-// 						   byte<1>: FieldType
-//						   byte<1>: ParameterFlag
-//					    }
-//				     }
-// 				    Foreach parameter
-//				    {
-// 					   byte<n> BinaryParameterValue
-//				    }
-//			     }
+// int<3> PacketLength
+// int<1> PacketNumber
+// int<1> COM_STMT_EXECUTE (0x17)
+// int<4> StatementID
+// int<1> Flags
+// int<4> IterationCount = 1
+// if (ParamCount > 0)
+// {
+// 		byte<(ParamCount + 7) / 8> NullBitmap
+// 		byte<1>: SendTypeToServer = 0 or 1
+// 		if (SendTypeToServer)
+//		{
+// 			Foreach parameter
+//			{
+// 				byte<1>: FieldType
+//				byte<1>: ParameterFlag
+//			}
+//		}
+// 		Foreach parameter
+//		{
+// 			byte<n> BinaryParameterValue
+//		}
+// }
 func DecodeComStmtExecuteRequest(packet []byte, paramsCount uint16) (*ComStmtExecuteRequest, error) {
 
 	// Min packet length = header(4 bytes) + command(1 byte) + statementID(4 bytes)
@@ -145,9 +145,8 @@ func DecodeComStmtExecuteRequest(packet []byte, paramsCount uint16) (*ComStmtExe
 		reader.Seek(nullBitmapLength, io.SeekCurrent)
 
 		// Read SendTypeToServer value
-		sendTypeToServerBuf := make([]byte, 1)
-		reader.Read(sendTypeToServerBuf)
-		sendTypeToServer, _ := DecodeLenEncodedInteger(sendTypeToServerBuf)
+		sendTypeToServerByte, _ := reader.ReadByte()
+		sendTypeToServer := uint16(sendTypeToServerByte)
 
 		if sendTypeToServer == 1 {
 			for index := range parameters {
@@ -170,10 +169,8 @@ func DecodeComStmtExecuteRequest(packet []byte, paramsCount uint16) (*ComStmtExe
 			// It's length encoded string
 			case fieldTypeString:
 				// Read first byte of parameter value to know buffer length for whole value
-				stringLengthBuf := make([]byte, 1)
-				reader.Read(stringLengthBuf)
-
-				stringLength, _ := DecodeLenEncodedInteger(stringLengthBuf)
+				stringLengthByte, _ := reader.ReadByte()
+				stringLength := uint16(stringLengthByte)
 				reader.UnreadByte()
 
 				// Packets with 0 length parameter are also possible

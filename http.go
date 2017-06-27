@@ -17,7 +17,6 @@ const (
 )
 
 func runHttpServer(hub *chat.Hub) {
-
 	// Websockets endpoint
 	http.HandleFunc(websocketRoute, func(w http.ResponseWriter, r *http.Request) {
 		upgr := websocket.Upgrader{CheckOrigin: func(r *http.Request) bool { return true }}
@@ -69,6 +68,8 @@ func runHttpServer(hub *chat.Hub) {
 
 		if len(columns) > 0 {
 			table := tablewriter.NewWriter(w)
+			table.SetAutoFormatHeaders(false)
+			table.SetColWidth(1000)
 			table.SetHeader(columns)
 			table.AppendBulk(rows)
 			table.Render()

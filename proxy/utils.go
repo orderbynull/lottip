@@ -4,7 +4,7 @@ import (
 	"strings"
 )
 
-func haventYetDecidedFuncName(query string) string {
+func getUseDatabaseValue(query string) string {
 	var db = ""
 
 	words := strings.Fields(query)

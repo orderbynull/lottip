@@ -157,7 +157,7 @@ func (ps *proxyServer) extractAndForward(conn net.Conn, mysql net.Conn, connID i
 		case requestComQuery:
 			decoded, _ := DecodeQueryRequest(requestPacket)
 
-			selectedDb := haventYetDecidedFuncName(decoded.Query)
+			selectedDb := getUseDatabaseValue(decoded.Query)
 			if len(selectedDb) > 0 {
 				ps.getHandshake(connID).SelectedDb = selectedDb
 			}
@@ -189,7 +189,7 @@ func (ps *proxyServer) extractAndForward(conn net.Conn, mysql net.Conn, connID i
 		case requestComStmtPrepare:
 			decoded, _ := DecodeQueryRequest(requestPacket)
 
-			selectedDb := haventYetDecidedFuncName(decoded.Query)
+			selectedDb := getUseDatabaseValue(decoded.Query)
 			if len(selectedDb) > 0 {
 				ps.getHandshake(connID).SelectedDb = selectedDb
 			}
