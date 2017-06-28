@@ -18,6 +18,11 @@ type QueryRequest struct {
 	Query string // SQL query value
 }
 
+// DecodeQueryRequest decodes COM_QUERY and COM_STMT_PREPARE requests from client.
+// Basic packet structure shown below.
+// For more details see https://mariadb.com/kb/en/mariadb/com_query/ and
+// https://mariadb.com/kb/en/mariadb/com_stmt_prepare/
+//
 // int<3> PacketLength
 // int<1> PacketNumber
 // int<1> Command COM_QUERY (0x03) or COM_STMT_PREPARE (0x16)
@@ -29,6 +34,11 @@ func DecodeQueryRequest(packet []byte) (*QueryRequest, error) {
 		return nil, errInvalidPacketLength
 	}
 
+	// Fifth byte is command
+	if packet[4] != requestComQuery && packet[4] != requestComStmtPrepare {
+		return nil, errInvalidPacketType
+	}
+
 	return &QueryRequest{DecodeEOFLengthString(packet[5:])}, nil
 }
 
@@ -38,7 +48,7 @@ type ComStmtPrepareOkResponse struct {
 	ParametersNum uint16 // Num of prepared parameters
 }
 
-// DecodeComStmtPrepareOkResponse decodes COM_STMT_PREPARE_OK response from MySQL server
+// DecodeComStmtPrepareOkResponse decodes COM_STMT_PREPARE_OK response from MySQL server.
 // Basic packet structure shown below.
 // For more details see https://mariadb.com/kb/en/mariadb/com_stmt_prepare/#COM_STMT_PREPARE_OK
 //
@@ -70,13 +80,13 @@ func DecodeComStmtPrepareOkResponse(packet []byte) (*ComStmtPrepareOkResponse, e
 	return &ComStmtPrepareOkResponse{StatementID: statementID, ParametersNum: parametersNum}, nil
 }
 
-// ComStmtExecuteRequest represents COM_STMT_EXECUTE request structure
+// ComStmtExecuteRequest represents COM_STMT_EXECUTE request structure.
 type ComStmtExecuteRequest struct {
 	StatementID        uint32              // ID of prepared statement
 	PreparedParameters []PreparedParameter // Slice of prepared parameters
 }
 
-// PreparedParameter structure represents single prepared parameter structure for COM_STMT_EXECUTE request
+// PreparedParameter structure represents single prepared parameter structure for COM_STMT_EXECUTE request.
 type PreparedParameter struct {
 	FieldType byte   // Type of prepared parameter. See https://mariadb.com/kb/en/mariadb/resultset/#field-types
 	Flag      byte   // Unused
@@ -86,7 +96,7 @@ type PreparedParameter struct {
 // DecodeComStmtExecuteRequest decodes COM_STMT_EXECUTE packet sent by MySQL client.
 // Basic packet structure shown below.
 // For more details see https://mariadb.com/kb/en/mariadb/com_stmt_execute/
-
+//
 // int<3> PacketLength
 // int<1> PacketNumber
 // int<1> COM_STMT_EXECUTE (0x17)
@@ -145,8 +155,7 @@ func DecodeComStmtExecuteRequest(packet []byte, paramsCount uint16) (*ComStmtExe
 		reader.Seek(nullBitmapLength, io.SeekCurrent)
 
 		// Read SendTypeToServer value
-		sendTypeToServerByte, _ := reader.ReadByte()
-		sendTypeToServer := uint16(sendTypeToServerByte)
+		sendTypeToServer, _ := reader.ReadByte()
 
 		if sendTypeToServer == 1 {
 			for index := range parameters {
@@ -169,8 +178,7 @@ func DecodeComStmtExecuteRequest(packet []byte, paramsCount uint16) (*ComStmtExe
 			// It's length encoded string
 			case fieldTypeString:
 				// Read first byte of parameter value to know buffer length for whole value
-				stringLengthByte, _ := reader.ReadByte()
-				stringLength := uint16(stringLengthByte)
+				stringLength, _ := reader.ReadByte()
 				reader.UnreadByte()
 
 				// Packets with 0 length parameter are also possible
@@ -198,7 +206,7 @@ func DecodeComStmtExecuteRequest(packet []byte, paramsCount uint16) (*ComStmtExe
 				doubleBits := binary.LittleEndian.Uint64(doubleLengthBuf)
 				doubleValue := math.Float64frombits(doubleBits)
 
-				stringValue = strconv.FormatFloat(doubleValue, 'f', 6, 64)
+				stringValue = strconv.FormatFloat(doubleValue, 'f', longLongDecodePrecision, 64)
 
 			default:
 				return nil, errFieldTypeNotImplementedYet
@@ -211,7 +219,7 @@ func DecodeComStmtExecuteRequest(packet []byte, paramsCount uint16) (*ComStmtExe
 	return &ComStmtExecuteRequest{StatementID: statementID, PreparedParameters: parameters}, nil
 }
 
-// DecodeLenEncodedInteger returns parsed length-encoded integer and it's offset
+// DecodeLenEncodedInteger returns parsed length-encoded integer and it's offset.
 // For more details see https://mariadb.com/kb/en/mariadb/protocol-data-types/#length-encoded-integers
 func DecodeLenEncodedInteger(data []byte) (value uint64, offset uint64) {
 	if len(data) == 0 {
@@ -246,7 +254,7 @@ func DecodeLenEncodedInteger(data []byte) (value uint64, offset uint64) {
 	return value, offset
 }
 
-// DecodeLenEncodedString returns parsed length-encoded string and it's length
+// DecodeLenEncodedString returns parsed length-encoded string and it's length.
 // Length-encoded strings are prefixed by a length-encoded integer which describes
 // the length of the string, followed by the string value.
 // For more details see https://mariadb.com/kb/en/mariadb/protocol-data-types/#length-encoded-strings

@@ -29,4 +29,7 @@ const (
 	// MySQL connection state constants
 	connStateStarted  = 0xf4
 	connStateFinished = 0xf5
+
+	// Digits after comma
+	longLongDecodePrecision = 6
 )
