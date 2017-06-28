@@ -32,7 +32,7 @@ Get binaries from [releases](https://github.com/orderbynull/lottip/releases) pag
     go get github.com/orderbynull/lottip
     go install github.com/mjibson/esc
     cd $GOPATH/src/github.com/orderbynull/lottip
-    $GOPATH/bin/esc -o embed.go -prefix web -include=".*\.css|.*\.js|.*\.html|.*\.png" web
+    $GOPATH/bin/esc -o fs.go -prefix web -include=".*\.css|.*\.js|.*\.html|.*\.png" web
     go build
     ./lottip
     
