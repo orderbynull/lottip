@@ -154,7 +154,7 @@ func (ps *proxyServer) extractAndForward(conn net.Conn, mysql net.Conn, connID i
 		switch requestPacket[4] {
 
 		// Received COM_QUERY from client
-		case requestComQuery:
+		case comQuery:
 			decoded, _ := DecodeQueryRequest(requestPacket)
 
 			selectedDb := getUseDatabaseValue(decoded.Query)
@@ -186,7 +186,7 @@ func (ps *proxyServer) extractAndForward(conn net.Conn, mysql net.Conn, connID i
 			}
 
 		// Received COM_STMT_PREPARE from client
-		case requestComStmtPrepare:
+		case comStmtPrepare:
 			decoded, _ := DecodeQueryRequest(requestPacket)
 
 			selectedDb := getUseDatabaseValue(decoded.Query)
@@ -207,8 +207,8 @@ func (ps *proxyServer) extractAndForward(conn net.Conn, mysql net.Conn, connID i
 				WritePacket(response, conn)
 			}
 
-		// Received requestComStmtExecute from MySQL client
-		case requestComStmtExecute:
+		// Received comStmtExecute from MySQL client
+		case comStmtExecute:
 			var preparedParameters []PreparedParameter
 			var executable bool
 
@@ -234,13 +234,13 @@ func (ps *proxyServer) extractAndForward(conn net.Conn, mysql net.Conn, connID i
 			ps.setCommandResult(connID, cmdId, result, "", time.Since(start))
 			WritePacket(response, conn)
 
-		case requestComShowFields:
+		case comFieldList:
 			WritePacket(requestPacket, mysql)
 			response, _, _ := readShowFieldsResponse(mysql)
 			WritePacket(response, conn)
 
 		// Received COM_STMT_CLOSE from client
-		case requestComStmtClose:
+		case comStmtClose:
 			continue
 
 		default:

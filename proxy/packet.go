@@ -15,8 +15,8 @@ type ConnSettings struct {
 
 //...
 func (h *ConnSettings) DeprecateEOFSet() bool {
-	return ((capabilityDeprecateEof & h.serverCapabilities) != 0) &&
-		((capabilityDeprecateEof & h.clientCapabilities) != 0)
+	return ((clientDeprecateEOF & h.serverCapabilities) != 0) &&
+		((clientDeprecateEOF & h.clientCapabilities) != 0)
 }
 
 // processHandshake handles ConnSettings between client and MySQL server.
@@ -111,7 +111,7 @@ func ReadResponse(conn net.Conn, deprecateEof bool) ([]byte, byte, error) {
 	data = append(data, pkt...)
 
 	if !deprecateEof {
-		columns, _ := DecodeLenEncodedInteger(pkt[4:])
+		columns, _ := ReadLenEncodedInteger(pkt[4:])
 
 		toRead := int(columns) + 1
 

@@ -13,6 +13,99 @@ var errInvalidPacketLength = errors.New("Invalid packet length")
 var errInvalidPacketType = errors.New("Invalid packet type")
 var errFieldTypeNotImplementedYet = errors.New("Required field type not implemented yet")
 
+type HandshakeV10 struct {
+	ProtocolVersion    byte
+	ServerVersion      string
+	ConnectionID       uint32
+	ServerCapabilities uint32
+	AuthPlugin         string
+}
+
+func DecodeHandshakeV10(packet []byte) (*HandshakeV10, error) {
+	r := bytes.NewReader(packet)
+
+	// Skip packet header
+	if _, err := r.Seek(4, io.SeekStart); err != nil {
+		return nil, err
+	}
+
+	// Read ProtocolVersion value
+	protoVersion, _ := r.ReadByte()
+
+	// Read ServerVersion value
+	serverVersion := ReadNullTerminatedString(r)
+
+	// Read ConnectionID value
+	connectionIDBuf := make([]byte, 4)
+	if _, err := r.Read(connectionIDBuf); err != nil {
+		return nil, err
+	}
+	connectionID := binary.LittleEndian.Uint32(connectionIDBuf)
+
+	// Skip AuthPluginData and filler (always 0x00)
+	if _, err := r.Seek(9, io.SeekCurrent); err != nil {
+		return nil, err
+	}
+
+	// Read ServerCapabilities value
+	serverCapabilitiesLowerBuf := make([]byte, 2)
+	if _, err := r.Read(serverCapabilitiesLowerBuf); err != nil {
+		return nil, err
+	}
+
+	// Skip ServerDefaultCollation and StatusFlags
+	if _, err := r.Seek(3, io.SeekCurrent); err != nil {
+		return nil, err
+	}
+
+	// Read ExServerCapabilities value
+	serverCapabilitiesHigherBuf := make([]byte, 2)
+	if _, err := r.Read(serverCapabilitiesHigherBuf); err != nil {
+		return nil, err
+	}
+
+	// Compose ServerCapabilities from 2 bufs
+	var serverCapabilitiesBuf []byte
+	serverCapabilitiesBuf = append(serverCapabilitiesBuf, serverCapabilitiesLowerBuf...)
+	serverCapabilitiesBuf = append(serverCapabilitiesBuf, serverCapabilitiesHigherBuf...)
+	serverCapabilities := binary.LittleEndian.Uint32(serverCapabilitiesBuf)
+
+	var authPluginDataLength byte
+	if serverCapabilities&clientPluginAuth != 0 {
+		var err error
+		authPluginDataLength, err = r.ReadByte()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	// Skip reserved (all 0x00)
+	if _, err := r.Seek(10, io.SeekCurrent); err != nil {
+		return nil, err
+	}
+
+	if serverCapabilities&clientSecureConnection != 0 {
+		skip := int64(math.Max(13, float64(authPluginDataLength)-8))
+		// Skip reserved (all 0x00)
+		if _, err := r.Seek(skip, io.SeekCurrent); err != nil {
+			return nil, err
+		}
+	}
+
+	var authPlugin string
+	if serverCapabilities&clientPluginAuth != 0 {
+		authPlugin = ReadNullTerminatedString(r)
+	}
+
+	return &HandshakeV10{
+		ProtocolVersion:    protoVersion,
+		ServerVersion:      serverVersion,
+		ConnectionID:       connectionID,
+		ServerCapabilities: serverCapabilities,
+		AuthPlugin:         authPlugin,
+	}, nil
+}
+
 // QueryRequest represents COM_QUERY or COM_STMT_PREPARE command sent by client to server.
 type QueryRequest struct {
 	Query string // SQL query value
@@ -20,8 +113,7 @@ type QueryRequest struct {
 
 // DecodeQueryRequest decodes COM_QUERY and COM_STMT_PREPARE requests from client.
 // Basic packet structure shown below.
-// For more details see https://mariadb.com/kb/en/mariadb/com_query/ and
-// https://mariadb.com/kb/en/mariadb/com_stmt_prepare/
+// See https://mariadb.com/kb/en/mariadb/com_query/ and https://mariadb.com/kb/en/mariadb/com_stmt_prepare/
 //
 // int<3> PacketLength
 // int<1> PacketNumber
@@ -35,11 +127,11 @@ func DecodeQueryRequest(packet []byte) (*QueryRequest, error) {
 	}
 
 	// Fifth byte is command
-	if packet[4] != requestComQuery && packet[4] != requestComStmtPrepare {
+	if packet[4] != comQuery && packet[4] != comStmtPrepare {
 		return nil, errInvalidPacketType
 	}
 
-	return &QueryRequest{DecodeEOFLengthString(packet[5:])}, nil
+	return &QueryRequest{ReadEOFLengthString(packet[5:])}, nil
 }
 
 // ComStmtPrepareOkResponse represents COM_STMT_PREPARE_OK response structure.
@@ -50,7 +142,7 @@ type ComStmtPrepareOkResponse struct {
 
 // DecodeComStmtPrepareOkResponse decodes COM_STMT_PREPARE_OK response from MySQL server.
 // Basic packet structure shown below.
-// For more details see https://mariadb.com/kb/en/mariadb/com_stmt_prepare/#COM_STMT_PREPARE_OK
+// See https://mariadb.com/kb/en/mariadb/com_stmt_prepare/#COM_STMT_PREPARE_OK
 //
 // int<3> PacketLength
 // int<1> PacketNumber
@@ -95,7 +187,7 @@ type PreparedParameter struct {
 
 // DecodeComStmtExecuteRequest decodes COM_STMT_EXECUTE packet sent by MySQL client.
 // Basic packet structure shown below.
-// For more details see https://mariadb.com/kb/en/mariadb/com_stmt_execute/
+// See https://mariadb.com/kb/en/mariadb/com_stmt_execute/
 //
 // int<3> PacketLength
 // int<1> PacketNumber
@@ -129,99 +221,158 @@ func DecodeComStmtExecuteRequest(packet []byte, paramsCount uint16) (*ComStmtExe
 	}
 
 	// Fifth byte is command
-	if packet[4] != requestComStmtExecute {
+	if packet[4] != comStmtExecute {
 		return nil, errInvalidPacketType
 	}
 
-	reader := bytes.NewReader(packet)
+	r := bytes.NewReader(packet)
 
 	// Skip to statementID position
-	reader.Seek(5, io.SeekStart)
+	if _, err := r.Seek(5, io.SeekStart); err != nil {
+		return nil, err
+	}
 
 	// Read StatementID value
 	statementIDBuf := make([]byte, 4)
-	reader.Read(statementIDBuf)
+	if _, err := r.Read(statementIDBuf); err != nil {
+		return nil, err
+	}
 	statementID := binary.LittleEndian.Uint32(statementIDBuf)
 
 	// Skip to NullBitmap position
-	reader.Seek(5, io.SeekCurrent)
+	if _, err := r.Seek(5, io.SeekCurrent); err != nil {
+		return nil, err
+	}
 
+	// Prepare buffer for n=paramsCount prepared parameters
 	parameters := make([]PreparedParameter, paramsCount)
 
 	if paramsCount > 0 {
 		nullBitmapLength := int64((paramsCount + 7) / 8)
 
 		// Skip to SendTypeToServer position
-		reader.Seek(nullBitmapLength, io.SeekCurrent)
+		if _, err := r.Seek(nullBitmapLength, io.SeekCurrent); err != nil {
+			return nil, err
+		}
 
 		// Read SendTypeToServer value
-		sendTypeToServer, _ := reader.ReadByte()
+		sendTypeToServer, err := r.ReadByte()
+		if err != nil {
+			return nil, err
+		}
 
 		if sendTypeToServer == 1 {
 			for index := range parameters {
 
 				// Read parameter FieldType and ParameterFlag
 				parameterMeta := make([]byte, 2)
-				reader.Read(parameterMeta)
+				if _, err := r.Read(parameterMeta); err != nil {
+					return nil, err
+				}
 
 				parameters[index].FieldType = parameterMeta[0]
 				parameters[index].Flag = parameterMeta[1]
 			}
 		}
 
-		var stringValue string
+		var fieldDecoderError error
+		var fieldValue string
 
 		for index, parameter := range parameters {
 			switch parameter.FieldType {
 
-			// MYSQL_TYPE_VAR_STRING
-			// It's length encoded string
+			// MYSQL_TYPE_VAR_STRING (length encoded string)
 			case fieldTypeString:
-				// Read first byte of parameter value to know buffer length for whole value
-				stringLength, _ := reader.ReadByte()
-				reader.UnreadByte()
-
-				// Packets with 0 length parameter are also possible
-				if stringLength > 0 {
-					// Read whole length encoded string
-					stringValueBuf := make([]byte, stringLength+1)
-					reader.Read(stringValueBuf)
-
-					stringValue, _ = DecodeLenEncodedString(stringValueBuf)
-				}
+				fieldValue, fieldDecoderError = DecodeFieldTypeString(r)
 
 			// MYSQL_TYPE_LONGLONG
 			case fieldTypeLongLong:
-				var bigIntValue int64
-				binary.Read(reader, binary.LittleEndian, &bigIntValue)
-
-				stringValue = strconv.FormatInt(bigIntValue, 10)
+				fieldValue, fieldDecoderError = DecodeFieldTypeLongLong(r)
 
 			// MYSQL_TYPE_DOUBLE
 			case fieldTypeDouble:
-				// Read 8 bytes required for float64
-				doubleLengthBuf := make([]byte, 8)
-				reader.Read(doubleLengthBuf)
+				fieldValue, fieldDecoderError = DecodeFieldTypeDouble(r)
 
-				doubleBits := binary.LittleEndian.Uint64(doubleLengthBuf)
-				doubleValue := math.Float64frombits(doubleBits)
-
-				stringValue = strconv.FormatFloat(doubleValue, 'f', longLongDecodePrecision, 64)
-
+			// Field with missing decoder
 			default:
 				return nil, errFieldTypeNotImplementedYet
 			}
 
-			parameters[index].Value = stringValue
+			// Return with first decoding error
+			if fieldDecoderError != nil {
+				return nil, fieldDecoderError
+			}
+
+			parameters[index].Value = fieldValue
+			fieldValue = ""
 		}
 	}
 
 	return &ComStmtExecuteRequest{StatementID: statementID, PreparedParameters: parameters}, nil
 }
 
-// DecodeLenEncodedInteger returns parsed length-encoded integer and it's offset.
-// For more details see https://mariadb.com/kb/en/mariadb/protocol-data-types/#length-encoded-integers
-func DecodeLenEncodedInteger(data []byte) (value uint64, offset uint64) {
+// DecodeFieldTypeString decodes MYSQL_TYPE_VAR_STRING field
+// See https://mariadb.com/kb/en/mariadb/resultset/#field-types
+func DecodeFieldTypeString(r *bytes.Reader) (string, error) {
+	var str string
+
+	// Read first byte of parameter value to know buffer length for whole value
+	// io.EOF is ok since reader may be empty already because of empty prepared parameter value
+	stringLength, err := r.ReadByte()
+	if err != nil && err != io.EOF {
+		return "", err
+	}
+
+	// Put byte back to reader
+	if err = r.UnreadByte(); err != nil {
+		return "", err
+	}
+
+	// Packets with 0-length parameter are also possible
+	if stringLength > 0 {
+		// Read whole length encoded string
+		stringValueBuf := make([]byte, stringLength+1)
+		_, err := r.Read(stringValueBuf)
+		if err != nil {
+			return "", nil
+		}
+
+		str, _ = ReadLenEncodedString(stringValueBuf)
+	}
+
+	return str, nil
+}
+
+// DecodeFieldTypeLongLong decodes MYSQL_TYPE_LONGLONG field
+// See https://mariadb.com/kb/en/mariadb/resultset/#field-types
+func DecodeFieldTypeLongLong(r *bytes.Reader) (string, error) {
+	var bigIntValue int64
+
+	if err := binary.Read(r, binary.LittleEndian, &bigIntValue); err != nil {
+		return "", nil
+	}
+
+	return strconv.FormatInt(bigIntValue, 10), nil
+}
+
+// DecodeFieldTypeDouble decodes MYSQL_TYPE_DOUBLE field
+// See https://mariadb.com/kb/en/mariadb/resultset/#field-types
+func DecodeFieldTypeDouble(r *bytes.Reader) (string, error) {
+	// Read 8 bytes required for float64
+	doubleLengthBuf := make([]byte, 8)
+	if _, err := r.Read(doubleLengthBuf); err != nil {
+		return "", err
+	}
+
+	doubleBits := binary.LittleEndian.Uint64(doubleLengthBuf)
+	doubleValue := math.Float64frombits(doubleBits)
+
+	return strconv.FormatFloat(doubleValue, 'f', doubleDecodePrecision, 64), nil
+}
+
+// ReadLenEncodedInteger returns parsed length-encoded integer and it's offset.
+// See https://mariadb.com/kb/en/mariadb/protocol-data-types/#length-encoded-integers
+func ReadLenEncodedInteger(data []byte) (value uint64, offset uint64) {
 	if len(data) == 0 {
 		value = 0
 		offset = 0
@@ -254,19 +405,34 @@ func DecodeLenEncodedInteger(data []byte) (value uint64, offset uint64) {
 	return value, offset
 }
 
-// DecodeLenEncodedString returns parsed length-encoded string and it's length.
+// ReadLenEncodedString returns parsed length-encoded string and it's length.
 // Length-encoded strings are prefixed by a length-encoded integer which describes
 // the length of the string, followed by the string value.
-// For more details see https://mariadb.com/kb/en/mariadb/protocol-data-types/#length-encoded-strings
-func DecodeLenEncodedString(data []byte) (string, uint64) {
-	strLen, offset := DecodeLenEncodedInteger(data)
+// See https://mariadb.com/kb/en/mariadb/protocol-data-types/#length-encoded-strings
+func ReadLenEncodedString(data []byte) (string, uint64) {
+	strLen, offset := ReadLenEncodedInteger(data)
 
 	return string(data[offset : offset+strLen]), strLen
 }
 
-// DecodeEOFLengthString returns parsed EOF-length string.
+// ReadEOFLengthString returns parsed EOF-length string.
 // EOF-length strings are those strings whose length will be calculated by the packet remaining length.
-// For more details see https://mariadb.com/kb/en/mariadb/protocol-data-types/#end-of-file-length-strings
-func DecodeEOFLengthString(data []byte) string {
+// See https://mariadb.com/kb/en/mariadb/protocol-data-types/#end-of-file-length-strings
+func ReadEOFLengthString(data []byte) string {
 	return string(data)
+}
+
+// ReadNullTerminatedString reads bytes from reader until 0x00 byte
+// See https://mariadb.com/kb/en/mariadb/protocol-data-types/#null-terminated-strings
+func ReadNullTerminatedString(r *bytes.Reader) string {
+	var str []byte
+	for {
+		//TODO: Check for error
+		b, _ := r.ReadByte()
+		if b == 0x00 {
+			return string(str)
+		} else {
+			str = append(str, b)
+		}
+	}
 }
