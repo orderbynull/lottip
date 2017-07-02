@@ -61,13 +61,13 @@ func DecodeHandshakeV10(packet []byte) (*HandshakeV10, error) {
 		return nil, err
 	}
 
-	// Read ProtocolVersion value
+	// Read ProtocolVersion
 	protoVersion, _ := r.ReadByte()
 
-	// Read ServerVersion value
+	// Read ServerVersion
 	serverVersion := ReadNullTerminatedString(r)
 
-	// Read ConnectionID value
+	// Read ConnectionID
 	connectionIDBuf := make([]byte, 4)
 	if _, err := r.Read(connectionIDBuf); err != nil {
 		return nil, err
@@ -79,7 +79,7 @@ func DecodeHandshakeV10(packet []byte) (*HandshakeV10, error) {
 		return nil, err
 	}
 
-	// Read ServerCapabilities value
+	// Read ServerCapabilities
 	serverCapabilitiesLowerBuf := make([]byte, 2)
 	if _, err := r.Read(serverCapabilitiesLowerBuf); err != nil {
 		return nil, err
@@ -90,7 +90,7 @@ func DecodeHandshakeV10(packet []byte) (*HandshakeV10, error) {
 		return nil, err
 	}
 
-	// Read ExServerCapabilities value
+	// Read ExServerCapabilities
 	serverCapabilitiesHigherBuf := make([]byte, 2)
 	if _, err := r.Read(serverCapabilitiesHigherBuf); err != nil {
 		return nil, err
@@ -136,6 +136,44 @@ func DecodeHandshakeV10(packet []byte) (*HandshakeV10, error) {
 		ServerCapabilities: serverCapabilities,
 		AuthPlugin:         authPlugin,
 	}, nil
+}
+
+// HandshakeResponse41 represents handshake response packet sent by 4.1+ clients supporting clientProtocol41 capability,
+// if the server announced it in its initial handshake packet.
+// See http://imysql.com/mysql-internal-manual/connection-phase-packets.html#packet-Protocol::HandshakeResponse41
+type HandshakeResponse41 struct {
+	ClientCapabilities uint32
+	ClientCharset      byte
+}
+
+// DecodeHandshakeReponse41 decodes handshake response packet send by client.
+func DecodeHandshakeReponse41(packet []byte) (*HandshakeResponse41, error) {
+	r := bytes.NewReader(packet)
+
+	// Skip packet header
+	if _, err := r.Seek(4, io.SeekStart); err != nil {
+		return nil, err
+	}
+
+	// Read CapabilityFlags
+	clientCapabilitiesBuf := make([]byte, 4)
+	if _, err := r.Read(clientCapabilitiesBuf); err != nil {
+		return nil, err
+	}
+	clientCapabilities := binary.LittleEndian.Uint32(clientCapabilitiesBuf)
+
+	// Skip MaxPacketSize
+	if _, err := r.Seek(4, io.SeekCurrent); err != nil {
+		return nil, err
+	}
+
+	// Read Charset
+	charset, err := r.ReadByte()
+	if err != nil {
+		return nil, err
+	}
+
+	return &HandshakeResponse41{clientCapabilities, charset}, nil
 }
 
 // QueryRequest represents COM_QUERY or COM_STMT_PREPARE command sent by client to server.
@@ -264,7 +302,7 @@ func DecodeComStmtExecuteRequest(packet []byte, paramsCount uint16) (*ComStmtExe
 		return nil, err
 	}
 
-	// Read StatementID value
+	// Read StatementID
 	statementIDBuf := make([]byte, 4)
 	if _, err := r.Read(statementIDBuf); err != nil {
 		return nil, err
@@ -287,7 +325,7 @@ func DecodeComStmtExecuteRequest(packet []byte, paramsCount uint16) (*ComStmtExe
 			return nil, err
 		}
 
-		// Read SendTypeToServer value
+		// Read SendTypeToServer
 		sendTypeToServer, err := r.ReadByte()
 		if err != nil {
 			return nil, err
