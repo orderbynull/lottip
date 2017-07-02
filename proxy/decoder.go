@@ -13,6 +13,8 @@ var errInvalidPacketLength = errors.New("Invalid packet length")
 var errInvalidPacketType = errors.New("Invalid packet type")
 var errFieldTypeNotImplementedYet = errors.New("Required field type not implemented yet")
 
+// HandshakeV10 represents sever's initial handshake packet
+// See https://mariadb.com/kb/en/mariadb/1-connecting-connecting/#initial-handshake-packet
 type HandshakeV10 struct {
 	ProtocolVersion    byte
 	ServerVersion      string
@@ -21,6 +23,36 @@ type HandshakeV10 struct {
 	AuthPlugin         string
 }
 
+// DecodeHandshakeV10 decodes initial handshake request from server.
+// Basic packet structure shown below.
+// See http://imysql.com/mysql-internal-manual/connection-phase-packets.html#packet-Protocol::HandshakeV10
+//
+// int<1> ProtocolVersion
+// string<NUL> ServerVersion
+// int<4> ConnectionID
+// string<8> AuthPluginDataPart1 (authentication seed)
+// string<1> Reserved (always 0x00)
+// int<2> ServerCapabilities (1st part)
+// int<1> ServerDefaultCollation
+// int<2> StatusFlags
+// int<2> ServerCapabilities (2nd part)
+// if capabilities & clientPluginAuth
+// {
+// 		int<1> AuthPluginDataLength
+// }
+// else
+// {
+//		int<1> 0x00
+// }
+// string<10> Reserved (all 0x00)
+// if capabilities & clientSecureConnection
+// {
+// 		string[$len] AuthPluginDataPart2 ($len=MAX(13, AuthPluginDataLength - 8))
+// }
+// if capabilities & clientPluginAuth
+// {
+//		string[NUL] AuthPluginName
+// }
 func DecodeHandshakeV10(packet []byte) (*HandshakeV10, error) {
 	r := bytes.NewReader(packet)
 

@@ -144,22 +144,19 @@ func ReadResponse(conn net.Conn, deprecateEof bool) ([]byte, byte, error) {
 // ReadPacket ...
 func ReadPacket(conn net.Conn) ([]byte, error) {
 
+	// Read packet header
 	header := []byte{0, 0, 0, 0}
-
-	if _, err := io.ReadFull(conn, header); err == io.EOF {
-		return nil, io.ErrUnexpectedEOF
-	} else if err != nil {
+	if _, err := io.ReadFull(conn, header); err != nil {
 		return nil, err
 	}
 
-	bodyLength := int(uint32(header[0]) | uint32(header[1])<<8 | uint32(header[2])<<16)
+	// Calculate packet body length
+	bodyLen := int(uint32(header[0]) | uint32(header[1])<<8 | uint32(header[2])<<16)
 
-	body := make([]byte, bodyLength)
-
+	// Read packet body
+	body := make([]byte, bodyLen)
 	n, err := io.ReadFull(conn, body)
-	if err == io.EOF {
-		return nil, io.ErrUnexpectedEOF
-	} else if err != nil {
+	if err != nil {
 		return nil, err
 	}
 
