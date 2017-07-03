@@ -1,4 +1,4 @@
-package proxy
+package protocol
 
 import (
 	"encoding/binary"
@@ -8,36 +8,60 @@ import (
 
 //...
 type ConnSettings struct {
-	clientCapabilities uint32
-	serverCapabilities uint32
+	ClientCapabilities uint32
+	ServerCapabilities uint32
 	SelectedDb         string
 }
 
 //...
 func (h *ConnSettings) DeprecateEOFSet() bool {
-	return ((clientDeprecateEOF & h.serverCapabilities) != 0) &&
-		((clientDeprecateEOF & h.clientCapabilities) != 0)
+	return ((clientDeprecateEOF & h.ServerCapabilities) != 0) &&
+		((clientDeprecateEOF & h.ClientCapabilities) != 0)
 }
 
-// processHandshake handles ConnSettings between client and MySQL server.
-// When client connects MySQL server for the first time "ConnSettings"
-// packet is sent by MySQL server so it just should be delivered without analyzing.
-// Returns extended server and client capabilities flags
-func processHandshake(app net.Conn, mysql net.Conn) *ConnSettings {
-	serverPacket, _ := ProxyPacket(mysql, app)
-	clientPacket, _ := ProxyPacket(app, mysql)
-	ProxyPacket(mysql, app)
+// ProcessHandshake handles handshake between server and client.
+// Returns server and client handshake responses
+func ProcessHandshake(client net.Conn, mysql net.Conn) (*HandshakeV10, *HandshakeResponse41, error) {
 
-	return &ConnSettings{
-		clientCapabilities: uint32(binary.LittleEndian.Uint16(clientPacket[6 : 6+2])),
-		serverCapabilities: uint32(binary.LittleEndian.Uint16(serverPacket[30 : 30+2])),
+	// Read server handshake
+	packet, err := ProxyPacket(mysql, client)
+	if err != nil {
+		println(err.Error())
+		return nil, nil, err
 	}
+
+	serverHandshake, err := DecodeHandshakeV10(packet)
+	if err != nil {
+		println(err.Error())
+		return nil, nil, err
+	}
+
+	// Read client handshake response
+	packet, err = ProxyPacket(client, mysql)
+	if err != nil {
+		println(err.Error())
+		return nil, nil, err
+	}
+
+	clientHandshake, err := DecodeHandshakeReponse41(packet)
+	if err != nil {
+		println(err.Error())
+		return nil, nil, err
+	}
+
+	// Read server OK response
+	if _, err = ProxyPacket(mysql, client); err != nil {
+		println(err.Error())
+		return nil, nil, err
+	}
+
+	return serverHandshake, clientHandshake, nil
 }
 
-// readPrepareResponse reads response from MySQL server for COM_STMT_PREPARE
+// ReadPrepareResponse reads response from MySQL server for COM_STMT_PREPARE
 // query issued by client.
 // ...
-func readPrepareResponse(conn net.Conn) ([]byte, byte, error) {
+func ReadPrepareResponse(conn net.Conn) ([]byte, byte, error) {
 	pkt, err := ReadPacket(conn)
 	if err != nil {
 		return []byte{}, 0, err
@@ -74,18 +98,18 @@ func readPrepareResponse(conn net.Conn) ([]byte, byte, error) {
 
 		return data, responseOk, nil
 
-	case responseErr:
-		return pkt, responseErr, nil
+	case ResponseErr:
+		return pkt, ResponseErr, nil
 	}
 
 	return []byte{}, 0, nil
 }
 
-func readErrMessage(errPacket []byte) string {
+func ReadErrMessage(errPacket []byte) string {
 	return string(errPacket[13:])
 }
 
-func readShowFieldsResponse(conn net.Conn) ([]byte, byte, error) {
+func ReadShowFieldsResponse(conn net.Conn) ([]byte, byte, error) {
 	return ReadResponse(conn, true)
 }
 
@@ -100,8 +124,8 @@ func ReadResponse(conn net.Conn, deprecateEof bool) ([]byte, byte, error) {
 	case responseOk:
 		return pkt, responseOk, nil
 
-	case responseErr:
-		return pkt, responseErr, nil
+	case ResponseErr:
+		return pkt, ResponseErr, nil
 
 	case responseLocalinfile:
 	}
@@ -167,7 +191,7 @@ func ReadPacket(conn net.Conn) ([]byte, error) {
 func WritePacket(pkt []byte, conn net.Conn) (int, error) {
 	n, err := conn.Write(pkt)
 	if err != nil {
-		return 0, errWritePacket
+		return 0, err
 	}
 
 	return n, nil

@@ -1,4 +1,4 @@
-package proxy
+package protocol
 
 import (
 	"bytes"
@@ -197,7 +197,7 @@ func DecodeQueryRequest(packet []byte) (*QueryRequest, error) {
 	}
 
 	// Fifth byte is command
-	if packet[4] != comQuery && packet[4] != comStmtPrepare {
+	if packet[4] != ComQuery && packet[4] != ComStmtPrepare {
 		return nil, errInvalidPacketType
 	}
 
@@ -291,7 +291,7 @@ func DecodeComStmtExecuteRequest(packet []byte, paramsCount uint16) (*ComStmtExe
 	}
 
 	// Fifth byte is command
-	if packet[4] != comStmtExecute {
+	if packet[4] != ComStmtExecute {
 		return nil, errInvalidPacketType
 	}
 

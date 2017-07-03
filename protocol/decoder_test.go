@@ -1,8 +1,7 @@
-package proxy
+package protocol
 
 import (
 	"bytes"
-	_ "encoding/binary"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )

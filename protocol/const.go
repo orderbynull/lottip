@@ -1,10 +1,10 @@
-package proxy
+package protocol
 
 const (
 	responseEof         = 0xfe
 	responseOk          = 0x00
 	responsePrepareOk   = 0x00
-	responseErr         = 0xff
+	ResponseErr         = 0xff
 	responseLocalinfile = 0xfb
 
 	// MySQL field types constants
@@ -17,8 +17,8 @@ const (
 	responseResultset = 0xbb
 
 	// MySQL connection state constants
-	connStateStarted  = 0xf4
-	connStateFinished = 0xf5
+	ConnStateStarted  = 0xf4
+	ConnStateFinished = 0xf5
 
 	// Digits after comma
 	doubleDecodePrecision = 6
@@ -27,8 +27,8 @@ const (
 const (
 	comQuit byte = iota + 1
 	comInitDB
-	comQuery
-	comFieldList
+	ComQuery
+	ComFieldList
 	comCreateDB
 	comDropDB
 	comRefresh
@@ -46,10 +46,10 @@ const (
 	comTableDump
 	comConnectOut
 	comRegisterSlave
-	comStmtPrepare
-	comStmtExecute
+	ComStmtPrepare
+	ComStmtExecute
 	comStmtSendLongData
-	comStmtClose
+	ComStmtClose
 	comStmtReset
 	comSetOption
 	comStmtFetch
