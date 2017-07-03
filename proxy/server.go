@@ -33,7 +33,7 @@ func NewServer(proxyHost string, mysqlHost string) (*Server, error) {
 	return &Server{handshakes: make(map[uint32]*protocol.ConnSettings), proxyHost: proxyHost, mysqlHost: mysqlHost}, nil
 }
 
-// Run starts accepting TCP connections and forwarding them to MySQL server.
+// Run starts accepting TCP connection and forwarding it to MySQL server.
 // Each incoming TCP connection is handled in own goroutine.
 func (ps *Server) Run() {
 	listener, err := net.Listen("tcp", ps.proxyHost)

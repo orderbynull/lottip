@@ -64,7 +64,7 @@ func ProcessHandshake(client net.Conn, mysql net.Conn) (*HandshakeV10, *Handshak
 func ReadPrepareResponse(conn net.Conn) ([]byte, byte, error) {
 	pkt, err := ReadPacket(conn)
 	if err != nil {
-		return []byte{}, 0, err
+		return nil, 0, err
 	}
 
 	numParams := binary.LittleEndian.Uint16(pkt[9:11])
