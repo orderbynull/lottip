@@ -2,7 +2,6 @@ package chat
 
 import (
 	"encoding/json"
-	"github.com/orderbynull/lottip/proxy"
 )
 
 // Hub ...
@@ -10,16 +9,16 @@ type Hub struct {
 	clients       map[*Client]bool
 	register      chan *Client
 	deregister    chan *Client
-	cmdChan       chan proxy.Cmd
-	cmdResultChan chan proxy.CmdResult
-	connStateChan chan proxy.ConnState
+	cmdChan       chan Cmd
+	cmdResultChan chan CmdResult
+	connStateChan chan ConnState
 }
 
 // NewHub ...
 func NewHub(
-	cmdChan chan proxy.Cmd,
-	cmdResultChan chan proxy.CmdResult,
-	connStateChan chan proxy.ConnState,
+	cmdChan chan Cmd,
+	cmdResultChan chan CmdResult,
+	connStateChan chan ConnState,
 ) *Hub {
 	return &Hub{
 		clients:       make(map[*Client]bool),

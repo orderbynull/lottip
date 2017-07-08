@@ -1,4 +1,4 @@
-package proxy
+package chat
 
 // Cmd represents MySQL command to be executed.
 type Cmd struct {

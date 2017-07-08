@@ -1,4 +1,4 @@
-package proxy
+package main
 
 import (
 	"errors"
@@ -7,35 +7,36 @@ import (
 	"net"
 	"time"
 
+	"github.com/orderbynull/lottip/chat"
 	"github.com/orderbynull/lottip/protocol"
 )
 
-var errInvalidProxyParams = errors.New("both proxy and mysql hosts must be set")
+var errInvalidProxyParams = errors.New("Main: both proxy and mysql hosts must be set")
 
-// Server implements server for capturing and forwarding MySQL traffic
-type Server struct {
+// proxy implements server for capturing and forwarding MySQL traffic
+type proxy struct {
 	handshakes    map[uint32]*protocol.ConnSettings
-	cmdChan       chan Cmd
-	cmdStateChan  chan CmdResult
-	connStateChan chan ConnState
+	cmdChan       chan chat.Cmd
+	cmdStateChan  chan chat.CmdResult
+	connStateChan chan chat.ConnState
 	appReadyChan  chan bool
 	mysqlHost     string
 	proxyHost     string
 }
 
-// NewServer returns new Server with connections params for proxy and mysql hosts.
+// newProxy returns new proxy with connections params for proxy and mysql hosts.
 // Returns error if either proxyHost or mysqlHost not set.
-func NewServer(proxyHost string, mysqlHost string) (*Server, error) {
+func newProxy(proxyHost string, mysqlHost string) (*proxy, error) {
 	if proxyHost == "" || mysqlHost == "" {
 		return nil, errInvalidProxyParams
 	}
 
-	return &Server{handshakes: make(map[uint32]*protocol.ConnSettings), proxyHost: proxyHost, mysqlHost: mysqlHost}, nil
+	return &proxy{handshakes: make(map[uint32]*protocol.ConnSettings), proxyHost: proxyHost, mysqlHost: mysqlHost}, nil
 }
 
-// Run starts accepting TCP connection and forwarding it to MySQL server.
+// run starts accepting TCP connection and forwarding it to MySQL server.
 // Each incoming TCP connection is handled in own goroutine.
-func (ps *Server) Run() {
+func (ps *proxy) run() {
 	listener, err := net.Listen("tcp", ps.proxyHost)
 	if err != nil {
 		log.Fatal(err.Error())
@@ -57,13 +58,13 @@ func (ps *Server) Run() {
 	}
 }
 
-// SetChannels assigns user defined channels to Server.
+// setChannels assigns user defined channels to proxy.
 // This channels are used to transfer captured command(query), command state and
 // connection state to corresponding routine.
-func (ps *Server) SetChannels(
-	cmdChan chan Cmd,
-	cmdStateChan chan CmdResult,
-	connStateChan chan ConnState,
+func (ps *proxy) setChannels(
+	cmdChan chan chat.Cmd,
+	cmdStateChan chan chat.CmdResult,
+	connStateChan chan chat.ConnState,
 	appReadyChan chan bool,
 ) {
 	ps.cmdChan = cmdChan
@@ -73,8 +74,8 @@ func (ps *Server) SetChannels(
 }
 
 // setCommand writes command string representation and it's id to command channel
-// provided by caller code via NewServer routine
-func (ps *Server) setCommand(
+// provided by caller code via newProxy routine
+func (ps *proxy) setCommand(
 	connID uint32,
 	cmdID int,
 	database string,
@@ -87,7 +88,7 @@ func (ps *Server) setCommand(
 		parametersSlice = append(parametersSlice, parameter.Value)
 	}
 
-	ps.cmdChan <- Cmd{
+	ps.cmdChan <- chat.Cmd{
 		ConnId:     connID,
 		CmdId:      cmdID,
 		Database:   database,
@@ -98,9 +99,9 @@ func (ps *Server) setCommand(
 }
 
 // setCommandResult writes command execution result to command result channel
-// provided by caller code via NewServer routine
-func (ps *Server) setCommandResult(connId uint32, cmdId int, cmdState byte, error string, duration time.Duration) {
-	ps.cmdStateChan <- CmdResult{
+// provided by caller code via newProxy routine
+func (ps *proxy) setCommandResult(connId uint32, cmdId int, cmdState byte, error string, duration time.Duration) {
+	ps.cmdStateChan <- chat.CmdResult{
 		ConnId:   connId,
 		CmdId:    cmdId,
 		Result:   cmdState,
@@ -110,13 +111,13 @@ func (ps *Server) setCommandResult(connId uint32, cmdId int, cmdState byte, erro
 }
 
 // setConnectionState writes TCP connection state to connection state channel
-// provided by caller code via NewServer routine
-func (ps *Server) setConnectionState(connId uint32, state byte) {
-	ps.connStateChan <- ConnState{ConnId: connId, State: state}
+// provided by caller code via newProxy routine
+func (ps *proxy) setConnectionState(connId uint32, state byte) {
+	ps.connStateChan <- chat.ConnState{ConnId: connId, State: state}
 }
 
 // handleConnection ...
-func (ps *Server) handleConnection(client net.Conn) {
+func (ps *proxy) handleConnection(client net.Conn) {
 	defer client.Close()
 
 	// Establishing connection to MySQL server for forwarding packets.
@@ -149,7 +150,7 @@ func (ps *Server) handleConnection(client net.Conn) {
 }
 
 // process reads data from proxy client, extracts queries and forwards them to MySQL
-func (ps *Server) process(client net.Conn, mysql net.Conn, connID uint32) {
+func (ps *proxy) process(client net.Conn, mysql net.Conn, connID uint32) {
 	var cmdId int
 	var preparedQuery string
 	var preparedParamsCount uint16

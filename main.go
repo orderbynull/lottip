@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/orderbynull/lottip/chat"
-	"github.com/orderbynull/lottip/proxy"
 )
 
 var (
@@ -27,9 +26,9 @@ func appReadyInfo(appReadyChan chan bool) {
 func main() {
 	flag.Parse()
 
-	cmdChan := make(chan proxy.Cmd)
-	cmdResultChan := make(chan proxy.CmdResult)
-	connStateChan := make(chan proxy.ConnState)
+	cmdChan := make(chan chat.Cmd)
+	cmdResultChan := make(chan chat.CmdResult)
+	connStateChan := make(chan chat.ConnState)
 	appReadyChan := make(chan bool)
 
 	hub := chat.NewHub(cmdChan, cmdResultChan, connStateChan)
@@ -38,7 +37,7 @@ func main() {
 	go runHttpServer(hub)
 	go appReadyInfo(appReadyChan)
 
-	p, _ := proxy.NewServer(*proxyAddr, *mysqlAddr)
-	p.SetChannels(cmdChan, cmdResultChan, connStateChan, appReadyChan)
-	p.Run()
+	p, _ := newProxy(*proxyAddr, *mysqlAddr)
+	p.setChannels(cmdChan, cmdResultChan, connStateChan, appReadyChan)
+	p.run()
 }
