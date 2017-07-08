@@ -67,20 +67,20 @@ func ReadPrepareResponse(conn net.Conn) ([]byte, byte, error) {
 		return nil, 0, err
 	}
 
-	numParams := binary.LittleEndian.Uint16(pkt[9:11])
-	numColumns := binary.LittleEndian.Uint16(pkt[11:13])
-	packetsExpected := 0
-
-	if numParams > 0 {
-		packetsExpected += int(numParams) + 1
-	}
-
-	if numColumns > 0 {
-		packetsExpected += int(numColumns) + 1
-	}
-
 	switch pkt[4] {
 	case responsePrepareOk:
+		numParams := binary.LittleEndian.Uint16(pkt[9:11])
+		numColumns := binary.LittleEndian.Uint16(pkt[11:13])
+		packetsExpected := 0
+
+		if numParams > 0 {
+			packetsExpected += int(numParams) + 1
+		}
+
+		if numColumns > 0 {
+			packetsExpected += int(numColumns) + 1
+		}
+
 		var data []byte
 		var eofCnt int
 
@@ -90,7 +90,7 @@ func ReadPrepareResponse(conn net.Conn) ([]byte, byte, error) {
 			eofCnt++
 			pkt, err = ReadPacket(conn)
 			if err != nil {
-				return []byte{}, 0, err
+				return nil, 0, err
 			}
 
 			data = append(data, pkt...)
@@ -102,7 +102,7 @@ func ReadPrepareResponse(conn net.Conn) ([]byte, byte, error) {
 		return pkt, ResponseErr, nil
 	}
 
-	return []byte{}, 0, nil
+	return nil, 0, nil
 }
 
 func ReadErrMessage(errPacket []byte) string {
@@ -117,7 +117,7 @@ func ReadShowFieldsResponse(conn net.Conn) ([]byte, byte, error) {
 func ReadResponse(conn net.Conn, deprecateEof bool) ([]byte, byte, error) {
 	pkt, err := ReadPacket(conn)
 	if err != nil {
-		return []byte{}, 0, err
+		return nil, 0, err
 	}
 
 	switch pkt[4] {
@@ -142,7 +142,7 @@ func ReadResponse(conn net.Conn, deprecateEof bool) ([]byte, byte, error) {
 		for i := 0; i < toRead; i++ {
 			pkt, err := ReadPacket(conn)
 			if err != nil {
-				return []byte{}, 0, err
+				return nil, 0, err
 			}
 
 			data = append(data, pkt...)
@@ -152,7 +152,7 @@ func ReadResponse(conn net.Conn, deprecateEof bool) ([]byte, byte, error) {
 	for {
 		pkt, err := ReadPacket(conn)
 		if err != nil {
-			return []byte{}, 0, err
+			return nil, 0, err
 		}
 
 		data = append(data, pkt...)
