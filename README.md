@@ -7,7 +7,7 @@ It comes as single binary with zero dependencies and consists of 2 parts: proxy 
 # Screenshots
 |  Query list   |Freezed query|Query error   |In app results       |
 |---------------|-------------|--------------|---------------------|
-|![Example 1](https://preview.ibb.co/h3szQF/query_list.png)|![Example 2](https://preview.ibb.co/bCnAXv/sleep.png)             |![Example 3](https://preview.ibb.co/hDkaza/error.png)              |![Example 4](https://preview.ibb.co/cu9qXv/dialog.png)             |
+|![Example 1](https://image.ibb.co/fjzeQF/query_list.png)|![Example 2](https://image.ibb.co/iPt65F/sleep.png)|![Example 3](https://image.ibb.co/c464sv/error.png)|![Example 4](https://image.ibb.co/fVCoKa/dialog.png)|
 
 # Main features
 **Lottip is on it's early stage of development.**
