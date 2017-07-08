@@ -5,14 +5,9 @@ As it sits between your application and MySQL server there's no need to use tool
 It comes as single binary with zero dependencies and consists of 2 parts: proxy server and embedded GUI.
 
 # Screenshots
-Here's how query list looks like:
-![Example 1](https://1.downloader.disk.yandex.ru/disk/82afbaa6ce9aad75d933f5b301786370158163a0adc0946bbb1c57586c00048e/5952ccb4/fKqInKw3d7bLFOeFnMGnhIpCh-g1Fsa4ASTpYYM1Tq82SVhYPSUYXiw5SnQjlbcFsWJBAtfosLEWTLDBVSUHpAtqvJgORLVMKQXgkxmqx4ar8npumZHI4midPdWhecNq?uid=0&filename=query-list.png&disposition=inline&hash=&limit=0&content_type=image%2Fpng&fsize=529592&hid=9cf9439e72300a253f78baa1c5ac1b9e&media_type=image&tknv=v2&etag=2b9e9b1c4ab35daec10ad11d196b00f6)
-Query freezed for 10 seconds:
-![Example 2](https://4.downloader.disk.yandex.ru/disk/836e493fc28cad669e4b9e08f77dbad5ffefcbcb75f12cc82144fb889cb4e1f0/5952cce1/fKqInKw3d7bLFOeFnMGnhPyNSkKL-VufKsCx8zmN0C_LvxSEN1CQimedqoRS48qfyYUGTtS4vgYL-MRO3PJt1i9iIgiAuomYMwlRghktoIer8npumZHI4midPdWhecNq?uid=0&filename=sleep.png&disposition=inline&hash=&limit=0&content_type=image%2Fpng&fsize=490096&hid=9fa692657191070cc11adac12c41b091&media_type=image&tknv=v2&etag=72184792faf353d534ba0bad4bbb00e8)
-Ooops, query returned an error:
-![Example 3](https://4.downloader.disk.yandex.ru/disk/193675e44a0db993aa65e58900ef1f7f6b4ecd01448480ed90600c2b1e483495/5952cd0e/fKqInKw3d7bLFOeFnMGnhJWYcZLrDbJ2m4Ak3bcAhlbBVUXp0oG_6XUrPQumLMcZp2j7Ne5xIPM6_Kl6F49JukxTSTqvk8hav2RNxfSeYhKr8npumZHI4midPdWhecNq?uid=0&filename=error.png&disposition=inline&hash=&limit=0&content_type=image%2Fpng&fsize=475041&hid=5a82c44688dcb6a3ceec8cfb04d03143&media_type=image&tknv=v2&etag=e52f07e3149ab48ebbbb3805466d88b8)
-Each query can be executed right from the app:
-![Example 4](https://2.downloader.disk.yandex.ru/disk/28539b74a03c0f8e08ad048eca4cd0a00d3145c5261c66291f31f9837459a55b/5952cd2a/fKqInKw3d7bLFOeFnMGnhEPh6u0x8S8JJr_NiRfyge4I2oaBbqGsQkgPUs-6m9Q6GBCqLoGbFe9sx_rNyVeCQAnRijJwHc7qQqqKW9RpAkmr8npumZHI4midPdWhecNq?uid=0&filename=dialog.png&disposition=inline&hash=&limit=0&content_type=image%2Fpng&fsize=586418&hid=6a2c28a6b60fc17dac6672823d00cdc8&media_type=image&tknv=v2&etag=5c1abf8803c6cbc22ab923645a7f6a75)
+|  Query list   |Freezed query|Query error   |In app results       |
+|---------------|-------------|--------------|---------------------|
+|![Example 1](https://image.ibb.co/fjzeQF/query_list.png)|![Example 2](https://image.ibb.co/iPt65F/sleep.png)|![Example 3](https://image.ibb.co/c464sv/error.png)|![Example 4](https://image.ibb.co/fVCoKa/dialog.png)|
 
 # Main features
 **Lottip is on it's early stage of development.**
