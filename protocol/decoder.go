@@ -9,9 +9,9 @@ import (
 	"strconv"
 )
 
-var errInvalidPacketLength = errors.New("Invalid packet length")
-var errInvalidPacketType = errors.New("Invalid packet type")
-var errFieldTypeNotImplementedYet = errors.New("Required field type not implemented yet")
+var errInvalidPacketLength = errors.New("Protocol: Invalid packet length")
+var errInvalidPacketType = errors.New("Protocol: Invalid packet type")
+var errFieldTypeNotImplementedYet = errors.New("Protocol: Required field type not implemented yet")
 
 // HandshakeV10 represents sever's initial handshake packet
 // See https://mariadb.com/kb/en/mariadb/1-connecting-connecting/#initial-handshake-packet
@@ -146,8 +146,8 @@ type HandshakeResponse41 struct {
 	ClientCharset      byte
 }
 
-// DecodeHandshakeReponse41 decodes handshake response packet send by client.
-func DecodeHandshakeReponse41(packet []byte) (*HandshakeResponse41, error) {
+// DecodeHandshakeResponse41 decodes handshake response packet send by client.
+func DecodeHandshakeResponse41(packet []byte) (*HandshakeResponse41, error) {
 	r := bytes.NewReader(packet)
 
 	// Skip packet header
@@ -314,7 +314,7 @@ func DecodeComStmtExecuteRequest(packet []byte, paramsCount uint16) (*ComStmtExe
 		return nil, err
 	}
 
-	// Prepare buffer for n=paramsCount prepared parameters
+	// Make buffer for n=paramsCount prepared parameters
 	parameters := make([]PreparedParameter, paramsCount)
 
 	if paramsCount > 0 {

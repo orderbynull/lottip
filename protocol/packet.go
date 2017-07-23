@@ -43,7 +43,7 @@ func ProcessHandshake(client net.Conn, mysql net.Conn) (*HandshakeV10, *Handshak
 		return nil, nil, err
 	}
 
-	clientHandshake, err := DecodeHandshakeReponse41(packet)
+	clientHandshake, err := DecodeHandshakeResponse41(packet)
 	if err != nil {
 		println(err.Error())
 		return nil, nil, err
