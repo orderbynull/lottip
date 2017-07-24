@@ -13,6 +13,44 @@ var errInvalidPacketLength = errors.New("Protocol: Invalid packet length")
 var errInvalidPacketType = errors.New("Protocol: Invalid packet type")
 var errFieldTypeNotImplementedYet = errors.New("Protocol: Required field type not implemented yet")
 
+type ErrResponse struct {
+	Message string
+}
+
+func DecodeErrResponse(packet []byte) (*ErrResponse, error) {
+	return nil, nil
+}
+
+// OkResponse represents packet sent from the server to the client to signal successful completion of a command
+// https://dev.mysql.com/doc/dev/mysql-server/latest/page_protocol_basic_ok_packet.html
+type OkResponse struct {
+	PacketType   byte
+	AffectedRows uint64
+	LastInsertID uint64
+}
+
+// DecodeOkResponse decodes OK_Packet from server.
+// Part of basic packet structure shown below.
+//
+// int<3> PacketLength
+// int<1> PacketNumber
+// int<1> PacketType (0x00 or 0xFE)
+// int<lenenc> AffectedRows
+// int<lenenc> LastInsertID
+// ... more ...
+func DecodeOkResponse(packet []byte) (*OkResponse, error) {
+
+	// Min packet length = header(4 bytes) + PacketType(1 byte)
+	if err := CheckPacketLength(5, packet); err != nil {
+		return nil, err
+	}
+
+	affectedRows, offset := ReadLenEncodedInteger(packet[5:])
+	lastInsertID, _ := ReadLenEncodedInteger(packet[5+offset:])
+
+	return &OkResponse{packet[4], affectedRows, lastInsertID}, nil
+}
+
 // HandshakeV10 represents sever's initial handshake packet
 // See https://mariadb.com/kb/en/mariadb/1-connecting-connecting/#initial-handshake-packet
 type HandshakeV10 struct {
@@ -27,6 +65,8 @@ type HandshakeV10 struct {
 // Basic packet structure shown below.
 // See http://imysql.com/mysql-internal-manual/connection-phase-packets.html#packet-Protocol::HandshakeV10
 //
+// int<3> PacketLength
+// int<1> PacketNumber
 // int<1> ProtocolVersion
 // string<NUL> ServerVersion
 // int<4> ConnectionID
@@ -54,10 +94,12 @@ type HandshakeV10 struct {
 //		string[NUL] AuthPluginName
 // }
 func DecodeHandshakeV10(packet []byte) (*HandshakeV10, error) {
+	// TODO: Add length check
+
 	r := bytes.NewReader(packet)
 
 	// Skip packet header
-	if _, err := r.Seek(4, io.SeekStart); err != nil {
+	if err := SkipPacketHeader(r); err != nil {
 		return nil, err
 	}
 
@@ -147,11 +189,13 @@ type HandshakeResponse41 struct {
 }
 
 // DecodeHandshakeResponse41 decodes handshake response packet send by client.
+// TODO: Add packet struct comment
+// TODO: Add packet length check
 func DecodeHandshakeResponse41(packet []byte) (*HandshakeResponse41, error) {
 	r := bytes.NewReader(packet)
 
 	// Skip packet header
-	if _, err := r.Seek(4, io.SeekStart); err != nil {
+	if err := SkipPacketHeader(r); err != nil {
 		return nil, err
 	}
 
@@ -286,8 +330,8 @@ func DecodeComStmtExecuteRequest(packet []byte, paramsCount uint16) (*ComStmtExe
 
 	// Min packet length = header(4 bytes) + command(1 byte) + statementID(4 bytes)
 	// + flags(1 byte) + iteration count(4 bytes)
-	if len(packet) < 14 {
-		return nil, errInvalidPacketLength
+	if err := CheckPacketLength(14, packet); err != nil {
+		return nil, err
 	}
 
 	// Fifth byte is command
@@ -297,8 +341,13 @@ func DecodeComStmtExecuteRequest(packet []byte, paramsCount uint16) (*ComStmtExe
 
 	r := bytes.NewReader(packet)
 
+	// Skip packet header
+	if err := SkipPacketHeader(r); err != nil {
+		return nil, err
+	}
+
 	// Skip to statementID position
-	if _, err := r.Seek(5, io.SeekStart); err != nil {
+	if _, err := r.Seek(1, io.SeekCurrent); err != nil {
 		return nil, err
 	}
 
@@ -505,4 +554,22 @@ func ReadNullTerminatedString(r *bytes.Reader) string {
 			str = append(str, b)
 		}
 	}
+}
+
+// SkipPacketHeader rewinds reader to packet payload
+func SkipPacketHeader(r *bytes.Reader) error {
+	if _, err := r.Seek(4, io.SeekStart); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// CheckPacketLength checks if packet length meets expected value
+func CheckPacketLength(expected int, packet []byte) error {
+	if len(packet) < expected {
+		return errInvalidPacketLength
+	}
+
+	return nil
 }

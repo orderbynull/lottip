@@ -6,6 +6,54 @@ import (
 	"testing"
 )
 
+func TestDecodeOkResponse(t *testing.T) {
+
+	type DecodeOkResponseAssert struct {
+		Packet   []byte
+		HasError bool
+		Error    error
+		OkResponse
+	}
+
+	testData := []*DecodeOkResponseAssert{
+		{
+			[]byte{
+				0x30, 0x00, 0x00, 0x01, 0x00, 0x01, 0x00, 0x22, 0x00, 0x00, 0x00, 0x28, 0x52, 0x6f, 0x77, 0x73,
+				0x20, 0x6d, 0x61, 0x74, 0x63, 0x68, 0x65, 0x64, 0x3a, 0x20, 0x31, 0x20, 0x20, 0x43, 0x68, 0x61,
+				0x6e, 0x67, 0x65, 0x64, 0x3a, 0x20, 0x31, 0x20, 0x20, 0x57, 0x61, 0x72, 0x6e, 0x69, 0x6e, 0x67,
+				0x73, 0x3a, 0x20, 0x30,
+			},
+			false,
+			nil,
+			OkResponse{0x00, uint64(1), uint64(0)},
+		},
+		{
+			[]byte{0x07, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00},
+			false,
+			nil,
+			OkResponse{0x00, uint64(0), uint64(0)},
+		},
+		{
+			[]byte{0x07, 0x00, 0x00, 0x01, 0x00, 0x01, 0x02, 0x02, 0x00, 0x00, 0x00},
+			false,
+			nil,
+			OkResponse{0x00, uint64(1), uint64(2)},
+		},
+	}
+
+	for _, asserted := range testData {
+		decoded, err := DecodeOkResponse(asserted.Packet)
+
+		assert.Nil(t, err)
+
+		if err == nil {
+			assert.Equal(t, asserted.OkResponse.PacketType, decoded.PacketType)
+			assert.Equal(t, asserted.OkResponse.AffectedRows, decoded.AffectedRows)
+			assert.Equal(t, asserted.OkResponse.LastInsertID, decoded.LastInsertID)
+		}
+	}
+}
+
 func TestDecodeHandshakeV10(t *testing.T) {
 
 	type DecodeHandshakeV10Assert struct {
@@ -73,7 +121,7 @@ func TestDecodeHandshakeV10(t *testing.T) {
 	for _, asserted := range testData {
 		decoded, err := DecodeHandshakeV10(asserted.Packet)
 
-		if asserted.HasError {
+		if err != nil {
 			assert.Equal(t, asserted.Error, err)
 		} else {
 			assert.Equal(t, asserted.ProtocolVersion, decoded.ProtocolVersion)
@@ -195,7 +243,7 @@ func TestDecodeComStmtExecuteRequest(t *testing.T) {
 
 		assert.Equal(t, asserted.HasError, err != nil)
 
-		if asserted.HasError {
+		if err != nil {
 			assert.Equal(t, asserted.Error, err)
 		} else {
 			assert.Equal(t, asserted.StatementID, decoded.StatementID)
@@ -249,7 +297,7 @@ func TestDecodeQueryRequest(t *testing.T) {
 	for _, asserted := range testData {
 		decoded, err := DecodeQueryRequest(asserted.Packet)
 
-		if asserted.HasError {
+		if err != nil {
 			assert.Equal(t, asserted.Error, err)
 		} else {
 			assert.Equal(t, asserted.Query, decoded.Query)
@@ -291,7 +339,7 @@ func TestDecodeComStmtPrepareOkResponse(t *testing.T) {
 	for _, asserted := range testData {
 		decoded, err := DecodeComStmtPrepareOkResponse(asserted.Packet)
 
-		if asserted.HasError {
+		if err != nil {
 			assert.Equal(t, asserted.Error, err)
 		} else {
 			assert.Equal(t, asserted.StatementID, decoded.StatementID)
