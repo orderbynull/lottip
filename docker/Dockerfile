@@ -4,8 +4,6 @@ FROM frolvlad/alpine-go
 RUN apk update && apk upgrade && \
     apk add --no-cache bash git
 
-#ENV GOPATH /root/go
-
 RUN go get github.com/orderbynull/lottip && \
     go get github.com/mjibson/esc && \
     go install github.com/mjibson/esc && \
