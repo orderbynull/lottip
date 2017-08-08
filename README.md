@@ -18,6 +18,7 @@ For now you can:
 3. See query execution time(it includes time to transfer data over network).
 4. Filter queries by string.
 5. Execute any query and see results immediately.
+6. Run lottip in Docker container. Thanks to @tm-lmathieu
 
 # Installation
 ###### Binary
