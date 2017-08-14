@@ -1,7 +1,7 @@
 const connStateStarted = 0xf4;
 const connStateFinished = 0xf5;
 const cmdResultError = 0xff;
-const typingMessage = 'Waiting for you to stop typing...';
+const typingMessage = 'Typing...';
 const copyDoneMessage = 'Copied to clipboard';
 const executeUrl = '/execute';
 const notificationShowTimeMs = 2000;

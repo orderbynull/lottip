@@ -1,129 +1,132 @@
 #bootstrap-override {
-    background-color: #f4f4f4;
-    font-family: Arial, Helvetica, sans-serif;
+	background-color: #f4f4f4;
+	font-family: Arial, Helvetica, sans-serif;
 }
-
 #bootstrap-override p.connection {
-    text-align: center;
+	text-align: center;
 }
-
 #bootstrap-override #data {
-    margin-top: 68px;
+	margin-top: 68px;
 }
-
 #bootstrap-override pre {
-    background-color: #FFFFFF;
-    border: none;
-    margin: 0;
-    padding: 0;
-    word-wrap: initial;
+	background-color: #FFFFFF;
+	border: none;
+	margin: 0;
+	padding: 0;
+	word-wrap: initial;
 }
-
 #bootstrap-override div.error {
-    margin-bottom: 15px;
+	margin-bottom: 15px;
 }
-
 #bootstrap-override div.error code {
-    background-color: #d9534f;
-    color: #FFFFFF;
+	background-color: #d9534f;
+	color: #FFFFFF;
 }
-
 #bootstrap-override .modal-dialog {
-    position: relative;
-    display: table; /* This is important */
-    overflow-y: auto;
-    overflow-x: auto;
-    width: auto;
-    min-width: 300px;
+	position: relative;
+	display: table; /* This is important */
+	overflow-y: auto;
+	overflow-x: auto;
+	width: auto;
+	min-width: 300px;
 }
-
 #bootstrap-override .modal-content {
-    max-width: 1024px;
+	max-width: 1024px;
 }
-
 #bootstrap-override .modal-body {
-    text-align: center;
+	text-align: center;
+}
+#bootstrap-override .label {
+	margin-right: 3px;
 }
 
-#bootstrap-override .label{
-    margin-right: 3px;
+/*Navbar styles*/
+@media (max-width: 767px) {
+.btn-group button {
+	font-size: 13px;
+}
+}
+.header-buttons {
+	width: 60%;
 }
 
-    /*Navbar styles*/
-
+@media (max-width: 767px) {
+.header-buttons {
+	width: auto;
+}
+}
 #bootstrap-override .navbar-inverse {
-    background-color: #336699;
-    background-image: none;
-    border: none;
-    border-radius: 0;
+	background-color: #336699;
+	background-image: none;
+	border: none;
+	border-radius: 0;
 }
 
+@media (max-width: 767px) {
 #bootstrap-override #filter {
-    width: 400px;
+	width: 100%;
+}
+}
+.filter {
+	width: 40%;
 }
 
+@media (max-width: 767px) {
+.filter {
+	margin: 8px;
+	float: right;
+	width: 32%;
+}
+}
 #bootstrap-override .navbar-text {
-    padding-right: 15px;
+	padding-right: 15px;
 }
-
-#bootstrap-override .navbar-inverse,
-#bootstrap-override .navbar-text {
-    color: #FFFFFF;
+#bootstrap-override .navbar-inverse, #bootstrap-override .navbar-text {
+	color: #FFFFFF;
 }
-
 #bootstrap-override .btn:focus {
-    outline: none;
+	outline: none;
 }
-
 /*Table styles*/
 #bootstrap-override table {
-    background-color: #FFFFFF;
-    color: #272950;
+	background-color: #FFFFFF;
+	color: #272950;
 }
-
 #bootstrap-override table tr th {
-    text-align: center;
-    background-color: #f4f4f4;
-    border: none;
+	text-align: center;
+	background-color: #f4f4f4;
+	border: none;
 }
-
 #bootstrap-override table tr.result-ok {
-    border-left: solid #5cb85c 3px;
+	border-left: solid #5cb85c 3px;
 }
-
 #bootstrap-override table tr.result-pending {
-    border-left: solid #f0ad4e 3px;
+	border-left: solid #f0ad4e 3px;
 }
-
 #bootstrap-override table tr.result-error {
-    border-left: solid #d9534f 6px;
+	border-left: solid #d9534f 6px;
 }
-
 #bootstrap-override table tr td.tiny {
-    width: 40px;
-    text-align: center;
+	width: 40px;
+	text-align: center;
 }
-
 #bootstrap-override table tr td.more {
-    cursor: pointer;
+	cursor: pointer;
 }
-
 #bootstrap-override table tr td.query {
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    table-layout: fixed;
-    max-width: 0;
-    cursor: pointer;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	table-layout: fixed;
+	max-width: 0;
+	cursor: pointer;
 }
-
 #bootstrap-override table tr td.expanded {
-    white-space: normal;
+	white-space: normal;
 }
-
 /*Modal window styles*/
 #bootstrap-override #results #modal-preloader {
-    text-align: center;
-    font-size: 17px;
-    color: #FFFFFF;
+	text-align: center;
+	font-size: 17px;
+	color: #FFFFFF;
 }
