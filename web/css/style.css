@@ -8,6 +8,9 @@
 #bootstrap-override #data {
 	margin-top: 68px;
 }
+#bootstrap-override .params{
+	color: #337ab7;
+}
 #bootstrap-override pre {
 	background-color: #FFFFFF;
 	border: none;

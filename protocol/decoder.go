@@ -45,8 +45,20 @@ func DecodeOkResponse(packet []byte) (*OkResponse, error) {
 		return nil, err
 	}
 
-	affectedRows, offset := ReadLenEncodedInteger(packet[5:])
-	lastInsertID, _ := ReadLenEncodedInteger(packet[5+offset:])
+	r := bytes.NewReader(packet)
+
+	// Skip packet header
+	if err := SkipPacketHeader(r); err != nil {
+		return nil, err
+	}
+
+	// Skip packet type
+	if _, err := r.Seek(1, io.SeekCurrent); err != nil {
+		return nil, err
+	}
+
+	affectedRows, _ := ReadLenEncodedInteger(r)
+	lastInsertID, _ := ReadLenEncodedInteger(r)
 
 	return &OkResponse{packet[4], affectedRows, lastInsertID}, nil
 }
@@ -430,33 +442,14 @@ func DecodeComStmtExecuteRequest(packet []byte, paramsCount uint16) (*ComStmtExe
 	return &ComStmtExecuteRequest{StatementID: statementID, PreparedParameters: parameters}, nil
 }
 
-// DecodeFieldTypeString decodes MYSQL_TYPE_VAR_STRING field
+// DecodeFieldTypeString decodes MYSQL_TYPE_VAR_STRING field (length-encoded string)
 // See https://mariadb.com/kb/en/mariadb/resultset/#field-types
 func DecodeFieldTypeString(r *bytes.Reader) (string, error) {
-	var str string
+	str, _, err := ReadLenEncodedString(r)
 
-	// Read first byte of parameter value to know buffer length for whole value
 	// io.EOF is ok since reader may be empty already because of empty prepared parameter value
-	stringLength, err := r.ReadByte()
 	if err != nil && err != io.EOF {
 		return "", err
-	}
-
-	// Put byte back to reader
-	if err = r.UnreadByte(); err != nil {
-		return "", err
-	}
-
-	// Packets with 0-length parameter are also possible
-	if stringLength > 0 {
-		// Read whole length encoded string
-		stringValueBuf := make([]byte, stringLength+1)
-		_, err := r.Read(stringValueBuf)
-		if err != nil {
-			return "", nil
-		}
-
-		str, _ = ReadLenEncodedString(stringValueBuf)
 	}
 
 	return str, nil
@@ -489,35 +482,65 @@ func DecodeFieldTypeDouble(r *bytes.Reader) (string, error) {
 	return strconv.FormatFloat(doubleValue, 'f', doubleDecodePrecision, 64), nil
 }
 
+// GetLenEncodedIntegerSize returns bytes count for length encoded integer
+// determined by it's 1st byte
+func GetLenEncodedIntegerSize(firstByte byte) byte  {
+	switch firstByte {
+	case 0xfc:
+		return 2
+	case 0xfd:
+		return 3
+	case 0xfe:
+		return 8
+	default:
+		return 1
+	}
+}
+
 // ReadLenEncodedInteger returns parsed length-encoded integer and it's offset.
 // See https://mariadb.com/kb/en/mariadb/protocol-data-types/#length-encoded-integers
-func ReadLenEncodedInteger(data []byte) (value uint64, offset uint64) {
-	if len(data) == 0 {
-		value = 0
-		offset = 0
+func ReadLenEncodedInteger(r *bytes.Reader) (value uint64, offset uint64) {
+	firstLenEncIntByte, err := r.ReadByte()
+	if err != nil {
+		return 0, 0
 	}
 
-	switch data[0] {
+	switch firstLenEncIntByte {
 	case 0xfb:
 		value = 0
 		offset = 1
 
 	case 0xfc:
-		value = uint64(data[1]) | uint64(data[2])<<8
+		data := make([]byte, 2)
+		_, err = r.Read(data)
+		if err != nil {
+			return 0, 0
+		}
+		value = uint64(data[0]) | uint64(data[1])<<8
 		offset = 3
 
 	case 0xfd:
-		value = uint64(data[1]) | uint64(data[2])<<8 | uint64(data[3])<<16
+		data := make([]byte, 3)
+		_, err = r.Read(data)
+		if err != nil {
+			return 0, 0
+		}
+		value = uint64(data[0]) | uint64(data[1])<<8 | uint64(data[2])<<16
 		offset = 4
 
 	case 0xfe:
-		value = uint64(data[1]) | uint64(data[2])<<8 | uint64(data[3])<<16 |
-			uint64(data[4])<<24 | uint64(data[5])<<32 | uint64(data[6])<<40 |
-			uint64(data[7])<<48 | uint64(data[8])<<56
+		data := make([]byte, 8)
+		_, err = r.Read(data)
+		if err != nil {
+			return 0, 0
+		}
+		value = uint64(data[0]) | uint64(data[1])<<8 | uint64(data[2])<<16 |
+			uint64(data[3])<<24 | uint64(data[4])<<32 | uint64(data[5])<<40 |
+			uint64(data[6])<<48 | uint64(data[7])<<56
 		offset = 9
 
 	default:
-		value = uint64(data[0])
+		value = uint64(firstLenEncIntByte)
 		offset = 1
 	}
 
@@ -528,10 +551,15 @@ func ReadLenEncodedInteger(data []byte) (value uint64, offset uint64) {
 // Length-encoded strings are prefixed by a length-encoded integer which describes
 // the length of the string, followed by the string value.
 // See https://mariadb.com/kb/en/mariadb/protocol-data-types/#length-encoded-strings
-func ReadLenEncodedString(data []byte) (string, uint64) {
-	strLen, offset := ReadLenEncodedInteger(data)
+func ReadLenEncodedString(r *bytes.Reader) (string, uint64, error) {
+	strLen, _ := ReadLenEncodedInteger(r)
 
-	return string(data[offset : offset+strLen]), strLen
+	strBuf := make([]byte, strLen)
+	if _, err := r.Read(strBuf); err != nil{
+		return "", 0, err
+	}
+
+	return string(strBuf), strLen, nil
 }
 
 // ReadEOFLengthString returns parsed EOF-length string.

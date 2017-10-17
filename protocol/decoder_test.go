@@ -146,6 +146,7 @@ func TestDecodeHandshakeV10(t *testing.T) {
 func TestDecodeComStmtExecuteRequest(t *testing.T) {
 
 	type DecodeComStmtExecuteRequestAssert struct {
+		Id                 int
 		Packet             []byte
 		HasError           bool
 		Error              error
@@ -155,6 +156,7 @@ func TestDecodeComStmtExecuteRequest(t *testing.T) {
 
 	testData := []*DecodeComStmtExecuteRequestAssert{
 		{
+			1,
 			// Incorrect packet type
 			[]byte{
 				0x43, 0x00, 0x00, 0x00, 0x18, 0x01, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x01,
@@ -169,6 +171,7 @@ func TestDecodeComStmtExecuteRequest(t *testing.T) {
 			nil,
 		},
 		{
+			2,
 			// Incorrect packet length
 			[]byte{0x43, 0x00, 0x00, 0x00, 0x17},
 			true,
@@ -177,6 +180,7 @@ func TestDecodeComStmtExecuteRequest(t *testing.T) {
 			nil,
 		},
 		{
+			3,
 			// Correct packet with string params
 			[]byte{
 				0x43, 0x00, 0x00, 0x00, 0x17, 0x01, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x01,
@@ -191,6 +195,7 @@ func TestDecodeComStmtExecuteRequest(t *testing.T) {
 			[]string{"1.2345678910111E+21", "XYZZZZ", "ABCDEFGHIKLMONPQRSTYW"},
 		},
 		{
+			4,
 			// Correct packet with string params and 0-length last param
 			[]byte{
 				0x6a, 0x00, 0x00, 0x00, 0x17, 0x02, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x01,
@@ -207,6 +212,7 @@ func TestDecodeComStmtExecuteRequest(t *testing.T) {
 			[]string{"0", "0", "0", "dhc5tbj241raddmtlve26rvkbv", "2017-06-25 18:19:20", "2017-06-25", "auth", "login", ""},
 		},
 		{
+			5,
 			// Correct packet with string params and 0-length last param
 			[]byte{
 				0x6d, 0x00, 0x00, 0x00, 0x17, 0x71, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x01,
@@ -224,6 +230,7 @@ func TestDecodeComStmtExecuteRequest(t *testing.T) {
 			[]string{"1", "1", "0", "dhc5tbj241raddmtlve26rvkbv", "2017-06-30 09:56:18", "2017-06-30", "widgets", "index", ""},
 		},
 		{
+			6,
 			// Correct packet with longlong params
 			[]byte{
 				0x34, 0x00, 0x00, 0x00, 0x17, 0x01, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x01,
@@ -241,7 +248,13 @@ func TestDecodeComStmtExecuteRequest(t *testing.T) {
 	for _, asserted := range testData {
 		decoded, err := DecodeComStmtExecuteRequest(asserted.Packet, uint16(len(asserted.PreparedParameters)))
 
-		assert.Equal(t, asserted.HasError, err != nil)
+		actualHasError := err != nil
+		if (asserted.HasError != actualHasError) {
+			t.Errorf("ID = %d expected(%t) and actual(%t) errors mismatch", asserted.Id, asserted.HasError, actualHasError)
+			if actualHasError {
+				t.Errorf("Actual error: %s", err.Error())
+			}
+		}
 
 		if err != nil {
 			assert.Equal(t, asserted.Error, err)
@@ -348,17 +361,17 @@ func TestDecodeComStmtPrepareOkResponse(t *testing.T) {
 	}
 }
 
-func TestReadLenEncodedString(t *testing.T) {
-	expected := "ABCDEFGHIKLMONPQRSTYW"
-	packet := []byte{
-		0x15, 0x41, 0x42, 0x43, 0x44, 0x45, 0x46, 0x47, 0x48, 0x49, 0x4b, 0x4c, 0x4d, 0x4f, 0x4e, 0x50,
-		0x51, 0x52, 0x53, 0x54, 0x59, 0x57,
-	}
-
-	decoded, _ := ReadLenEncodedString(packet)
-
-	assert.Equal(t, expected, decoded)
-}
+//func TestReadLenEncodedString(t *testing.T) {
+//	expected := "ABCDEFGHIKLMONPQRSTYW"
+//	packet := []byte{
+//		0x15, 0x41, 0x42, 0x43, 0x44, 0x45, 0x46, 0x47, 0x48, 0x49, 0x4b, 0x4c, 0x4d, 0x4f, 0x4e, 0x50,
+//		0x51, 0x52, 0x53, 0x54, 0x59, 0x57,
+//	}
+//
+//	decoded, _ := ReadLenEncodedString(packet)
+//
+//	assert.Equal(t, expected, decoded)
+//}
 
 func TestReadEOFLengthString(t *testing.T) {
 	expected := "SET sql_mode='STRICT_TRANS_TABLES'"

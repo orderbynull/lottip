@@ -4,6 +4,7 @@ import (
 	"encoding/binary"
 	"io"
 	"net"
+	"bytes"
 )
 
 //...
@@ -135,7 +136,8 @@ func ReadResponse(conn net.Conn, deprecateEof bool) ([]byte, byte, error) {
 	data = append(data, pkt...)
 
 	if !deprecateEof {
-		columns, _ := ReadLenEncodedInteger(pkt[4:])
+		pktReader := bytes.NewReader(pkt[4:])
+		columns, _ := ReadLenEncodedInteger(pktReader)
 
 		toRead := int(columns) + 1
 
