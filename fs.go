@@ -633,7 +633,7 @@ eIjnYvqd06ub8oymFAdfcM/rae8fI0VDB1TFcSmd6UQrHZDMGmTT6nkjY7oxSWytdGAdQ/47+XGdLIM1
 	"/index.html": {
 		local:   "web/index.html",
 		size:    7050,
-		modtime: 1508271191,
+		modtime: 1508308025,
 		compressed: `
 H4sIAAAAAAAC/7RZzY7juBE+T4C8Qw0XSGeBkYXZ7CHolZQseifAANlk8gMEQZADJZYt9lAkh6TUbRi+
 5gXyhnmSgKQk/7Tstto9PlgiVfWx/lhVlLK3P/357u///PQBateI4pe/yPwVBJWrnKAkYQYp89cGHYWq

@@ -9,17 +9,17 @@ import (
 	"strconv"
 )
 
-var errInvalidPacketLength = errors.New("Protocol: Invalid packet length")
-var errInvalidPacketType = errors.New("Protocol: Invalid packet type")
-var errFieldTypeNotImplementedYet = errors.New("Protocol: Required field type not implemented yet")
+var errInvalidPacketLength = errors.New("protocol: Invalid packet length")
+var errInvalidPacketType = errors.New("protocol: Invalid packet type")
+var errFieldTypeNotImplementedYet = errors.New("protocol: Required field type not implemented yet")
 
 type ErrResponse struct {
 	Message string
 }
 
-func DecodeErrResponse(packet []byte) (*ErrResponse, error) {
-	return nil, nil
-}
+//func DecodeErrResponse(packet []byte) (*ErrResponse, error) {
+//	return nil, nil
+//}
 
 // OkResponse represents packet sent from the server to the client to signal successful completion of a command
 // https://dev.mysql.com/doc/dev/mysql-server/latest/page_protocol_basic_ok_packet.html
@@ -480,21 +480,6 @@ func DecodeFieldTypeDouble(r *bytes.Reader) (string, error) {
 	doubleValue := math.Float64frombits(doubleBits)
 
 	return strconv.FormatFloat(doubleValue, 'f', doubleDecodePrecision, 64), nil
-}
-
-// GetLenEncodedIntegerSize returns bytes count for length encoded integer
-// determined by it's 1st byte
-func GetLenEncodedIntegerSize(firstByte byte) byte  {
-	switch firstByte {
-	case 0xfc:
-		return 2
-	case 0xfd:
-		return 3
-	case 0xfe:
-		return 8
-	default:
-		return 1
-	}
 }
 
 // ReadLenEncodedInteger returns parsed length-encoded integer and it's offset.

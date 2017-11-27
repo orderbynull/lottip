@@ -11,7 +11,7 @@ import (
 	"github.com/orderbynull/lottip/protocol"
 )
 
-var errInvalidProxyParams = errors.New("Main: both proxy and mysql hosts must be set")
+var errInvalidProxyParams = errors.New("main: both proxy and mysql hosts must be set")
 
 // proxy implements server for capturing and forwarding MySQL traffic
 type proxy struct {

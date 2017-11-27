@@ -27,7 +27,7 @@ func getQueryResults(database, query string, params []string, dsn string) ([]str
 	}
 
 	// Prepare params
-	var interfaceSlice []interface{} = make([]interface{}, len(params))
+	var interfaceSlice = make([]interface{}, len(params))
 	for i, d := range params {
 		interfaceSlice[i] = d
 	}
