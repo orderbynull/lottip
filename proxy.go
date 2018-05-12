@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"sync"
 	"time"
 
 	"github.com/orderbynull/lottip/chat"
@@ -15,6 +16,7 @@ var errInvalidProxyParams = errors.New("Main: both proxy and mysql hosts must be
 
 // proxy implements server for capturing and forwarding MySQL traffic
 type proxy struct {
+	rwmu          sync.RWMutex
 	handshakes    map[uint32]*protocol.ConnSettings
 	cmdChan       chan chat.Cmd
 	cmdStateChan  chan chat.CmdResult
@@ -143,8 +145,15 @@ func (ps *proxy) handleConnection(client net.Conn) {
 	defer ps.setConnectionState(serverHandshake.ConnectionID, protocol.ConnStateFinished)
 	ps.setConnectionState(serverHandshake.ConnectionID, protocol.ConnStateStarted)
 
+	ps.rwmu.Lock()
 	ps.handshakes[serverHandshake.ConnectionID] = connSettings
-	defer delete(ps.handshakes, serverHandshake.ConnectionID)
+	ps.rwmu.Unlock()
+
+	defer func() {
+		ps.rwmu.Lock()
+		delete(ps.handshakes, serverHandshake.ConnectionID)
+		ps.rwmu.Unlock()
+	}()
 
 	ps.process(client, server, serverHandshake.ConnectionID)
 }
@@ -154,7 +163,9 @@ func (ps *proxy) process(client net.Conn, mysql net.Conn, connID uint32) {
 	var cmdId int
 	var preparedQuery string
 	var preparedParamsCount uint16
+	ps.rwmu.RLock()
 	var deprecateEof = ps.handshakes[connID].DeprecateEOFSet()
+	ps.rwmu.RUnlock()
 
 	for {
 		//Client query --> $requestPacket --> mysql
@@ -183,13 +194,18 @@ func (ps *proxy) process(client net.Conn, mysql net.Conn, connID uint32) {
 
 			selectedDb := getUseDatabaseValue(decoded.Query)
 			if len(selectedDb) > 0 {
+				ps.rwmu.RLock()
 				ps.handshakes[connID].SelectedDb = selectedDb
+				ps.rwmu.RUnlock()
 			}
 
+			ps.rwmu.RLock()
+			selectedDb = ps.handshakes[connID].SelectedDb
+			ps.rwmu.RUnlock()
 			ps.setCommand(
 				connID,
 				cmdId,
-				ps.handshakes[connID].SelectedDb,
+				selectedDb,
 				decoded.Query,
 				[]protocol.PreparedParameter{},
 				true,
@@ -215,7 +231,9 @@ func (ps *proxy) process(client net.Conn, mysql net.Conn, connID uint32) {
 
 			selectedDb := getUseDatabaseValue(decoded.Query)
 			if len(selectedDb) > 0 {
+				ps.rwmu.RLock()
 				ps.handshakes[connID].SelectedDb = selectedDb
+				ps.rwmu.RUnlock()
 			}
 
 			protocol.WritePacket(requestPacket, mysql)
@@ -242,10 +260,14 @@ func (ps *proxy) process(client net.Conn, mysql net.Conn, connID uint32) {
 				executable = true
 			}
 
+			ps.rwmu.RLock()
+			selectedDb := ps.handshakes[connID].SelectedDb
+			ps.rwmu.RUnlock()
+
 			ps.setCommand(
 				connID,
 				cmdId,
-				ps.handshakes[connID].SelectedDb,
+				selectedDb,
 				preparedQuery,
 				preparedParameters,
 				executable,
