@@ -149,13 +149,13 @@ new Vue({
 
                 //CmdResult received
                 if ('Result' in data) {
-                    //app.cmdResultReceived(data.ConnId, data.CmdId, data.Result, data.Error, data.Duration);
+                    app.cmdResultReceived(data.ConnId, data.CmdId, data.Result, data.Error, data.Duration);
                     return;
                 }
 
                 // ConnState received
                 if ('State' in data) {
-                    //app.connStateReceived(data.ConnId, data.State);
+                    app.connStateReceived(data.ConnId, data.State);
                 }
             };
 

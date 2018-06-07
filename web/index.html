@@ -41,7 +41,7 @@
                 </div>
                 {{tipMessage}} </div>
             	<div class="navbar-collapse collapse">
-                	<p class="navbar-text navbar-right"> Status: {{connected ? 'connected' : 'disconnected'}}
+                	<p class="navbar-text navbar-right"> Status: {{connected ? "connected" : "disconnected"}}
                    	 /
                    	 Queries: {{queriesCount}} </p>
             	</div>
@@ -52,7 +52,7 @@
             <div class="col-sm-12">
                 <p v-if="!queriesCount" class="text-center">No queries yet</p>
                 <template v-for="connection, index, connId in connections">
-                    <p class="connection"> <span> ↓ Connection #{{connId+1}} / {{isConnectionActive(connId) ? 'active' : 'finished'}} ↓ </span> </p>
+                    <p class="connection"> <span> ↓ Connection #{{connId+1}} / {{isConnectionActive(connId) ? "active" : "finished"}} ↓ </span> </p>
                     <table class="table table-bordered">
                         <tr style="display: none;">
                             <th colspan="3">↓</th>
