@@ -143,20 +143,19 @@ new Vue({
 
                 //Cmd received
                 if ('Query' in data) {
-                    console.log(data);
                     app.cmdReceived(data.ConnId, data.CmdId, data.Database, data.Query, data.Parameters, data.Executable);
                     return;
                 }
 
                 //CmdResult received
                 if ('Result' in data) {
-                    app.cmdResultReceived(data.ConnId, data.CmdId, data.Result, data.Error, data.Duration);
+                    //app.cmdResultReceived(data.ConnId, data.CmdId, data.Result, data.Error, data.Duration);
                     return;
                 }
 
                 // ConnState received
                 if ('State' in data) {
-                    app.connStateReceived(data.ConnId, data.State);
+                    //app.connStateReceived(data.ConnId, data.State);
                 }
             };
 

@@ -249,7 +249,7 @@ func TestDecodeComStmtExecuteRequest(t *testing.T) {
 		decoded, err := DecodeComStmtExecuteRequest(asserted.Packet, uint16(len(asserted.PreparedParameters)))
 
 		actualHasError := err != nil
-		if (asserted.HasError != actualHasError) {
+		if asserted.HasError != actualHasError {
 			t.Errorf("ID = %d expected(%t) and actual(%t) errors mismatch", asserted.Id, asserted.HasError, actualHasError)
 			if actualHasError {
 				t.Errorf("Actual error: %s", err.Error())

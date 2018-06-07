@@ -37,7 +37,6 @@ func main() {
 	go runHttpServer(hub)
 	go appReadyInfo(appReadyChan)
 
-	p, _ := newProxy(*proxyAddr, *mysqlAddr)
-	p.setChannels(cmdChan, cmdResultChan, connStateChan, appReadyChan)
+	p := proxy{cmdChan, cmdResultChan, connStateChan, appReadyChan, *mysqlAddr, *proxyAddr}
 	p.run()
 }

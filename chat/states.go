@@ -2,7 +2,7 @@ package chat
 
 // Cmd represents MySQL command to be executed.
 type Cmd struct {
-	ConnId     uint32
+	ConnId     string
 	CmdId      int
 	Database   string
 	Query      string
@@ -12,7 +12,7 @@ type Cmd struct {
 
 // CmdResult represents MySQL command execution result.
 type CmdResult struct {
-	ConnId   uint32
+	ConnId   string
 	CmdId    int
 	Result   byte
 	Error    string
@@ -21,6 +21,6 @@ type CmdResult struct {
 
 // ConnState represents tcp connection state.
 type ConnState struct {
-	ConnId uint32
+	ConnId string
 	State  byte
 }

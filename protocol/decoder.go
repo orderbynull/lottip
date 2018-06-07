@@ -13,6 +13,10 @@ var errInvalidPacketLength = errors.New("protocol: Invalid packet length")
 var errInvalidPacketType = errors.New("protocol: Invalid packet type")
 var errFieldTypeNotImplementedYet = errors.New("protocol: Required field type not implemented yet")
 
+func GetPacketType(packet []byte) byte {
+	return packet[4]
+}
+
 type ErrResponse struct {
 	Message string
 }
@@ -540,7 +544,7 @@ func ReadLenEncodedString(r *bytes.Reader) (string, uint64, error) {
 	strLen, _ := ReadLenEncodedInteger(r)
 
 	strBuf := make([]byte, strLen)
-	if _, err := r.Read(strBuf); err != nil{
+	if _, err := r.Read(strBuf); err != nil {
 		return "", 0, err
 	}
 

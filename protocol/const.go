@@ -2,7 +2,7 @@ package protocol
 
 const (
 	responseEof         = 0xfe
-	responseOk          = 0x00
+	ResponseOk          = 0x00
 	responsePrepareOk   = 0x00
 	ResponseErr         = 0xff
 	responseLocalinfile = 0xfb
@@ -25,7 +25,7 @@ const (
 )
 
 const (
-	comQuit byte = iota + 1
+	ComQuit byte = iota + 1
 	comInitDB
 	ComQuery
 	ComFieldList
