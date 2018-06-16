@@ -7,6 +7,7 @@ import (
 	"io"
 	"math"
 	"strconv"
+	"fmt"
 )
 
 var errInvalidPacketLength = errors.New("protocol: Invalid packet length")
@@ -21,9 +22,25 @@ type ErrResponse struct {
 	Message string
 }
 
-//func DecodeErrResponse(packet []byte) (*ErrResponse, error) {
-//	return nil, nil
-//}
+// DecodeOkResponse decodes ERR_Packet from server.
+// Part of basic packet structure shown below.
+//
+// int<3> PacketLength
+// int<1> PacketNumber
+// int<1> PacketType (0xFF)
+// if clientCapabilities & clientProtocol41
+// {
+//		string<1> SqlStateMarker (#)
+//		string<5> SqlState
+// }
+// string<EOF> ErrorMessage
+func DecodeErrResponse(packet []byte) (string, error) {
+	if err := checkPacketLength(14, packet); err != nil {
+		return "", err
+	}
+
+	return fmt.Sprintf("[%s] %s", packet[7:13], packet[13:]), nil
+}
 
 // OkResponse represents packet sent from the server to the client to signal successful completion of a command
 // https://dev.mysql.com/doc/dev/mysql-server/latest/page_protocol_basic_ok_packet.html
@@ -45,7 +62,7 @@ type OkResponse struct {
 func DecodeOkResponse(packet []byte) (*OkResponse, error) {
 
 	// Min packet length = header(4 bytes) + PacketType(1 byte)
-	if err := CheckPacketLength(5, packet); err != nil {
+	if err := checkPacketLength(5, packet); err != nil {
 		return nil, err
 	}
 
@@ -346,7 +363,7 @@ func DecodeComStmtExecuteRequest(packet []byte, paramsCount uint16) (*ComStmtExe
 
 	// Min packet length = header(4 bytes) + command(1 byte) + statementID(4 bytes)
 	// + flags(1 byte) + iteration count(4 bytes)
-	if err := CheckPacketLength(14, packet); err != nil {
+	if err := checkPacketLength(14, packet); err != nil {
 		return nil, err
 	}
 
@@ -582,8 +599,8 @@ func SkipPacketHeader(r *bytes.Reader) error {
 	return nil
 }
 
-// CheckPacketLength checks if packet length meets expected value
-func CheckPacketLength(expected int, packet []byte) error {
+// checkPacketLength checks if packet length meets expected value
+func checkPacketLength(expected int, packet []byte) error {
 	if len(packet) < expected {
 		return errInvalidPacketLength
 	}

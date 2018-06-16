@@ -42,9 +42,10 @@ type ResponsePacketParser struct {
 func (pp *ResponsePacketParser) Write(p []byte) (n int, err error) {
 	switch protocol.GetPacketType(p) {
 	case protocol.ResponseErr:
-		pp.cmdResultChan <- chat.CmdResult{pp.connId, *pp.cmdId, protocol.ResponseErr, "Fuck!", "1s"}
+		decoded, _ := protocol.DecodeErrResponse(p)
+		pp.cmdResultChan <- chat.CmdResult{pp.connId, *pp.cmdId, protocol.ResponseErr, decoded, ""}
 	default:
-		pp.cmdResultChan <- chat.CmdResult{pp.connId, *pp.cmdId, protocol.ResponseOk, "", "1s"}
+		pp.cmdResultChan <- chat.CmdResult{pp.connId, *pp.cmdId, protocol.ResponseOk, "", ""}
 	}
 
 	return len(p), nil
