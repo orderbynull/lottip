@@ -96,15 +96,15 @@ func (p *proxy) handleConnection(client net.Conn) {
 	}
 	defer server.Close()
 
-	connId := fmt.Sprintf("%s -> %s", client.RemoteAddr().String(), server.RemoteAddr().String())
+	connId := fmt.Sprintf("%s => %s", client.RemoteAddr().String(), server.RemoteAddr().String())
 
 	defer func() { p.connStateChan <- chat.ConnState{connId, protocol.ConnStateFinished} }()
 
 	var cmdId int
 
-	// Copy bytes from client to [server, requestParser]
+	// Copy bytes from client to server and requestParser
 	go io.Copy(io.MultiWriter(server, &RequestPacketParser{connId, &cmdId, p.cmdChan, p.connStateChan}), client)
 
-	// Copy bytes from server to [client, responseParser]
+	// Copy bytes from server to client and responseParser
 	io.Copy(io.MultiWriter(client, &ResponsePacketParser{connId, &cmdId, p.cmdResultChan}), server)
 }
