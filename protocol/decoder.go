@@ -7,7 +7,6 @@ import (
 	"io"
 	"math"
 	"strconv"
-	"fmt"
 )
 
 var errInvalidPacketLength = errors.New("protocol: Invalid packet length")
@@ -35,11 +34,11 @@ type ErrResponse struct {
 // }
 // string<EOF> ErrorMessage
 func DecodeErrResponse(packet []byte) (string, error) {
-	if err := checkPacketLength(14, packet); err != nil {
+	if err := checkPacketLength(8, packet); err != nil {
 		return "", err
 	}
 
-	return fmt.Sprintf("[%s] %s", packet[7:13], packet[13:]), nil
+	return string(packet[7:]), nil
 }
 
 // OkResponse represents packet sent from the server to the client to signal successful completion of a command
