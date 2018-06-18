@@ -7,24 +7,27 @@ import (
 	"io"
 	"log"
 	"net"
+	"time"
 )
 
 type RequestPacketParser struct {
 	connId        string
-	cmdId         *int
-	cmdChan       chan chat.Cmd
+	queryId       *int
+	queryChan     chan chat.Cmd
 	connStateChan chan chat.ConnState
+	timer         *time.Time
 }
 
 func (pp *RequestPacketParser) Write(p []byte) (n int, err error) {
-	*pp.cmdId++
+	*pp.queryId++
+	*pp.timer = time.Now()
 
 	switch protocol.GetPacketType(p) {
 	case protocol.ComStmtPrepare:
 	case protocol.ComQuery:
 		decoded, err := protocol.DecodeQueryRequest(p)
 		if err == nil {
-			pp.cmdChan <- chat.Cmd{pp.connId, *pp.cmdId, "", decoded.Query, nil, false}
+			pp.queryChan <- chat.Cmd{pp.connId, *pp.queryId, "", decoded.Query, nil, false}
 		}
 	case protocol.ComQuit:
 		pp.connStateChan <- chat.ConnState{pp.connId, protocol.ConnStateFinished}
@@ -34,25 +37,28 @@ func (pp *RequestPacketParser) Write(p []byte) (n int, err error) {
 }
 
 type ResponsePacketParser struct {
-	connId        string
-	cmdId         *int
-	cmdResultChan chan chat.CmdResult
+	connId          string
+	queryId         *int
+	queryResultChan chan chat.CmdResult
+	timer           *time.Time
 }
 
 func (pp *ResponsePacketParser) Write(p []byte) (n int, err error) {
+	duration := fmt.Sprintf("%.3f", time.Since(*pp.timer).Seconds())
+
 	switch protocol.GetPacketType(p) {
 	case protocol.ResponseErr:
 		decoded, _ := protocol.DecodeErrResponse(p)
-		pp.cmdResultChan <- chat.CmdResult{pp.connId, *pp.cmdId, protocol.ResponseErr, decoded, ""}
+		pp.queryResultChan <- chat.CmdResult{pp.connId, *pp.queryId, protocol.ResponseErr, decoded, duration}
 	default:
-		pp.cmdResultChan <- chat.CmdResult{pp.connId, *pp.cmdId, protocol.ResponseOk, "", ""}
+		pp.queryResultChan <- chat.CmdResult{pp.connId, *pp.queryId, protocol.ResponseOk, "", duration}
 	}
 
 	return len(p), nil
 }
 
-// proxy implements server for capturing and forwarding MySQL traffic.
-type proxy struct {
+// MySQLProxyServer implements server for capturing and forwarding MySQL traffic.
+type MySQLProxyServer struct {
 	cmdChan       chan chat.Cmd
 	cmdResultChan chan chat.CmdResult
 	connStateChan chan chat.ConnState
@@ -63,7 +69,7 @@ type proxy struct {
 
 // run starts accepting TCP connection and forwarding it to MySQL server.
 // Each incoming TCP connection is handled in own goroutine.
-func (p *proxy) run() {
+func (p *MySQLProxyServer) run() {
 	listener, err := net.Listen("tcp", p.proxyHost)
 	if err != nil {
 		log.Fatal(err.Error())
@@ -86,10 +92,10 @@ func (p *proxy) run() {
 }
 
 // handleConnection ...
-func (p *proxy) handleConnection(client net.Conn) {
+func (p *MySQLProxyServer) handleConnection(client net.Conn) {
 	defer client.Close()
 
-	// New connection to MySQL is made per each incoming TCP request to proxy server.
+	// New connection to MySQL is made per each incoming TCP request to MySQLProxyServer server.
 	server, err := net.Dial("tcp", p.mysqlHost)
 	if err != nil {
 		log.Print(err.Error())
@@ -101,11 +107,12 @@ func (p *proxy) handleConnection(client net.Conn) {
 
 	defer func() { p.connStateChan <- chat.ConnState{connId, protocol.ConnStateFinished} }()
 
-	var cmdId int
+	var queryId int
+	var timer time.Time
 
 	// Copy bytes from client to server and requestParser
-	go io.Copy(io.MultiWriter(server, &RequestPacketParser{connId, &cmdId, p.cmdChan, p.connStateChan}), client)
+	go io.Copy(io.MultiWriter(server, &RequestPacketParser{connId, &queryId, p.cmdChan, p.connStateChan, &timer}), client)
 
 	// Copy bytes from server to client and responseParser
-	io.Copy(io.MultiWriter(client, &ResponsePacketParser{connId, &cmdId, p.cmdResultChan}), server)
+	io.Copy(io.MultiWriter(client, &ResponsePacketParser{connId, &queryId, p.cmdResultChan, &timer}), server)
 }
