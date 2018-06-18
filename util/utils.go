@@ -1,4 +1,4 @@
-package main
+package util
 
 import (
 	"database/sql"
@@ -9,7 +9,7 @@ import (
 )
 
 //...
-func getQueryResults(database, query string, params []string, dsn string) ([]string, [][]string, error) {
+func GetQueryResults(database, query string, params []string, dsn string) ([]string, [][]string, error) {
 	//isPrepared := true
 
 	// Open database
@@ -87,7 +87,7 @@ func getQueryResults(database, query string, params []string, dsn string) ([]str
 	return columns, resultRows, nil
 }
 
-func getUseDatabaseValue(query string) string {
+func GetUseDatabaseValue(query string) string {
 	var db = ""
 
 	words := strings.Fields(query)

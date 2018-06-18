@@ -55,3 +55,9 @@ func (c *Client) Process() {
 		}
 	}
 }
+
+
+
+//func ProcessMessage(row [][]string)  {
+//	fmt.Println(row)
+//}

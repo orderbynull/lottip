@@ -1,7 +1,8 @@
-package main
+package http
 
 import (
 	"fmt"
+	"github.com/orderbynull/lottip/util"
 	"log"
 	"net/http"
 
@@ -16,7 +17,7 @@ const (
 	webRoute       = "/"
 )
 
-func runHttpServer(hub *chat.Hub) {
+func RunHttpServer(hub *chat.Hub, mysqlDsn *string, useLocalUI *bool, guiAddr *string) {
 	// Websockets endpoint
 	http.HandleFunc(websocketRoute, func(w http.ResponseWriter, r *http.Request) {
 		upgr := websocket.Upgrader{CheckOrigin: func(r *http.Request) bool { return true }}
@@ -60,7 +61,7 @@ func runHttpServer(hub *chat.Hub) {
 		data := r.PostFormValue("data")
 		json.Unmarshal([]byte(data), &parsedData)
 
-		columns, rows, err := getQueryResults(parsedData.Database, parsedData.Query, parsedData.Parameters, *mysqlDsn)
+		columns, rows, err := util.GetQueryResults(parsedData.Database, parsedData.Query, parsedData.Parameters, *mysqlDsn)
 		if err != nil {
 			fmt.Fprint(w, err.Error())
 			return
@@ -78,7 +79,7 @@ func runHttpServer(hub *chat.Hub) {
 		}
 	})
 
-	http.Handle(webRoute, http.FileServer(FS(*useLocalUI)))
+	http.Handle(webRoute, http.FileServer(util.FS(*useLocalUI)))
 
 	log.Fatal(http.ListenAndServe(*guiAddr, nil))
 }
