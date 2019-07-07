@@ -3,7 +3,7 @@ package chat
 import (
 	"encoding/json"
 	"fmt"
-	"srv-config/cfg"
+	"log"
 )
 
 // Hub ...
@@ -53,17 +53,17 @@ func (h *Hub) Run() {
 
 		case cmd := <-h.cmdChan:
 			fmt.Println(string(data))
-			cfg.Log.Println(string(data))
+			//log.Println(string(data))
 			data, _ = json.Marshal(cmd)
 
 		case cmdResult := <-h.cmdResultChan:
 			fmt.Println(string(data))
-			cfg.Log.Println(string(data))
+			log.Println(string(data))
 			data, _ = json.Marshal(cmdResult)
 
 		case connState := <-h.connStateChan:
 			fmt.Println(string(data))
-			cfg.Log.Println(string(data))
+			//log.Println(string(data))
 			data, _ = json.Marshal(connState)
 		}
 

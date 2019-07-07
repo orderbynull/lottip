@@ -28,7 +28,7 @@ func AppReadyInfo(appReadyChan chan bool) {
 
 func main() {
 	flag.Parse()
-	cfg.RotationLogFile("sql-proxy","/Users/zy/GolandProjects/src/github.com/orderbynull/lottip/")
+	cfg.RotationSystemLog("sql-proxy","/Users/zy/GolandProjects/src/github.com/orderbynull/lottip/")
 	cmdChan := make(chan chat.Cmd)
 	cmdResultChan := make(chan chat.CmdResult)
 	connStateChan := make(chan chat.ConnState)
