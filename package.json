@@ -1,0 +1,19 @@
+{
+  "name": "lottip",
+  "version": "1.0.0",
+  "description": "Lottip is proxy for **MySQL RDBMS** with web GUI. It will show you what's happening under the hood of your database layer. As it sits between your application and MySQL server there's no need to use tools like Wireshark or enable general logs to see which queries are being executed. It comes as single binary with zero dependencies and consists of 2 parts: proxy server and embedded GUI.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/orderbynull/lottip.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/orderbynull/lottip/issues"
+  },
+  "homepage": "https://github.com/orderbynull/lottip#readme"
+}

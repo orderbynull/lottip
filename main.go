@@ -17,6 +17,7 @@ var (
 	guiAddr    = flag.String("gui", "127.0.0.1:9999", "Web UI <host>:<port>")
 	useLocalUI = flag.Bool("use-local", false, "Use local UI instead of embed")
 	mysqlDsn   = flag.String("mysql-dsn", "", "MySQL DSN for query execution capabilities")
+	logPath   = flag.String("log-path","~/", "Log Path")
 )
 
 func AppReadyInfo(appReadyChan chan bool) {
@@ -28,7 +29,7 @@ func AppReadyInfo(appReadyChan chan bool) {
 
 func main() {
 	flag.Parse()
-	cfg.RotationSystemLog("sql-proxy","/Users/zy/GolandProjects/src/github.com/orderbynull/lottip/")
+	cfg.RotationSystemLog("sql-proxy",*logPath)
 	cmdChan := make(chan chat.Cmd)
 	cmdResultChan := make(chan chat.CmdResult)
 	connStateChan := make(chan chat.ConnState)
