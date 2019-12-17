@@ -4,17 +4,14 @@
             Applications
         </p>
         <ul class="menu-list">
-            <li>
-                <a class="is-active">SelfBookingBusinessManager</a>
+            <li v-for="app in apps" v-bind:key="app.id">
+                <a>{{app.title}}</a>
                 <ul>
-                    <li><router-link to="/mysql">MySQL</router-link></li>
-                    <li><router-link to="/redis">Redis</router-link></li>
-                    <li><a>RabbitMQ</a></li>
+                    <li v-for="service in app.services" v-bind:key="service.id">
+                        <router-link :to="service.type">{{service.title}}</router-link>
+                    </li>
                 </ul>
             </li>
-            <li><a>Scoring</a></li>
-            <li><a>PaymentLinks</a></li>
-            <li><a>Autofunnel</a></li>
         </ul>
     </aside>
 </template>
@@ -23,7 +20,7 @@
     export default {
         name: 'Applications',
         props: {
-            msg: String
+            apps: Array
         }
     }
 </script>

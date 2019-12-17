@@ -2,7 +2,7 @@
     <div id="app">
         <div class="columns">
             <div class="column is-narrow">
-                <Applications/>
+                <Applications v-bind:apps="[{'id':1, 'title':'SelfBookingBusinessManager', 'services':[{'id':1, 'title':'Redis', 'type':'redis'}, {'id':2, 'title':'MySQL', 'type':'mysql'}]}]"/>
             </div>
 
             <div class="column">
