@@ -1,0 +1,80 @@
+{{define "layout"}}
+    <!DOCTYPE html>
+    <html class="has-background-light-">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>Lottip</title>
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.8.0/css/bulma.min.css">
+        <script defer src="https://use.fontawesome.com/releases/v5.3.1/js/all.js"></script>
+        <style>
+            html {
+                background: url("https://www.toptal.com/designers/subtlepatterns/patterns/subtle_zebra_3d.png");
+            }
+
+            #content {
+                padding: 0 1px 0 1px;
+                margin-top: 15px;
+            }
+
+            .menu-list a.is-active,
+            .button.is-info,
+            .button.is-info:hover,
+            .button.is-primary,
+            .button.is-primary:hover{
+                background-color: #337ab7;
+            }
+
+            .no-wrap {
+                white-space: nowrap;
+            }
+
+            .table tr.result-success {
+                border-left: solid #5cb85c 3px;
+            }
+
+            .table tr.result-error {
+                border-left: solid #d9534f 3px;
+            }
+        </style>
+    </head>
+    <body>
+    <section class="section">
+        <div class="columns">
+            <div class="column is-narrow">
+                <aside class="menu">
+                    <p class="menu-label">
+                        Applications
+                    </p>
+                    <ul class="menu-list">
+                        <li>
+                            <a href="/">SelfBookingBusinessManager</a>
+                            <ul>
+                                <li><a href="/mysql">MySQL</a></li>
+                                <li><a href="pgsql" class="is-active">PostgreSQL</a></li>
+                                <li><a href="#">RabbitMQ</a></li>
+                            </ul>
+                        </li>
+                    </ul>
+                </aside>
+            </div>
+
+            <div class="column">
+                <div class="field has-addons">
+                    <div class="control">
+                        <button class="button is-primary">Refresh</button>
+                    </div>
+                    <div class="control is-expanded">
+                        <input class="input" type="text" placeholder="Query to filter">
+                    </div>
+                </div>
+                <div id="content">
+                    {{template "content". }}
+                </div>
+            </div>
+        </div>
+    </section>
+    </body>
+    </html>
+{{end}}
+

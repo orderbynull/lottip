@@ -1,0 +1,60 @@
+{{define "content"}}
+    <table class="table is-fullwidth is-hoverable is-bordered is-narrow">
+        <tbody>
+        <tr class="result-success">
+            <td>
+                <button class="button is-small">
+                    <span class="icon is-small">
+                      <i class="fas fa-caret-down"></i>
+                    </span>
+                </button>
+            </td>
+            <td>SELECT * FROM shop ORDER BY article</td>
+            <td class="no-wrap">Dec 21, 2019 @ 15:39:10.812</td>
+        </tr>
+        <tr class="result-error">
+            <td>
+                <button class="button is-small">
+                    <span class="icon is-small">
+                      <i class="fas fa-caret-down"></i>
+                    </span>
+                </button>
+            </td>
+            <td>
+                INSERT INTO shop VALUES
+                (1,'A',3.45),(1,'B',3.99),(2,'A',10.99),(3,'B',1.45),
+                (3,'C',1.69),(3,'D',1.25),(4,'D',19.95);
+            </td>
+            <td>Dec 21, 2019 @ 15:39:10.812</td>
+        </tr>
+        <tr class="result-success">
+            <td>
+                <button class="button is-small">
+                    <span class="icon is-small">
+                      <i class="fas fa-caret-down"></i>
+                    </span>
+                </button>
+            </td>
+            <td>
+                CREATE TABLE shop (
+                article INT UNSIGNED DEFAULT '0000' NOT NULL,
+                dealer CHAR(20) DEFAULT '' NOT NULL,
+                price DECIMAL(16,2) DEFAULT '0.00' NOT NULL,
+                PRIMARY KEY(article, dealer));
+            </td>
+            <td>Dec 21, 2019 @ 15:39:10.812</td>
+        </tr>
+        <tr class="result-success">
+            <td>
+                <button class="button is-small">
+                    <span class="icon is-small">
+                      <i class="fas fa-caret-down"></i>
+                    </span>
+                </button>
+            </td>
+            <td>SELECT year,month,BIT_COUNT(BIT_OR(1day)) AS days FROM t1 GROUP BY year,month;</td>
+            <td>Dec 21, 2019 @ 15:39:10.812</td>
+        </tr>
+        </tbody>
+    </table>
+{{end}}
