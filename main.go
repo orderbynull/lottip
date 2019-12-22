@@ -1,32 +1,17 @@
 package main
 
 import (
-	"html/template"
-	"log"
-	"net/http"
+	app2 "github.com/orderbynull/lottip/app"
+	"github.com/orderbynull/lottip/impl"
+	"github.com/orderbynull/lottip/web"
 )
 
 func main() {
-	http.HandleFunc("/", func(writer http.ResponseWriter, request *http.Request) {
-		tmpl := template.Must(template.ParseFiles("ui/templates/layout.html", "ui/templates/default.html"))
-		if err := tmpl.ExecuteTemplate(writer, "layout", nil); err != nil {
-			log.Println(err)
-		}
-	})
+	pgsqlService := app2.NewPgsqlService(&impl.MemoryPgsqlRepository{})
 
-	http.HandleFunc("/mysql", func(writer http.ResponseWriter, request *http.Request) {
-		tmpl := template.Must(template.ParseFiles("ui/templates/layout.html", "ui/templates/mysql.html"))
-		if err := tmpl.ExecuteTemplate(writer, "layout", nil); err != nil {
-			log.Println(err)
-		}
-	})
+	app := &web.UiApp{PgsqlService: pgsqlService}
 
-	http.HandleFunc("/pgsql", func(writer http.ResponseWriter, request *http.Request) {
-		tmpl := template.Must(template.ParseFiles("ui/templates/layout.html", "ui/templates/pgsql.html"))
-		if err := tmpl.ExecuteTemplate(writer, "layout", nil); err != nil {
-			log.Println(err)
-		}
-	})
+	app.AddRouteHandler("/pgsql", web.PostgresqlHandler)
 
-	log.Fatal(http.ListenAndServe(":8081", nil))
+	app.Run(":8081")
 }
