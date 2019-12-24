@@ -1,7 +1,7 @@
 package web
 
 import (
-	"github.com/orderbynull/lottip/app"
+	"github.com/orderbynull/lottip/core"
 	"log"
 	"net/http"
 )
@@ -9,7 +9,8 @@ import (
 type RouteHandler func(app *UiApp, w http.ResponseWriter, r *http.Request)
 
 type UiApp struct {
-	PgsqlService *app.PgsqlService
+	PgsqlService *core.PgsqlService
+	PageSize     int
 }
 
 func (app *UiApp) withApp(fn RouteHandler) http.HandlerFunc {
