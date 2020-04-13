@@ -76,11 +76,11 @@
                                         <ul class="dropdown-menu" aria-labelledby="dropdownMenu2">
                                             
                                             <!--Copy button begin-->
-                                            <li> <a href="#" v-on:click.prevent="copyQuery(connId, query.cmdId)">Copy</a> </li>
+                                            <li> <a href="#" v-on:click.prevent="copyQuery(query.connId, query.cmdId)">Copy</a> </li>
                                             <!--Copy button end--> 
                                             
                                             <!--Execute button begin-->
-                                            <li v-bind:class="[query.executable ? '' : 'disabled']"> <a href="#" v-on:click.prevent="executeQuery(connId, query.cmdId)">Execute</a> </li>
+                                            <li v-bind:class="[query.executable ? '' : 'disabled']"> <a href="#" v-on:click.prevent="executeQuery(query.connId, query.cmdId)">Execute</a> </li>
                                             <!--Execute button end-->
                                             
                                         </ul>
