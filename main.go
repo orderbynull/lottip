@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/orderbynull/lottip/chat"
+	"github.com/brainz80/lottip/chat"
 )
 
 var (

@@ -2,8 +2,8 @@ package main
 
 import (
 	"fmt"
-	"github.com/orderbynull/lottip/chat"
-	"github.com/orderbynull/lottip/protocol"
+	"github.com/brainz80/lottip/chat"
+	"github.com/brainz80/lottip/protocol"
 	"io"
 	"log"
 	"net"

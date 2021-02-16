@@ -8,7 +8,7 @@ import (
 	"encoding/json"
 	"github.com/gorilla/websocket"
 	"github.com/olekukonko/tablewriter"
-	"github.com/orderbynull/lottip/chat"
+	"github.com/brainz80/lottip/chat"
 )
 
 const (
