@@ -187,6 +187,8 @@ new Vue({
 
         // Fired when received Cmd data from websocket
         cmdReceived: function (connId, cmdId, database, query, parameters, executable) {
+            var nw = Prism.plugins.NormalizeWhitespace;
+
             if (!(connId in this.connections)) {
                 Vue.set(this.connections, connId, {});
             }
@@ -195,6 +197,7 @@ new Vue({
                 connId: connId,
                 cmdId: cmdId,
                 database: database,
+                queryFormatted: Prism.highlight(nw.normalize(query), Prism.languages.sql, 'sql'),
                 query: query,
                 parameters: parameters,
                 expanded: true,

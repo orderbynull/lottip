@@ -125,7 +125,7 @@
 	cursor: pointer;
 }
 #bootstrap-override table tr td.expanded {
-	white-space: normal;
+	white-space: pre;
 }
 /*Modal window styles*/
 #bootstrap-override #results #modal-preloader {
