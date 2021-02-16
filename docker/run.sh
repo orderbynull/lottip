@@ -17,7 +17,7 @@ LOTTIP_DSN="${LOTTIP_DSN:-root:root@/}"
 
 # Run lottip
 
-/root/go/src/github.com/orderbynull/lottip/lottip \
+/root/go/src/github.com/brainz80/lottip/lottip \
   --proxy "$LOTTIP_PROXY" \
   --mysql "$LOTTIP_MYSQL" \
   --gui "$LOTTIP_GUI" \
