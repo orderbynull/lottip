@@ -28,6 +28,7 @@ func (pp *RequestPacketParser) Write(p []byte) (n int, err error) {
 		decoded, err := protocol.DecodeQueryRequest(p)
 		if err == nil {
 			pp.queryChan <- chat.Cmd{pp.connId, *pp.queryId, "", decoded.Query, nil, false}
+			fmt.Printf("[Request] connId: `%s`, queryId: `%s`, query: `%s`.\n", pp.connId, *pp.queryId, decoded.Query);
 		}
 	case protocol.ComQuit:
 		pp.connStateChan <- chat.ConnState{pp.connId, protocol.ConnStateFinished}
@@ -50,8 +51,10 @@ func (pp *ResponsePacketParser) Write(p []byte) (n int, err error) {
 	case protocol.ResponseErr:
 		decoded, _ := protocol.DecodeErrResponse(p)
 		pp.queryResultChan <- chat.CmdResult{pp.connId, *pp.queryId, protocol.ResponseErr, decoded, duration}
+		fmt.Printf("[Response ERROR] connId: `%s`, queryId: `%s`.\n", pp.connId, *pp.queryId);
 	default:
 		pp.queryResultChan <- chat.CmdResult{pp.connId, *pp.queryId, protocol.ResponseOk, "", duration}
+		fmt.Printf("[Response OK] connId: `%s`, queryId: `%s`.\n", pp.connId, *pp.queryId);
 	}
 
 	return len(p), nil
