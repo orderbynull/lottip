@@ -9,7 +9,9 @@ RUN go get github.com/brainz80/lottip && \
     go install github.com/mjibson/esc && \
     cd /root/go/src/github.com/brainz80/lottip && \
     /root/go/bin/esc -o fs.go -prefix web -include=".*\.css|.*\.js|.*\.html|.*\.png" web && \
-    go build
+    go build && \
+    rm -rf /root/go/src/github.com/brainz80/lottip && \
+    rm -rf /root/go/bin/esc
 
 ADD run.sh /run.sh
 RUN chmod +x /run.sh
