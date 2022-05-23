@@ -83,3 +83,5 @@ const (
 	clientSessionTrack
 	clientDeprecateEOF
 )
+
+const Ping byte = 0x0e

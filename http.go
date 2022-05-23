@@ -3,12 +3,12 @@ package main
 import (
 	"fmt"
 	"log"
+	"lottip/chat"
 	"net/http"
 
 	"encoding/json"
 	"github.com/gorilla/websocket"
 	"github.com/olekukonko/tablewriter"
-	"github.com/brainz80/lottip/chat"
 )
 
 const (

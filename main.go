@@ -3,9 +3,8 @@ package main
 import (
 	"flag"
 	"fmt"
+	"lottip/chat"
 	"time"
-
-	"github.com/brainz80/lottip/chat"
 )
 
 var (
