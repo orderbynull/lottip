@@ -10,10 +10,10 @@ import (
 
 var (
 	proxyAddr          = flag.String("proxy", "127.0.0.1:4041", "Proxy <host>:<port>")
-	LogRequests        = flag.Bool("log-requests", false, "Enable logging of requests")
-	LogResponses       = flag.Bool("log-responses", false, "Enable logging of responses")
-	LogResponsePackets = flag.Bool("log-response-packets", false, "Enable logging of response packets")
-	LogAll             = flag.Bool("log-all", true, "Enable logging of requests, responses, and other events")
+	logRequests        = flag.Bool("log-requests", false, "Enable logging of requests")
+	logResponses       = flag.Bool("log-responses", false, "Enable logging of responses")
+	logResponsePackets = flag.Bool("log-response-packets", false, "Enable logging of response packets")
+	logAll             = flag.Bool("log-all", true, "Enable logging of requests, responses, and other events")
 	mysqlAddr          = flag.String("mysql", "127.0.0.1:3306", "MySQL <host>:<port>")
 	guiAddr            = flag.String("gui-addr", "127.0.0.1:9999", "Web UI <host>:<port>")
 	guiEnabled         = flag.Bool("gui-enabled", false, "Enable the web-gui server")

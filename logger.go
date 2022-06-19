@@ -28,20 +28,20 @@ func LogInvalid(info *ConnectionInfo, entryType string, packet []byte) {
 	event.Bytes("packet", packet).Send()
 }
 func LogRequest(info *ConnectionInfo, entryType string, args ...interface{}) {
-	if *LogRequests || *LogAll {
+	if *logRequests || *logAll {
 		sender := "client"
 		doLogging(&sender, info, entryType, args)
 	}
 }
 
 func LogResponse(info *ConnectionInfo, entryType string, args ...interface{}) {
-	if *LogResponses || *LogAll {
+	if *logResponses || *logAll {
 		sender := "server"
 		doLogging(&sender, info, entryType, args)
 	}
 }
 func LogResponsePacket(info *ConnectionInfo, packet []byte) {
-	if *LogResponsePackets {
+	if *logResponsePackets {
 		sender := "server"
 		args := make([]interface{}, 2)
 		args[0] = "% x"
@@ -51,7 +51,7 @@ func LogResponsePacket(info *ConnectionInfo, packet []byte) {
 }
 
 func LogOther(info *ConnectionInfo, entryType string, args ...interface{}) {
-	if *LogAll {
+	if *logAll {
 		doLogging(nil, info, entryType, args)
 	}
 }
