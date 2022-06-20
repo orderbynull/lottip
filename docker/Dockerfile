@@ -1,17 +1,17 @@
 FROM frolvlad/alpine-go
 
-
 RUN apk update && apk upgrade && \
     apk add --no-cache bash git
 
-RUN go get github.com/rkoshy/lottip && \
-    go get github.com/mjibson/esc && \
-    go install github.com/mjibson/esc && \
-    cd /root/go/src/github.com/rkoshy/lottip && \
-    /root/go/bin/esc -o fs.go -prefix web -include=".*\.css|.*\.js|.*\.html|.*\.png" web && \
-    go build && \
-    rm -rf /root/go/src/github.com/rkoshy/lottip && \
-    rm -rf /root/go/bin/esc
+RUN git clone http://github.com/rkoshy/lottip
+WORKDIR lottip
+RUN go get github.com/mjibson/esc
+RUN go install github.com/mjibson/esc
+RUN /root/go/bin/esc -o fs.go -prefix web -include=".*\.css|.*\.js|.*\.html|.*\.png" web
+RUN go get
+RUN go install
+WORKDIR /
+RUN rm -rf /root/go/bin/esc && rm -rf lottip
 
 ADD run.sh /run.sh
 RUN chmod +x /run.sh
@@ -20,6 +20,3 @@ EXPOSE 4041
 EXPOSE 9999
 
 CMD /run.sh
-
-
-
