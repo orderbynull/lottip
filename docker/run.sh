@@ -14,11 +14,26 @@ LOTTIP_GUI="${LOTTIP_GUI:-0.0.0.0:9999}"
 # MySQL DSN (credentials)
 LOTTIP_DSN="${LOTTIP_DSN:-root:root@/}"
 
+# Log directory
+LOTTIP_LOG_DIRECTORY="${LOTTIP_LOG_DIRECTORY:./logs}"
+
+# Log filename
+LOTTIP_LOGFILE="${LOTTIP_LOGFILE:logfile.log}"
+
+# Query Log filename
+LOTTIP_QUERY_LOGFILE="${LOTTIP_QUERY_LOGFILE:queries.log}"
+
+# Enable
+LOTTIP_CONSOLE_LOGGING="${LOTTIP_CONSOLE_LOGGING:false}"
 
 # Run lottip
 
 /root/go/bin/lottip \
   --proxy "$LOTTIP_PROXY" \
   --mysql "$LOTTIP_MYSQL" \
-  --gui "$LOTTIP_GUI" \
-  --mysql-dsn "$LOTTIP_DSN"
+  --gui-addr "$LOTTIP_GUI" \
+  --mysql-dsn "$LOTTIP_DSN" \
+  --enable-console-logging "$LOTTIP_CONSOLE_LOGGING" \
+  --query-log-file "$LOTTIP_QUERY_LOGFILE" \
+  --log-file "$LOTTIP_LOGFILE" \
+  --log-directory "$LOTTIP_LOG_DIRECTORY"
