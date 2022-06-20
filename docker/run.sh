@@ -24,7 +24,12 @@ LOTTIP_LOGFILE="${LOTTIP_LOGFILE:logfile.log}"
 LOTTIP_QUERY_LOGFILE="${LOTTIP_QUERY_LOGFILE:queries.log}"
 
 # Enable
-LOTTIP_CONSOLE_LOGGING="${LOTTIP_CONSOLE_LOGGING:false}"
+if [ "${LOTTIP_CONSOLE_LOGGING}" == "true" ];
+then
+  LOTTIP_CONSOLE_LOGGING="--enable-console-logging"
+else
+  LOTTIP_CONSOLE_LOGGING=""
+fi
 
 # Run lottip
 
@@ -33,7 +38,7 @@ LOTTIP_CONSOLE_LOGGING="${LOTTIP_CONSOLE_LOGGING:false}"
   --mysql "$LOTTIP_MYSQL" \
   --gui-addr "$LOTTIP_GUI" \
   --mysql-dsn "$LOTTIP_DSN" \
-  --enable-console-logging "$LOTTIP_CONSOLE_LOGGING" \
+  "$LOTTIP_CONSOLE_LOGGING" \
   --query-log-file "$LOTTIP_QUERY_LOGFILE" \
   --log-file "$LOTTIP_LOGFILE" \
   --log-directory "$LOTTIP_LOG_DIRECTORY"
