@@ -1,14 +1,13 @@
 package main
 
 import (
-	"github.com/rs/zerolog/log"
 	"reflect"
 )
 
 const hex = "01234567890ABCDEF"
 
 func LogInvalid(info *ConnectionInfo, entryType string, packet []byte) {
-	event := log.Log().Str("client", info.ClientAddress).Int("clientPort", info.ClientPort).
+	event := queryLogger.Error().Str("client", info.ClientAddress).Int("clientPort", info.ClientPort).
 		Str("server", info.ServerAddress).Int("serverPort", info.ServerPort).
 		Str("user", info.User).Str("type", entryType)
 
@@ -18,13 +17,6 @@ func LogInvalid(info *ConnectionInfo, entryType string, packet []byte) {
 
 	event.Int("packetType", int(GetPacketType(packet)))
 
-	//packetStr := make([]byte, len(packet)*3)
-	//for i, b := range packet {
-	//	packetStr[i] = hex[b>>4]
-	//	packetStr[i+1] = hex[b&0x0F]
-	//	packetStr[i+2] = ' '
-	//}
-	//
 	event.Bytes("packet", packet).Send()
 }
 func LogRequest(info *ConnectionInfo, entryType string, args ...interface{}) {
@@ -57,7 +49,7 @@ func LogOther(info *ConnectionInfo, entryType string, args ...interface{}) {
 }
 
 func doLogging(sender *string, info *ConnectionInfo, entryType string, args []interface{}) {
-	event := log.Log().Str("client", info.ClientAddress).Int("clientPort", info.ClientPort).
+	event := queryLogger.Info().Str("client", info.ClientAddress).Int("clientPort", info.ClientPort).
 		Str("server", info.ServerAddress).Int("serverPort", info.ServerPort).
 		Str("user", info.User).Str("type", entryType)
 

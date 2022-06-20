@@ -213,7 +213,7 @@ var _escData = map[string]*_escFile{
 		name:    "bootstrap-theme.min.css",
 		local:   "web/css/bootstrap-theme.min.css",
 		size:    23409,
-		modtime: 1653116853,
+		modtime: 1655701668,
 		compressed: `
 H4sIAAAAAAAC/+xcX4+bOhZ/v5+CVVV1pkoIISF/GHW02u7VqlK7D7tdaaXVPhhsMugmgMCZSTWa735l
 GzIGbIPtRNOHFo06sc/5+cA5/mH7nMzs419+cz46f8tzXOESFM7jwl24a+fmAeMinM12CEdNnxvnh1si
@@ -269,7 +269,7 @@ iwOjoHFbAAA=
 		name:    "bootstrap.min.css",
 		local:   "web/css/bootstrap.min.css",
 		size:    121200,
-		modtime: 1653116853,
+		modtime: 1655701668,
 		compressed: `
 H4sIAAAAAAAC/+z9ba/jOLIniL+fT6HOQqEyKy2nJD8d26jz7/vvGcxt4PZ9sdMLDFCdu6Al2lalLKkl
 +TyUx/PZF+KTyGBQkn1OVfdi+yZulw/5YzAYDDLIEBn88uMf/ov3o/f/L4qmbipSek+z6Wy68j4em6bc
@@ -605,7 +605,7 @@ z//jP37aFUVTNxUpp6c0n8Z1PT2R0vvxy/8TAAD//1h8f0Zw2QEA
 		name:    "prism.css",
 		local:   "web/css/prism.css",
 		size:    2447,
-		modtime: 1653116853,
+		modtime: 1655701668,
 		compressed: `
 H4sIAAAAAAAC/5xV32/bRgx+lv4KosGaxLBkp/nRRUaGdunDVrTAgHR7GfZA6Sjr6tNRuzvFcYr878Wd
 f0iKmyDoiwHS5MfvE8njZAR/GWnrjzdwkr45Tadx5Vxjs8mk8e6vNi24ngheasUo0srV6sBVVJO9CgGv
@@ -631,7 +631,7 @@ AA==
 		name:    "style.css",
 		local:   "web/css/style.css",
 		size:    2602,
-		modtime: 1653116853,
+		modtime: 1655701668,
 		compressed: `
 H4sIAAAAAAAC/5xVy27rNhNex4DfgYBxgP8PIseJbyf0pt0U3bSr8wIjcWQPDsVhyZEvLfLuBSU7Vi5y
 nCbekNR8c/m+mRnlzBIlgM94iyGQQfXPcHCTQ/FzHbh2JivYctBqVM7S/2o4uCnZSVZCRfag1a+BwN6p
@@ -654,7 +654,7 @@ Xj6g5TTFL3RAd4UsW+Led/6/AQAA//9Vo/qLKgoAAA==
 		name:    "favicon.png",
 		local:   "web/images/favicon.png",
 		size:    1156,
-		modtime: 1653116853,
+		modtime: 1655701668,
 		compressed: `
 H4sIAAAAAAAC/wCEBHv7iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAAXNSR0IArs4c
 6QAABD5JREFUWAm9V11oVFcQ/nbdJpYmaVYMW9JYdqO4aMQ+uIa29i8QrCQiNRqqhPoSQcyLoghB0ZDI
@@ -683,7 +683,7 @@ eIjnYvqd06ub8oymFAdfcM/rae8fI0VDB1TFcSmd6UQrHZDMGmTT6nkjY7oxSWytdGAdQ/47+XGdLIM1
 		name:    "index.html",
 		local:   "web/index.html",
 		size:    7232,
-		modtime: 1653116853,
+		modtime: 1655701668,
 		compressed: `
 H4sIAAAAAAAC/7RZX4/jthF/vgL9DnMM0E3Qk4VL81BsJLXB5gIc0GvTpkBRFH2gxbHFO4pkSEq3huHX
 fIF8w/skAUlJa3tlW1rv+cESqZkf5x9nhlL28vt/3P37vz++gcrVovj97zJ/BUHlOicoSZhByvy1Rkeh
@@ -721,7 +721,7 @@ UfwWAAD//8ZWTmRAHAAA
 		name:    "app.js",
 		local:   "web/js/app.js",
 		size:    8257,
-		modtime: 1653116853,
+		modtime: 1655701668,
 		compressed: `
 H4sIAAAAAAAC/6xZX2/bOBJ/D5DvMO0eVjbqk43D7YsNX7GXtkAPt22v2dt9KIIDLY5tIjKpkFQUX+Dv
 vuAf/bFEyUqxeYkkDmc4w/kNf0MngisNieD8VhONt5pIjRTWsHja/n11fdUa/8A4U/tS4Kda4EC/ospT
@@ -764,7 +764,7 @@ tfYioc1BQ0hQloS2E2osnlWbwpa/xV5fnaarPwIAAP//jmgKfkEgAAA=
 		name:    "bootstrap.min.js",
 		local:   "web/js/bootstrap.min.js",
 		size:    37045,
-		modtime: 1653116853,
+		modtime: 1655701668,
 		compressed: `
 H4sIAAAAAAAC/8y9a3fbuNUo/L2/gsLMwwAjiJaTXp5SYbQyyfR9c047M2cm065zXLUFSfDi0KSGpO2k
 lvrbz8KVAAlKdnpZ54stkgC4sbHvewO8+GrxC+8r7+um6bu+JXvv7kXwIviNB4u+34cXFzntY/UsSJob
@@ -937,7 +937,7 @@ pH4cDg9HLOWlvPU1xxI/5FSW1gu8jRqgUbf3zd7s0zd785G285gqs8IQm/8bAAD//y+jxWq1kAAA
 		name:    "clipboard.min.js",
 		local:   "web/js/clipboard.min.js",
 		size:    4298,
-		modtime: 1653116853,
+		modtime: 1655701668,
 		compressed: `
 H4sIAAAAAAAC/5RXS4/juBG+969g66CQaK3ivlrhGoPeWWCBTTLYmQAJDCPgo/RI06SGou12bP33gNTT
 bm0jezIt1otffVUs4vyghauMxnkiyCU6aAl5pUFGj5S6cw0mR3sjDwo23U8Kb7WxrqECk3U0aEd0lO70
@@ -974,7 +974,7 @@ vZ97W9ImDwuPjI9wEIkcbu3FcIubcEnGNwJzspZDLMOQvhDL9KZoSfbwvwAAAP//LDCmqMoQAAA=
 		name:    "jquery.min.js",
 		local:   "web/js/jquery.min.js",
 		size:    97163,
-		modtime: 1653116853,
+		modtime: 1655701668,
 		compressed: `
 H4sIAAAAAAAC/9z9+5PbNrIojv9+/4oR14cBLEgjOcneE8oYlmM7m2Tz2jh7sjkUvQWSIEWJIjUUNY8M
 uX/7t9AASJCi7Ow991t161Muj0jiDTQa3Y1+XD+fXG3/duLl49Xdcr58Mf/sqr5CIdYfvypOecSqtMiv
@@ -1549,7 +1549,7 @@ jKDI8z9pZprYN724RUAqBAH+zsRdbq9DgtpgwpIeJpCdiYamWevj7eYvOidr9PWrpYcU+HmzLuoq2/Mx
 		name:    "lodash.min.js",
 		local:   "web/js/lodash.min.js",
 		size:    72772,
-		modtime: 1653116853,
+		modtime: 1655701668,
 		compressed: `
 H4sIAAAAAAAC/+y9+3fTOrMA+nv/iiaHz1siSpu0PJ2qvkApsKGUzXODky/LTeRGkMpBkfugzv3b79LI
 suXEKbC/c84v96yu1UiyNHqNRqPRzGj79u2Nzdub/8+Uj5iYMx1+lYyj+WRzCj9bo+RsO/+4mW1+EGMm
@@ -1964,7 +1964,7 @@ nCT/DQAA//9VhbzqRBwBAA==
 		name:    "prism.js",
 		local:   "web/js/prism.js",
 		size:    12851,
-		modtime: 1653116853,
+		modtime: 1655701668,
 		compressed: `
 H4sIAAAAAAAC/6R7a3fiOLbo9/4VwdPXZRWKofrcddcsKBXjgJJ4yti0bZJKA11HAYW4Y2zaFpXKRNzf
 ftaWbB5JavqsNR+CZT32e2/tLSut9yejIilX/4xOPti//Jfd/uleiHXZabXW0P1Hac/zVWuRP2Zpzhb2
@@ -2074,7 +2074,7 @@ MRehrYW6P/1PAAAA//9Y78ahMzIAAA==
 		name:    "vue.min.js",
 		local:   "web/js/vue.min.js",
 		size:    78479,
-		modtime: 1653116853,
+		modtime: 1655701668,
 		compressed: `
 H4sIAAAAAAAC/7y9a3PbuLYo+P38CovlYYAtWJHT+9w7TQatSpx0J915deKkH2ptFU1BNmIZUIOQHzF1
 f/vUWgBIkFKy96mZmi8SiReBBWBhvfHwH4P/OvjHwaeNGH2uDq4fjb4bjSGBlPTg0fj4n0ePxsf/++D5
