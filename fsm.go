@@ -48,12 +48,32 @@ func CreateStateMachine(ci *ConnectionInfo, clientConn net.Conn, serverConn net.
 		Permit(MsgServerHello, StateAuthRequested, func(ctx context.Context, args ...interface{}) bool {
 			// Server's initial response asking for loging info -- passthrough after changing compression flag
 			packet := args[0].([]byte)
-			packet[25] = packet[25] & 0xDF
-			LogResponse(ci, packet, "Handshake", "Server Handshake/Challenge response (forcing uncompressed protocol)")
+			index := 4
+			if packet[index] == 0x0A {
+				// Valid protocol, skip server version
+				for ; packet[index] != 0 && index < len(packet); index++ {
+				}
+				index++
+				// Skip thread-id
+				index += 4
+				// Skip salt
+				for ; packet[index] != 0 && index < len(packet); index++ {
+				}
+				index++
 
-			//LogOther(ci, "fsm - Writing to client", "% x", packet)
-			clientConn.Write(packet)
-			return true
+				packet[index] = packet[index] & 0xDF
+				LogResponse(ci, packet, "Handshake", "Server Handshake/Challenge response (forcing uncompressed protocol)")
+
+				//LogOther(ci, "fsm - Writing to client", "% x", packet)
+				clientConn.Write(packet)
+				return true
+			} else {
+				LogOther(ci, "INVALID PROTOCOL", "%x is not a supported protocol version", packet[4])
+
+				clientConn.Close()
+				serverConn.Close()
+				return false
+			}
 		})
 
 	fsm.Configure(StateAuthRequested).
