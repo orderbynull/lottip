@@ -10,7 +10,7 @@ import (
 	"lottip/chat"
 	"os"
 	"strings"
-	"syscall"
+	//"syscall"
 	"time"
 )
 
@@ -41,9 +41,9 @@ func appReadyInfo(appReadyChan chan bool) {
 	log.Info().Msgf("Web gui available at `http://%s`", *guiAddr)
 }
 
-func timespecToTime(ts syscall.Timespec) time.Time {
-	return time.Unix(int64(ts.Sec), int64(ts.Nsec))
-}
+//func timespecToTime(ts syscall.Timespec) time.Time {
+//	return time.Unix(int64(ts.Sec), int64(ts.Nsec))
+//}
 
 func newRollingFile(directory string, filename string) io.Writer {
 	if err := os.MkdirAll(directory, 0744); err != nil {
@@ -55,12 +55,12 @@ func newRollingFile(directory string, filename string) io.Writer {
 		return directory + "/" + filename
 	}, func(filename string, didRotate bool) {
 		if didRotate {
-			// Then rename the file
-			finfo, _ := os.Stat(filename)
-			stat_t := finfo.Sys().(*syscall.Stat_t)
-			timeFormatString := ".2006-01-02"
-			rolledName := directory + "/" + filename + timespecToTime(stat_t.Birthtimespec).Format(timeFormatString)
-			os.Rename(filename, rolledName)
+			//// Then rename the file
+			//finfo, _ := os.Stat(filename)
+			//stat_t := finfo.Sys().(*syscall.Stat_t)
+			//timeFormatString := ".2006-01-02"
+			//rolledName := directory + "/" + filename + timespecToTime(stat_t.Birthtimespec).Format(timeFormatString)
+			//os.Rename(filename, rolledName)
 		}
 	})
 
