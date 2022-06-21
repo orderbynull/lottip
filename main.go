@@ -3,7 +3,6 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/djherbis/times"
 	"github.com/kjk/dailyrotate"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -11,6 +10,7 @@ import (
 	"lottip/chat"
 	"os"
 	"strings"
+	"syscall"
 	"time"
 )
 
@@ -41,6 +41,10 @@ func appReadyInfo(appReadyChan chan bool) {
 	log.Info().Msgf("Web gui available at `http://%s`", *guiAddr)
 }
 
+func timespecToTime(ts syscall.Timespec) time.Time {
+	return time.Unix(int64(ts.Sec), int64(ts.Nsec))
+}
+
 func newRollingFile(directory string, filename string) io.Writer {
 	if err := os.MkdirAll(directory, 0744); err != nil {
 		log.Error().Err(err).Str("path", directory).Msg("can't create log directory")
@@ -52,13 +56,10 @@ func newRollingFile(directory string, filename string) io.Writer {
 	}, func(filename string, didRotate bool) {
 		if didRotate {
 			// Then rename the file
-			fileTimestamps, err := times.Stat(filename)
-			if err != nil {
-				log.Fatal().Msg(err.Error())
-			}
-
+			finfo, _ := os.Stat(filename)
+			stat_t := finfo.Sys().(*syscall.Stat_t)
 			timeFormatString := ".2006-01-02"
-			rolledName := directory + "/" + filename + fileTimestamps.BirthTime().Format(timeFormatString)
+			rolledName := directory + "/" + filename + timespecToTime(stat_t.Birthtimespec).Format(timeFormatString)
 			os.Rename(filename, rolledName)
 		}
 	})
