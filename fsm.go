@@ -49,7 +49,7 @@ func CreateStateMachine(ci *ConnectionInfo, clientConn net.Conn, serverConn net.
 			// Server's initial response asking for loging info -- passthrough after changing compression flag
 			packet := args[0].([]byte)
 			packet[25] = packet[25] & 0xDF
-			LogResponse(ci, "Handshake", "Server Handshake/Challenge response (forcing uncompressed protocol)")
+			LogResponse(ci, packet, "Handshake", "Server Handshake/Challenge response (forcing uncompressed protocol)")
 
 			//LogOther(ci, "fsm - Writing to client", "% x", packet)
 			clientConn.Write(packet)
@@ -68,7 +68,7 @@ func CreateStateMachine(ci *ConnectionInfo, clientConn net.Conn, serverConn net.
 			for ; packet[stop] != 0; stop++ {
 			}
 			ci.User = string(packet[start:stop])
-			LogRequest(ci, "Login", "Authorizing as user: '%s' (forcing uncompressed protocol)", ci.User)
+			LogRequest(ci, packet, "Login", "Authorizing as user: '%s' (forcing uncompressed protocol)", ci.User)
 
 			// Disable compression
 			packet[4] = packet[4] & 0xDF
@@ -80,8 +80,8 @@ func CreateStateMachine(ci *ConnectionInfo, clientConn net.Conn, serverConn net.
 
 	fsm.Configure(StateAuthSent).
 		Permit(MsgOK, StateAuthorized, func(ctx context.Context, args ...interface{}) bool {
-			LogResponse(ci, "Authorized", "Client auth successful")
 			packet := args[0].([]byte)
+			LogResponse(ci, packet, "Authorized", "Client auth successful")
 			//LogOther(ci, "fsm - Writing to client", "% x", packet)
 			clientConn.Write(packet)
 			return true
@@ -89,7 +89,7 @@ func CreateStateMachine(ci *ConnectionInfo, clientConn net.Conn, serverConn net.
 		Permit(MsgERROR, StateUnauthorized, func(ctx context.Context, args ...interface{}) bool {
 			// Server's initial response asking for loging info -- passthrough after changing compression flag
 			packet := args[0].([]byte)
-			LogResponse(ci, "Unauthorized", "Client auth failed")
+			LogResponse(ci, packet, "Unauthorized", "Client auth failed")
 			//LogOther(ci, "fsm - Writing to client", "% x", packet)
 			clientConn.Write(packet)
 			return true
@@ -105,12 +105,12 @@ func CreateStateMachine(ci *ConnectionInfo, clientConn net.Conn, serverConn net.
 			stop := start + 1
 			for ; packet[stop] != 0; stop++ {
 			}
-			LogRequest(ci, "ChangeUser", "Will reject request to change user to %s", string(packet[start:stop]))
+			LogRequest(ci, packet, "ChangeUser", "Will reject request to change user to %s", string(packet[start:stop]))
 			return nil
 		}).
 		InternalTransition(protocol.ComPing, func(ctx context.Context, args ...interface{}) error {
 			packet := args[0].([]byte)
-			LogOther(ci, "Ping")
+			LogRequest(ci, packet, "Ping")
 			serverConn.Write(packet)
 			return nil
 		}).
@@ -129,10 +129,9 @@ func CreateStateMachine(ci *ConnectionInfo, clientConn net.Conn, serverConn net.
 		InternalTransition(protocol.ComBinlogDump, logAndDrop(ci, "BinlogDump", cmdChan)).
 		InternalTransition(protocol.ComTableDump, logAndDrop(ci, "TableDump", cmdChan)).
 		InternalTransition(protocol.ComConnectOut, logAndDrop(ci, "ConnectOut", cmdChan)).
-		InternalTransition(protocol.ResponseOk, logAndSendPacketToServer(ci, serverConn, "Ok")).
 		InternalTransition(MsgOK, func(ctx context.Context, args ...interface{}) error {
 			packet := args[0].([]byte)
-			LogResponse(ci, "OK")
+			LogResponse(ci, packet, "OK")
 			duration := fmt.Sprintf("%.3f", time.Since(*ci.timer).Seconds())
 			resultChan <- chat.CmdResult{ci.ConnId, ci.QueryId, protocol.ResponseOk, "", duration}
 			clientConn.Write(packet)
@@ -140,7 +139,7 @@ func CreateStateMachine(ci *ConnectionInfo, clientConn net.Conn, serverConn net.
 		}).
 		InternalTransition(MsgERROR, func(ctx context.Context, args ...interface{}) error {
 			packet := args[0].([]byte)
-			LogResponse(ci, "ERROR")
+			LogResponse(ci, packet, "ERROR")
 			duration := fmt.Sprintf("%.3f", time.Since(*ci.timer).Seconds())
 			resultChan <- chat.CmdResult{ci.ConnId, ci.QueryId, protocol.ResponseErr, "", duration}
 			clientConn.Write(packet)
@@ -160,7 +159,7 @@ func logAndSendQueryToServer(ci *ConnectionInfo, serverConn net.Conn, command st
 	return func(ctx context.Context, args ...interface{}) error {
 		packet := args[0].([]byte)
 		query := string(packet[5:])
-		LogRequest(ci, command, query)
+		LogRequest(ci, packet, command, query)
 
 		ci.QueryId++
 		*ci.timer = time.Now()
@@ -172,20 +171,11 @@ func logAndSendQueryToServer(ci *ConnectionInfo, serverConn net.Conn, command st
 	}
 }
 
-func logAndSendPacketToServer(ci *ConnectionInfo, serverConn net.Conn, command string) func(ctx context.Context, args ...interface{}) error {
-	return func(ctx context.Context, args ...interface{}) error {
-		packet := args[0].([]byte)
-		LogOther(ci, "Sending raw packet to server for command "+command, "% x", packet)
-		serverConn.Write(packet)
-		return nil
-	}
-}
-
 func logAndDrop(ci *ConnectionInfo, command string, cmdChan chan chat.Cmd) func(ctx context.Context, args ...interface{}) error {
 	return func(ctx context.Context, args ...interface{}) error {
 		packet := args[0].([]byte)
 		query := string(packet[5:])
-		LogRequest(ci, "BLOCKED:"+command, query)
+		LogRequest(ci, packet, "BLOCKED:"+command, query)
 		cmdChan <- chat.Cmd{ci.ConnId, ci.QueryId, "", query, nil, false}
 		LogOther(ci, "fsm - Dropping packet", "% x", packet)
 		return nil

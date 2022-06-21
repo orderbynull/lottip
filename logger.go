@@ -19,22 +19,35 @@ func LogInvalid(info *ConnectionInfo, entryType string, packet []byte) {
 
 	event.Bytes("packet", packet).Send()
 }
-func LogRequest(info *ConnectionInfo, entryType string, args ...interface{}) {
+func LogRequest(info *ConnectionInfo, packet []byte, entryType string, args ...interface{}) {
 	if *logRequests || *logAll {
 		sender := "client"
 		doLogging(&sender, info, entryType, args)
 	}
+	LogRequestPacket(info, packet)
 }
 
-func LogResponse(info *ConnectionInfo, entryType string, args ...interface{}) {
+func LogResponse(info *ConnectionInfo, packet []byte, entryType string, args ...interface{}) {
 	if *logResponses || *logAll {
 		sender := "server"
 		doLogging(&sender, info, entryType, args)
 	}
+	LogResponsePacket(info, packet)
 }
+
 func LogResponsePacket(info *ConnectionInfo, packet []byte) {
-	if *logResponsePackets {
+	if *logPackets {
 		sender := "server"
+		args := make([]interface{}, 2)
+		args[0] = "% x"
+		args[1] = packet
+		doLogging(&sender, info, "Response Packet", args)
+	}
+}
+
+func LogRequestPacket(info *ConnectionInfo, packet []byte) {
+	if *logPackets {
+		sender := "client"
 		args := make([]interface{}, 2)
 		args[0] = "% x"
 		args[1] = packet

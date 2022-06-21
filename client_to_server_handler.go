@@ -26,8 +26,6 @@ func (pp *ClientToServerHandler) Write(buffer []byte) (n int, err error) {
 		} else {
 			if len(packet) < 4 {
 				LogInvalid(pp.connInfo, "?Request?", packet)
-			} else if GetPacketType(packet) == protocol.ComPing {
-				fsm.Fire(GetPacketType(packet), packet)
 			} else {
 				// We are processing queries
 				fsm.Fire(GetPacketType(packet), packet)

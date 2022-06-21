@@ -14,21 +14,21 @@ import (
 )
 
 var (
-	proxyAddr          = flag.String("proxy", "127.0.0.1:4041", "Proxy <host>:<port>")
-	logRequests        = flag.Bool("log-requests", false, "Enable logging of requests")
-	logResponses       = flag.Bool("log-responses", false, "Enable logging of responses")
-	logResponsePackets = flag.Bool("log-response-packets", false, "Enable logging of response packets")
-	logAll             = flag.Bool("log-all", true, "Enable logging of requests, responses, and other events")
-	logToConsole       = flag.Bool("enable-console-logging", false, "Enable logging to console")
-	logToFile          = flag.Bool("enable-file-logging", true, "Enable logging to console")
-	logDirectory       = flag.String("log-directory", "./logs", "Set the query log directory")
-	queryLogFile       = flag.String("query-log-file", "queries.log", "Set the query log file name")
-	logFile            = flag.String("log-file", "logfile.log", "Set the query log file name")
-	mysqlAddr          = flag.String("mysql", "127.0.0.1:3306", "MySQL <host>:<port>")
-	guiAddr            = flag.String("gui-addr", "127.0.0.1:9999", "Web UI <host>:<port>")
-	guiEnabled         = flag.Bool("gui-enabled", false, "Enable the web-gui server")
-	useLocalUI         = flag.Bool("use-local", false, "Use local UI instead of embed")
-	mysqlDsn           = flag.String("mysql-dsn", "", "MySQL DSN for query execution capabilities")
+	proxyAddr    = flag.String("proxy", "127.0.0.1:4041", "Proxy <host>:<port>")
+	logRequests  = flag.Bool("log-requests", false, "Enable logging of requests")
+	logResponses = flag.Bool("log-responses", false, "Enable logging of responses")
+	logPackets   = flag.Bool("log-packets", false, "Enable logging of packets")
+	logAll       = flag.Bool("log-all", true, "Enable logging of requests, responses, and other events")
+	logToConsole = flag.Bool("enable-console-logging", false, "Enable logging to console")
+	logToFile    = flag.Bool("enable-file-logging", true, "Enable logging to console")
+	logDirectory = flag.String("log-directory", "./logs", "Set the query log directory")
+	queryLogFile = flag.String("query-log-file", "queries.log", "Set the query log file name")
+	logFile      = flag.String("log-file", "logfile.log", "Set the query log file name")
+	mysqlAddr    = flag.String("mysql", "127.0.0.1:3306", "MySQL <host>:<port>")
+	guiAddr      = flag.String("gui-addr", "127.0.0.1:9999", "Web UI <host>:<port>")
+	guiEnabled   = flag.Bool("gui-enabled", false, "Enable the web-gui server")
+	useLocalUI   = flag.Bool("use-local", false, "Use local UI instead of embed")
+	mysqlDsn     = flag.String("mysql-dsn", "", "MySQL DSN for query execution capabilities")
 
 	queryLogger      zerolog.Logger
 	logFileStartTime time.Time
@@ -70,7 +70,7 @@ func newRollingFile(directory string, filename string) io.Writer {
 func main() {
 	flag.Parse()
 
-	if *logAll || *logRequests || *logResponses || *logResponsePackets {
+	if *logAll || *logRequests || *logResponses || *logPackets {
 		var queryWriters []io.Writer
 		if *logToConsole {
 			output := zerolog.ConsoleWriter{Out: os.Stderr, TimeFormat: "2006-01-02 15:04:05.000"}
