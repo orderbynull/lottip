@@ -40,7 +40,7 @@ func CreateStateMachine(ci *ConnectionInfo, clientConn net.Conn, serverConn net.
 
 	fsm.SetTriggerParameters(PacketReceived, reflect.TypeOf([]byte{}))
 	fsm.OnUnhandledTrigger(func(ctx context.Context, state stateless.State, trigger stateless.Trigger, unmetGuards []string) error {
-		LogOther(ci, "fsm - Unhandled event", "%s in state %s", trigger, state)
+		LogOther(ci, "fsm - Unhandled event", "%d in state %s", trigger, state)
 		return nil
 	})
 
@@ -129,6 +129,7 @@ func CreateStateMachine(ci *ConnectionInfo, clientConn net.Conn, serverConn net.
 		InternalTransition(protocol.ComBinlogDump, logAndDrop(ci, "BinlogDump", cmdChan)).
 		InternalTransition(protocol.ComTableDump, logAndDrop(ci, "TableDump", cmdChan)).
 		InternalTransition(protocol.ComConnectOut, logAndDrop(ci, "ConnectOut", cmdChan)).
+		InternalTransition(protocol.ResponseOk, logAndSendPacketToServer(ci, serverConn, "Ok")).
 		InternalTransition(MsgOK, func(ctx context.Context, args ...interface{}) error {
 			packet := args[0].([]byte)
 			LogResponse(ci, "OK")
@@ -166,6 +167,15 @@ func logAndSendQueryToServer(ci *ConnectionInfo, serverConn net.Conn, command st
 
 		cmdChan <- chat.Cmd{ci.ConnId, ci.QueryId, "", query, nil, false}
 		//LogOther(ci, "fsm - Writing to server", "% x", packet)
+		serverConn.Write(packet)
+		return nil
+	}
+}
+
+func logAndSendPacketToServer(ci *ConnectionInfo, serverConn net.Conn, command string) func(ctx context.Context, args ...interface{}) error {
+	return func(ctx context.Context, args ...interface{}) error {
+		packet := args[0].([]byte)
+		LogOther(ci, "Sending raw packet to server for command "+command, "% x", packet)
 		serverConn.Write(packet)
 		return nil
 	}

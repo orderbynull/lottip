@@ -10,7 +10,6 @@ import (
 	"lottip/chat"
 	"os"
 	"strings"
-	//"syscall"
 	"time"
 )
 
@@ -31,7 +30,8 @@ var (
 	useLocalUI         = flag.Bool("use-local", false, "Use local UI instead of embed")
 	mysqlDsn           = flag.String("mysql-dsn", "", "MySQL DSN for query execution capabilities")
 
-	queryLogger zerolog.Logger
+	queryLogger      zerolog.Logger
+	logFileStartTime time.Time
 )
 
 func appReadyInfo(appReadyChan chan bool) {
@@ -41,10 +41,6 @@ func appReadyInfo(appReadyChan chan bool) {
 	log.Info().Msgf("Web gui available at `http://%s`", *guiAddr)
 }
 
-//func timespecToTime(ts syscall.Timespec) time.Time {
-//	return time.Unix(int64(ts.Sec), int64(ts.Nsec))
-//}
-
 func newRollingFile(directory string, filename string) io.Writer {
 	if err := os.MkdirAll(directory, 0744); err != nil {
 		log.Error().Err(err).Str("path", directory).Msg("can't create log directory")
@@ -52,15 +48,14 @@ func newRollingFile(directory string, filename string) io.Writer {
 	}
 
 	logFileWriter, err := dailyrotate.NewFileWithPathGenerator(func(time time.Time) string {
+		logFileStartTime = time.Local()
 		return directory + "/" + filename
 	}, func(filename string, didRotate bool) {
 		if didRotate {
-			//// Then rename the file
-			//finfo, _ := os.Stat(filename)
-			//stat_t := finfo.Sys().(*syscall.Stat_t)
-			//timeFormatString := ".2006-01-02"
-			//rolledName := directory + "/" + filename + timespecToTime(stat_t.Birthtimespec).Format(timeFormatString)
-			//os.Rename(filename, rolledName)
+			// Then rename the file
+			timeFormatString := ".2006-01-02"
+			rolledName := directory + "/" + filename + logFileStartTime.Format(timeFormatString)
+			os.Rename(filename, rolledName)
 		}
 	})
 
