@@ -29,28 +29,28 @@ const (
 	comInitDB
 	ComQuery
 	ComFieldList
-	comCreateDB
-	comDropDB
+	ComCreateDB
+	ComDropDB
 	comRefresh
-	comShutdown
+	ComShutdown
 	comStatistics
 	comProcessInfo
 	comConnect
-	comProcessKill
+	ComProcessKill
 	comDebug
-	comPing
+	ComPing
 	comTime
 	comDelayedInsert
-	comChangeUser
-	comBinlogDump
-	comTableDump
-	comConnectOut
-	comRegisterSlave
+	ComChangeUser
+	ComBinlogDump
+	ComTableDump
+	ComConnectOut
+	ComRegisterSlave
 	ComStmtPrepare
 	ComStmtExecute
-	comStmtSendLongData
+	ComStmtSendLongData
 	ComStmtClose
-	comStmtReset
+	ComStmtReset
 	comSetOption
 	comStmtFetch
 )

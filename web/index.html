@@ -2,13 +2,14 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>Lottip</title>
+<title>Lottip - MS ed.</title>
 <meta name="description" content="">
 <meta name="author" content="">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" href="css/style.css">
 <link rel="stylesheet" href="css/bootstrap.min.css">
 <link rel="stylesheet" href="css/bootstrap-theme.min.css">
+<link rel="stylesheet" href="css/prism.css">
 <link rel="icon" type="image/png" href="images/favicon.png">
 </head>
 <body id="bootstrap-override">
@@ -96,7 +97,7 @@
                                     
                                     <!--Query error result block end--> 
                                     
-                                    {{query.query}}
+                                    <span v-html="query.queryFormatted"></span>
                                     <div v-if="query.parameters" class="params">Params: <span class="label label-primary" v-for="param in query.parameters">{{param}}</span> </div></td>
                                 <!--Query column end--> 
                                 
@@ -117,6 +118,7 @@
 <script src="js/clipboard.min.js" type="application/javascript"></script> 
 <script src="js/jquery.min.js" type="application/javascript"></script> 
 <script src="js/bootstrap.min.js" type="application/javascript"></script> 
+<script src="js/prism.js" type="application/javascript" data-manual></script>
 <script src="js/app.js" type="application/javascript"></script>
 </body>
 </html>

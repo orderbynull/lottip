@@ -6,8 +6,8 @@ import (
 )
 
 const (
-	pingPeriod          = time.Millisecond * 5000
-	writeDeadlinePeriod = time.Second * 2
+	pingPeriod          = time.Millisecond * 60000
+	writeDeadlinePeriod = time.Second * 60
 )
 
 // Client represents client(browser) connected via websocket

@@ -2,13 +2,13 @@ package main
 
 import (
 	"fmt"
-	"log"
+	"github.com/rs/zerolog/log"
+	"lottip/chat"
 	"net/http"
 
 	"encoding/json"
 	"github.com/gorilla/websocket"
 	"github.com/olekukonko/tablewriter"
-	"github.com/orderbynull/lottip/chat"
 )
 
 const (
@@ -23,7 +23,7 @@ func runHttpServer(hub *chat.Hub) {
 
 		conn, err := upgr.Upgrade(w, r, nil)
 		if err != nil {
-			log.Println(err)
+			log.Error().Err(err).Msg("Could not upgrade connection from " + r.RemoteAddr + " to websocket")
 			return
 		}
 
@@ -46,7 +46,7 @@ func runHttpServer(hub *chat.Hub) {
 	http.HandleFunc("/execute", func(w http.ResponseWriter, r *http.Request) {
 		err := r.ParseForm()
 		if err != nil {
-			log.Println(err)
+			log.Error().Err(err).Msg("Could not parse query execution request from " + r.RemoteAddr)
 			return
 		}
 
@@ -80,5 +80,8 @@ func runHttpServer(hub *chat.Hub) {
 
 	http.Handle(webRoute, http.FileServer(FS(*useLocalUI)))
 
-	log.Fatal(http.ListenAndServe(*guiAddr, nil))
+	err := http.ListenAndServe(*guiAddr, nil)
+	if err != nil {
+		log.Fatal().Err(err).Msg("Could not start HTTP server at " + *guiAddr)
+	}
 }
